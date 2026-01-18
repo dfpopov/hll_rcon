@@ -53,6 +53,10 @@ def get_server_data_from_rcon(api_url):
             try:
                 error_body = response.text[:500]  # Первые 500 символов ошибки
                 logger.error(f"RCON API error response: {error_body}")
+                # Если это 400 Bad Request, это обычно проблема с ALLOWED_HOSTS
+                # Сервер доступен, но отклоняет запрос - не нужно пробовать другие варианты
+                if response.status_code == 400:
+                    logger.error("Got 400 Bad Request - this usually means ALLOWED_HOSTS issue. Backend needs to be restarted.")
                 # Пробуем получить больше информации об ошибке
                 if response.headers.get('Content-Type', '').startswith('application/json'):
                     try:
@@ -111,6 +115,9 @@ def get_server_data_from_rcon(api_url):
             
     except requests.exceptions.ConnectionError as e:
         logger.warning(f"Could not connect to RCON API: {e}")
+        return None
+    except requests.exceptions.Timeout as e:
+        logger.warning(f"RCON API request timed out: {e}")
         return None
     except Exception as e:
         logger.error(f"Error fetching server data from RCON API: {e}", exc_info=True)
