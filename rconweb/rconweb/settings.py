@@ -141,6 +141,8 @@ DEBUG = os.getenv("DJANGO_DEBUG", False) is not False
 ALLOWED_HOSTS = [
     "backend:8000",
     "backend",
+    "backend_1",
+    "backend_1:8000",
     "127.0.0.1",
     "127.0.0.1:3000",
     "localhost",

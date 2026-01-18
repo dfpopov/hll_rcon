@@ -18,13 +18,11 @@ logger.info("Starting bot initialization...")
 logger.info("=" * 50)
 
 TOKEN = os.getenv("TOKEN")
-SERVER_ID = os.getenv("SERVER_ID")  # Используется как fallback, если RCON API недоступен
 BOT_NAME = os.getenv("BOT_NAME")
-RCON_API_URL = os.getenv("RCON_API_URL", "http://backend:8000/api/get_public_info")  # URL CRCON API (используем backend без подчеркивания)
+RCON_API_URL = os.getenv("RCON_API_URL", "http://backend:8000/api/get_public_info")  # URL CRCON API
 
 logger.info(f"Environment variables loaded:")
 logger.info(f"  TOKEN: {'*' * 20 if TOKEN else 'NOT SET'}")
-logger.info(f"  SERVER_ID: {SERVER_ID}")
 logger.info(f"  BOT_NAME: {BOT_NAME}")
 logger.info(f"  RCON_API_URL: {RCON_API_URL}")
 
@@ -42,7 +40,6 @@ def get_server_data_from_rcon(api_url):
     """
     try:
         logger.info(f"Fetching server data from RCON API: {api_url}")
-        # Для GET запроса не нужен Content-Type, только Accept
         headers = {
             "Accept": "application/json",
             "User-Agent": "DiscordBot/1.0"
@@ -111,29 +108,9 @@ def get_server_data_from_rcon(api_url):
         logger.error(f"Error fetching server data from RCON API: {e}", exc_info=True)
         return None
 
-def get_server_data_from_gamemonitoring(server_id):
+def get_server_data(api_url=None):
     """
-    Fallback: получает данные о сервере из gamemonitoring.net API
-    Возвращает: (numplayers, maxplayers, map_name, score_allied, score_axis, time_remaining, next_map_name)
-    """
-    try:
-        logger.info(f"Fetching server data from gamemonitoring.net for server_id: {server_id}")
-        response = requests.get(f"https://api.gamemonitoring.net/servers/{server_id}", timeout=10)
-        logger.info(f"gamemonitoring.net API response status: {response.status_code}")
-        data = response.json()
-        numplayers = data.get("response", {}).get("numplayers", 0)
-        maxplayers = data.get("response", {}).get("maxplayers", 0)
-        map_name = data.get("response", {}).get("map", "Unknown map")
-        # gamemonitoring.net не предоставляет счет, время и следующую карту
-        logger.info(f"Server data from gamemonitoring.net: {numplayers}/{maxplayers} players on {map_name}")
-        return numplayers, maxplayers, map_name, 0, 0, 0, "Unknown"
-    except Exception as e:
-        logger.error(f"Error fetching server data from gamemonitoring.net: {e}", exc_info=True)
-        return 0, 0, "Error", 0, 0, 0, "Unknown"
-
-def get_server_data(server_id=None, api_url=None):
-    """
-    Получает данные о сервере, сначала пытается из RCON API, затем fallback на gamemonitoring.net
+    Получает данные о сервере из RCON API
     """
     # Пытаемся получить данные из RCON API
     if api_url:
@@ -195,22 +172,17 @@ def get_server_data(server_id=None, api_url=None):
             if host != host_variants[-1]:
                 logger.info(f"Failed with {url}, trying next variant...")
     
-    # Fallback на gamemonitoring.net, если RCON API недоступен
-    if server_id:
-        logger.info("Falling back to gamemonitoring.net API")
-        return get_server_data_from_gamemonitoring(server_id)
-    
-    logger.error("No API available: neither RCON_API_URL nor SERVER_ID provided")
-    return 0, 0, "Error", 0, 0, 0, "Unknown"
+    # Если RCON API недоступен, возвращаем значения по умолчанию
+    logger.warning("RCON API unavailable, returning default values")
+    return 0, 0, "Unknown map", 0, 0, 0, "Unknown"
 
 class GameBot(discord.Client):
-    def __init__(self, *, intents, bot_name, server_id, rcon_api_url):
+    def __init__(self, *, intents, bot_name, rcon_api_url):
         logger.info("Initializing GameBot...")
         super().__init__(intents=intents)
         self.bot_name = bot_name
-        self.server_id = server_id
         self.rcon_api_url = rcon_api_url
-        logger.info(f"GameBot initialized with bot_name={bot_name}, server_id={server_id}, rcon_api_url={rcon_api_url}")
+        logger.info(f"GameBot initialized with bot_name={bot_name}, rcon_api_url={rcon_api_url}")
 
     async def on_connect(self):
         logger.info("Bot connected to Discord Gateway")
@@ -247,7 +219,7 @@ class GameBot(discord.Client):
                 return
 
             logger.info(f"Using guild: {guild.name} (ID: {guild.id})")
-            server_data = get_server_data(server_id=self.server_id, api_url=self.rcon_api_url)
+            server_data = get_server_data(api_url=self.rcon_api_url)
             
             if not server_data:
                 logger.warning("Failed to get server data")
@@ -331,7 +303,7 @@ intents.guilds = True
 
 if __name__ == "__main__":
     logger.info("Creating GameBot instance...")
-    bot = GameBot(intents=intents, bot_name=BOT_NAME, server_id=SERVER_ID, rcon_api_url=RCON_API_URL)
+    bot = GameBot(intents=intents, bot_name=BOT_NAME, rcon_api_url=RCON_API_URL)
     logger.info("Starting bot...")
     try:
         bot.run(TOKEN)
