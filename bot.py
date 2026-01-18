@@ -151,26 +151,30 @@ def get_server_data(server_id=None, api_url=None):
             path = ""
         
         # Определяем варианты хоста для попытки
-        # Важно: Django не принимает имена хостов с подчеркиваниями (backend_1, api_1)
-        # Поэтому сначала пробуем backend (алиас без подчеркивания), затем localhost/127.0.0.1
+        # В сети common доступно имя сервиса backend_1, а алиас backend доступен только в server сетях
+        # Поэтому сначала пробуем backend_1 (имя сервиса в common), затем backend (алиас), затем localhost/127.0.0.1
         host_variants = []
         if "backend_1" in host_part:
-            # Если в URL указан backend_1, заменяем на backend (алиас без подчеркивания)
+            # Если в URL указан backend_1, используем его напрямую, затем пробуем backend (алиас)
             host_variants = [
-                host_part.replace("backend_1", "backend"),  # Алиас backend (без подчеркивания)
+                host_part,  # backend_1 (имя сервиса в сети common)
+                host_part.replace("backend_1", "backend"),  # Алиас backend (в server сетях)
                 host_part.replace("backend_1", "localhost"),  # localhost
                 host_part.replace("backend_1", "127.0.0.1"),  # 127.0.0.1
             ]
         elif "api_1" in host_part:
-            # Если в URL указан api_1, заменяем на backend
+            # Если в URL указан api_1, пробуем backend_1 (имя сервиса), затем backend (алиас)
             host_variants = [
+                host_part.replace("api_1", "backend_1"),  # Имя сервиса в сети common
                 host_part.replace("api_1", "backend"),  # Алиас backend
                 host_part.replace("api_1", "localhost"),  # localhost
                 host_part.replace("api_1", "127.0.0.1"),  # 127.0.0.1
             ]
         elif "backend" in host_part:
+            # Если в URL указан backend, сначала пробуем backend_1 (имя сервиса в common)
             host_variants = [
-                host_part,  # backend (оригинальный, без подчеркивания)
+                host_part.replace("backend", "backend_1"),  # Имя сервиса в сети common
+                host_part,  # backend (алиас в server сетях)
                 host_part.replace("backend", "localhost"),  # localhost
                 host_part.replace("backend", "127.0.0.1"),  # 127.0.0.1
             ]
