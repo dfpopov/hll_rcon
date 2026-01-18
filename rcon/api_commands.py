@@ -746,6 +746,19 @@ class RconAPI(Rcon):
 
         # on -> off or off -> on
         if old_config.enabled != new_config.enabled:
+            from rcon.vote_map import VoteMap
+            
+            vote_map = VoteMap()
+            
+            if not old_config.enabled and new_config.enabled:
+                # votemap is being enabled - save current rotation
+                logger.info("Votemap enabled, saving current map rotation")
+                vote_map.save_rotation()
+            elif old_config.enabled and not new_config.enabled:
+                # votemap is being disabled - restore saved rotation
+                logger.info("Votemap disabled, restoring saved map rotation")
+                vote_map.restore_rotation()
+            
             self.reset_votemap_state()
 
         return True

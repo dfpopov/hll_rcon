@@ -1,7 +1,9 @@
 import json
 import logging
+import random
 import re
 import shlex
+import time as time_module
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from typing import Final
@@ -9,6 +11,8 @@ from typing import Final
 from discord_webhook import DiscordEmbed
 
 import rcon.steam_utils as steam_utils
+import custom_tools.live_topstats as live_topstats
+import custom_tools.all_time_stats as all_time_stats
 from discord.utils import escape_markdown
 from rcon.arguments import max_arg_index, replace_params
 from rcon.blacklist import (
@@ -106,6 +110,7 @@ def chat_commands(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
     if rcon_config.enabled:
         words.extend(rcon_config.command_words)
     if len(words) == 0:
+        logger.debug("[CHAT COMMANDS] No commands configured or both configs disabled")
         return
 
     chat_message = struct_log["sub_content"]
@@ -119,6 +124,17 @@ def chat_commands(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
 
     player_cache = event_cache.get(player_id, MostRecentEvents())
     chat_words = set(chat_message.split())
+    
+    # Debug logging for !me command
+    if "!me" in chat_words:
+        logger.debug(
+            f"[CHAT COMMANDS] !me command detected. "
+            f"Chat message: '{chat_message}', "
+            f"Chat words: {chat_words}, "
+            f"Total commands available: {len(words)}, "
+            f"Chat config enabled: {chat_config.enabled}, "
+            f"RCon config enabled: {rcon_config.enabled}"
+        )
     ctx = {
         MessageVariableContext.player_name.value: struct_log["player_name_1"],
         MessageVariableContext.player_id.value: player_id,
@@ -136,6 +152,23 @@ def chat_commands(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
         MessageVariableContext.last_tk_victim_weapon.value: player_cache.last_tk_victim_weapon,
     }
 
+    # Simple command: !victim or !lastkill - returns last victim name
+    if "!vc" in chat_words or "!lk" in chat_words:
+        last_victim = player_cache.last_victim_name
+        if last_victim:
+            rcon.message_player(
+                player_id=player_id,
+                message=f"Last victim: {last_victim}",
+                save_message=False,
+            )
+        else:
+            rcon.message_player(
+                player_id=player_id,
+                message="You haven't killed anyone yet in this match.",
+                save_message=False,
+            )
+        return
+
     for command in words:
         if not (
             triggered_word := chat_contains_command_word(
@@ -143,6 +176,17 @@ def chat_commands(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
             )
         ):
             continue
+
+        # Debug logging for !me command
+        if "!me" in chat_words:
+            logger.debug(
+                f"[CHAT COMMANDS] !me matched command. "
+                f"Command words: {command.words}, "
+                f"Triggered word: {triggered_word}, "
+                f"Is command word: {is_command_word(triggered_word)}, "
+                f"Command type: {type(command).__name__}, "
+                f"Is RCon command enabled: {getattr(command, 'enabled', 'N/A')}"
+            )
 
         if is_command_word(triggered_word) and isinstance(command, ChatCommand):
             chat_message_command(rcon, command, ctx)
@@ -332,12 +376,14 @@ def handle_new_match_start(rcon: Rcon, struct_log):
         except Exception as e:
             logger.error("Could not fetch Game Layout", e)
             pass
+        map_start_ts = int(struct_log["timestamp_ms"] / 1000)
         maps_history.save_new_map(
             new_map=str(map_name_to_save),
             guessed=guessed,
-            start_timestamp=int(struct_log["timestamp_ms"] / 1000),
+            start_timestamp=map_start_ts,
             game_layout=game_layout,
         )
+        
     except:
         raise
     finally:
@@ -346,6 +392,294 @@ def handle_new_match_start(rcon: Rcon, struct_log):
             record_stats_worker(MapsHistory()[1])
         except Exception:
             logger.exception("Unexpected error while running stats worker")
+
+
+# Порог игроков для переключения логики rotation
+PLAYER_COUNT_THRESHOLD = 40  # Если < 40: St. Mary карты, если >= 40: обычная rotation
+
+def _get_st_mary_day_maps():
+    """Возвращает список карт St. Mere Eglise (день) и St. Marie Du Mont (день)"""
+    return [
+        parse_layer("stmereeglise_warfare"),
+        parse_layer("stmariedumont_warfare"),
+    ]
+
+
+def _get_last_st_mary_map_id(red):
+    """Получает ID последней использованной St. Mary карты из Redis"""
+    key = "last_st_mary_map_id"
+    value = red.get(key)
+    if value:
+        if isinstance(value, bytes):
+            value = value.decode()
+        return value
+    return None
+
+
+def _set_last_st_mary_map_id(red, map_id):
+    """Сохраняет ID последней использованной St. Mary карты в Redis"""
+    key = "last_st_mary_map_id"
+    red.setex(key, 24 * 60 * 60, map_id)  # Храним 24 часа
+
+
+def _get_map_max_players(map_info: dict) -> int | None:
+    """
+    Получает количество игроков для карты из player_stats.
+    Использует len(player_stats) из MapsHistory.
+    """
+    if map_info and map_info.get("player_stats"):
+        player_stats = map_info.get("player_stats", {})
+        if isinstance(player_stats, dict):
+            player_count = len(player_stats)
+            if player_count > 0:
+                return player_count
+    return None
+
+
+def _get_last_5_maps_with_40_plus_players(maps_history: MapsHistory) -> set:
+    """
+    Возвращает множество базовых ID карт из последних 5 игр, где было >=PLAYER_COUNT_THRESHOLD игроков.
+    
+    Логика:
+    - Проходит по всей истории карт
+    - Фильтрует только игры с >=PLAYER_COUNT_THRESHOLD игроками
+    - Берет последние 5 из отфильтрованных
+    - Возвращает их base_map_ids для исключения из rotation
+    
+    Пример:
+    - Позавчера: 3 игры с 50 игроками (A, B, C)
+    - Вчера: 4 игры с 20 игроками (D, E, F, G) - пропускаются
+    - Сегодня: 1 игра с 10 игроками (H) - пропускается
+    - Сегодня: 4 игры с 60 игроками (I, J, K, L)
+    Результат: исключаем L, K, J, I, C (последние 5 игр с >=40)
+    """
+    exclude_last_n = 5  # Берем последние 5 игр с >=40 игроками
+    last_5_base_map_ids = set()
+    
+    if len(maps_history) == 0:
+        return last_5_base_map_ids
+    
+    # Сначала фильтруем все игры с >=PLAYER_COUNT_THRESHOLD игроками
+    maps_with_40_plus = []
+    
+    for map_info in maps_history:
+        if map_info.get("name") and map_info.get("start"):
+            try:
+                parsed = parse_layer(map_info["name"])
+                
+                # Проверяем количество игроков для этой карты из player_stats
+                max_players = _get_map_max_players(map_info)
+                
+                # Учитываем только карты с >=PLAYER_COUNT_THRESHOLD игроками
+                if max_players is not None and max_players >= PLAYER_COUNT_THRESHOLD:
+                    maps_with_40_plus.append({
+                        "map_info": map_info,
+                        "parsed": parsed,
+                        "max_players": max_players
+                    })
+            except Exception as e:
+                logger.warning(f"[ROTATION FILTER] Failed to parse map {map_info.get('name')}: {e}")
+    
+    # Берем последние N игр из отфильтрованных
+    last_n_maps = maps_with_40_plus[:exclude_last_n]
+    
+    for map_data in last_n_maps:
+        parsed = map_data["parsed"]
+        last_5_base_map_ids.add(parsed.map.id)
+    return last_5_base_map_ids
+
+
+def _check_and_update_rotation(rcon: Rcon, player_count: int, context: str = "unknown"):
+    """
+    Проверяет и обновляет ротацию карт в зависимости от количества игроков.
+    Вызывается при начале матча и при изменении количества игроков.
+    
+    Args:
+        rcon: Rcon instance
+        player_count: Количество игроков для проверки (может быть None)
+        context: Контекст вызова для логирования (например, "match_start", "match_end", "player_connected")
+    """
+    try:
+        # Получаем текущую карту
+        try:
+            current_map = rcon.get_map()
+        except HLLCommandFailedError:
+            logger.warning("[ROTATION FILTER] Could not get current map, skipping rotation check")
+            return
+
+        # Получаем следующую карту из ротации
+        rotation = rcon.get_map_rotation()["maps"]
+        next_map_in_rotation = None
+        if rotation and len(rotation) > 1:
+            next_map_in_rotation = rotation[1]
+        elif rotation:
+            try:
+                next_map_in_rotation = rcon.get_next_map()
+            except Exception as e:
+                logger.warning(f"[ROTATION FILTER] Could not get next map: {e}")
+        
+        if not next_map_in_rotation:
+            logger.warning("[ROTATION FILTER] No next map found in rotation")
+
+        slots = rcon.get_slots()
+        current_player_count = slots["current_players"]
+        
+        # Используем переданное количество или текущее
+        if player_count is None:
+            player_count = current_player_count
+
+        red = get_redis_client()
+        st_mary_day_maps = _get_st_mary_day_maps()
+        current_map_parsed = parse_layer(str(current_map))
+        
+        # Если < PLAYER_COUNT_THRESHOLD игроков - только St. Mary карты (день) по очереди
+        if player_count < PLAYER_COUNT_THRESHOLD:
+            # Если следующая карта не St. Mary (день), меняем её
+            if next_map_in_rotation:
+                next_map_parsed = parse_layer(str(next_map_in_rotation))
+                is_next_st_mary_day = any(
+                    next_map_parsed.map.id == m.map.id 
+                    for m in st_mary_day_maps
+                )
+                
+                if not is_next_st_mary_day:
+                    # Получаем последнюю использованную St. Mary карту
+                    last_st_mary_id = _get_last_st_mary_map_id(red)
+                    
+                    # Выбираем другую St. Mary карту (по очереди)
+                    if last_st_mary_id:
+                        # Находим индекс последней карты
+                        last_index = next(
+                            (i for i, m in enumerate(st_mary_day_maps) if m.map.id == last_st_mary_id),
+                            -1
+                        )
+                        # Берем следующую по очереди
+                        next_index = (last_index + 1) % len(st_mary_day_maps)
+                        new_map = st_mary_day_maps[next_index]
+                    else:
+                        # Первый раз - выбираем случайную
+                        new_map = random.choice(st_mary_day_maps)
+                    
+                    logger.info(
+                        f"[ROTATION FILTER] Players {player_count} < {PLAYER_COUNT_THRESHOLD}: changing next map from {next_map_in_rotation.pretty_name} to {new_map.pretty_name}"
+                    )
+                    rcon.set_map_rotation([current_map.id, new_map.id])
+                    _set_last_st_mary_map_id(red, new_map.map.id)
+                    return
+        
+        # Если >= PLAYER_COUNT_THRESHOLD игроков - обычный rotation с логикой исключения последних 5 игр с >=40 игроками
+        else:
+            maps_history = MapsHistory()
+            # Получаем базовые имена карт из последних 5 игр с >=40 игроками
+            last_5_base_map_ids = _get_last_5_maps_with_40_plus_players(maps_history)
+            
+            if next_map_in_rotation:
+                next_map_parsed = parse_layer(str(next_map_in_rotation))
+                next_base_map_id = next_map_parsed.map.id
+                
+                # Проверяем, является ли текущая карта St. Mary (день)
+                is_current_st_mary_day = any(
+                    current_map_parsed.map.id == m.map.id 
+                    for m in st_mary_day_maps
+                )
+                
+                # Проверяем, является ли следующая карта St. Mary (день)
+                is_next_st_mary_day = any(
+                    next_map_parsed.map.id == m.map.id 
+                    for m in st_mary_day_maps
+                )
+                
+                # Проверяем, не повторяется ли базовая карта из последних 5 игр с >=40 игроками
+                # (проверка по base_id, чтобы исключить Kharkov Offensive если был Kharkov Warfare)
+                is_in_excluded = next_base_map_id in last_5_base_map_ids
+                
+                # Если текущая карта St. Mary (день), то следующая НЕ должна быть St. Mary (день)
+                # (чтобы не было двух подряд матчей на St. Mary картах)
+                should_avoid_st_mary = is_current_st_mary_day and is_next_st_mary_day
+                
+                # Если базовая карта повторяется из последних 5 игр с >=40 игроками ИЛИ
+                # текущая карта St. Mary и следующая тоже St. Mary - меняем
+                if is_in_excluded or should_avoid_st_mary:
+                    # Получаем все доступные карты
+                    all_maps = [parse_layer(m) for m in rcon.get_maps()]
+                    
+                    # Исключаем:
+                    # 1. Карты из последних 5 игр с >=40 игроками (по base_id)
+                    # 2. Текущую карту
+                    # 3. St. Mary карты (день), если текущая карта тоже St. Mary (чтобы не было двух подряд)
+                    current_base_map_id = current_map_parsed.map.id
+                    available_maps = [
+                        m for m in all_maps 
+                        if m.map.id not in last_5_base_map_ids  # Исключаем по base_id (Kharkov Offensive = Kharkov Warfare)
+                        and m.map.id != current_base_map_id
+                        and not (is_current_st_mary_day and any(m.map.id == sm.map.id for sm in st_mary_day_maps))  # Если текущая St. Mary, исключаем все St. Mary
+                    ]
+                    
+                    if not available_maps:
+                        available_maps = [
+                            m for m in all_maps 
+                            if m.map.id != current_base_map_id
+                            and not (is_current_st_mary_day and any(m.map.id == sm.map.id for sm in st_mary_day_maps))
+                        ]
+                    
+                    if available_maps:
+                        # Выбираем случайную карту из доступных
+                        new_map = random.choice(available_maps)
+                        reason_parts = []
+                        if is_in_excluded:
+                            reason_parts.append("in last 5 games with >=40 players")
+                        if should_avoid_st_mary:
+                            reason_parts.append("avoiding consecutive St. Mary")
+                        reason = " / ".join(reason_parts) if reason_parts else "unknown"
+                        logger.info(
+                            f"[ROTATION FILTER] Players {player_count} >= {PLAYER_COUNT_THRESHOLD}: changing next map from {next_map_in_rotation.pretty_name} ({reason}) to {new_map.pretty_name}"
+                        )
+                        rcon.set_map_rotation([current_map.id, new_map.id])
+                        return
+                    else:
+                        logger.warning(f"[ROTATION FILTER] No available maps found after filtering, cannot change rotation")
+        
+    except Exception as e:
+        logger.exception(f"Error in _check_and_update_rotation: {e}")
+
+
+@on_match_start
+def filter_map_rotation(rcon: Rcon, struct_log):
+    """
+    Фильтрует ротацию карт при начале матча:
+    - Если < PLAYER_COUNT_THRESHOLD игроков: только St. Mere Eglise (день) или St. Marie Du Mont (день) по очереди
+    - Если >= PLAYER_COUNT_THRESHOLD игроков: обычный rotation с логикой shuffle (не повторять карты из последних 5 игр)
+    """
+    try:
+        logger.info("[ROTATION FILTER] Match started, checking rotation")
+        slots = rcon.get_slots()
+        player_count = slots["current_players"]
+        _check_and_update_rotation(rcon, player_count, context="match_start")
+    except Exception as e:
+        logger.exception(f"[ROTATION FILTER] Error in filter_map_rotation: {e}")
+
+
+@on_connected()
+def check_player_count_for_rotation(rcon: Rcon, _, name: str, player_id: str):
+    """
+    Проверяет количество игроков при подключении и обновляет ротацию если нужно.
+    Если количество изменилось с <PLAYER_COUNT_THRESHOLD на >=PLAYER_COUNT_THRESHOLD, меняет следующую карту.
+    """
+    try:
+        # Небольшая задержка, чтобы количество игроков успело обновиться
+        time_module.sleep(1)
+        
+        slots = rcon.get_slots()
+        player_count = slots["current_players"]
+        
+        logger.info(f"[ROTATION FILTER] Player {name} connected, current players: {player_count}")
+        
+        # Проверяем и обновляем ротацию
+        _check_and_update_rotation(rcon, player_count, context="player_connected")
+    except Exception as e:
+        logger.debug(f"[ROTATION FILTER] Error in check_player_count_for_rotation: {e}")
+
+
 
 
 @on_match_end
@@ -370,9 +704,18 @@ def record_map_end(rcon: Rcon, struct_log):
     if (datetime.utcnow() - log_time).total_seconds() < 60:
         # then we use the current map to be more accurate
         if current_map.map.name.lower() in log_map_name.lower():
+            
             maps_history.save_map_end(
                 str(current_map), end_timestamp=int(struct_log["timestamp_ms"] / 1000)
             )
+            
+            # Проверяем и обновляем ротацию для следующей карты
+            try:
+                slots = rcon.get_slots()
+                player_count = slots["current_players"]
+                _check_and_update_rotation(rcon, player_count, context="match_end")
+            except Exception as e:
+                logger.exception(f"[ROTATION FILTER] Error checking rotation at match end: {e}")
         return
 
     # If we're processing an old match
@@ -675,3 +1018,26 @@ def notify_camera(rcon: Rcon, struct_log):
 
     if config.welcome:
         temporary_welcome(rcon, struct_log["message"], 60)
+
+
+# Custom plugins hooks
+# -----------------------------------------------------------------------------
+
+@on_chat
+def livetopstats_onchat(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
+    live_topstats.stats_on_chat_command(rcon, struct_log)
+
+
+@on_match_end
+def livetopstats_onmatchend(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
+    live_topstats.stats_on_match_end(rcon, struct_log)
+
+
+@on_connected()
+def alltimestats_on_connected(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
+    all_time_stats.all_time_stats_on_connected(rcon, struct_log)
+
+
+@on_chat
+def alltimestats_on_chat_command(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
+    all_time_stats.all_time_stats_on_chat_command(rcon, struct_log)
