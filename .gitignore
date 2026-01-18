@@ -1,5 +1,4 @@
 # Compose files are templated now
-compose.yaml
 db_data/
 .env
 dev.env
