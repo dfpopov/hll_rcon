@@ -143,11 +143,17 @@ ALLOWED_HOSTS = [
     "backend",
     "backend_1",
     "backend_1:8000",
+    "api_1",
+    "api_1:8000",
     "127.0.0.1",
     "127.0.0.1:3000",
+    "127.0.0.1:8000",
     "localhost",
     "localhost:3000",
+    "localhost:8000",
 ] + os.getenv("DOMAINS", "").split(",")
+# Фильтруем пустые строки из DOMAINS
+ALLOWED_HOSTS = [h for h in ALLOWED_HOSTS if h]
 CORS_ALLOWED_ORIGINS = ["http://{}".format(h) for h in ALLOWED_HOSTS if h] + [
     "https://{}".format(h) for h in ALLOWED_HOSTS if h
 ]

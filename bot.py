@@ -44,6 +44,7 @@ def get_server_data_from_rcon(api_url):
             "Accept": "application/json",
             "User-Agent": "DiscordBot/1.0"
         }
+        # requests автоматически устанавливает правильный Host header на основе URL
         response = requests.get(api_url, headers=headers, timeout=10, allow_redirects=True)
         logger.info(f"RCON API response status: {response.status_code}")
         
@@ -52,6 +53,13 @@ def get_server_data_from_rcon(api_url):
             try:
                 error_body = response.text[:500]  # Первые 500 символов ошибки
                 logger.error(f"RCON API error response: {error_body}")
+                # Пробуем получить больше информации об ошибке
+                if response.headers.get('Content-Type', '').startswith('application/json'):
+                    try:
+                        error_json = response.json()
+                        logger.error(f"RCON API error JSON: {error_json}")
+                    except:
+                        pass
             except:
                 pass
             return None
