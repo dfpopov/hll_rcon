@@ -109,6 +109,8 @@ services:
     hostname: api_1
     networks:
       common:
+        aliases:
+          - backend
       server1:
         aliases:
           - backend

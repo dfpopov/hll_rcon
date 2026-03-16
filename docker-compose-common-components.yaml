@@ -21,7 +21,6 @@ services:
       dockerfile: Dockerfile-bot
     environment:
       TOKEN: ${DISCORD_BOT_TOKEN}
-      SERVER_ID: ${DISCORD_BOT_SERVER_ID}
       BOT_NAME: ${DISCORD_BOT_NAME}
       RCON_API_URL: ${RCON_API_URL:-http://backend:8000/api/get_public_info}
     restart: unless-stopped

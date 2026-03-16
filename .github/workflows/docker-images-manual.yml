@@ -31,7 +31,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: cericmathey/hll_rcon_tool:latest,cericmathey/hll_rcon_tool:${{ github.event.inputs.tag }}
+          tags: dinnamo1927/hll_rcon_tool:latest,dinnamo1927/hll_rcon_tool:${{ github.event.inputs.tag }}
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
@@ -39,16 +39,16 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: cericmathey/hll_rcon_tool_frontend:latest,cericmathey/hll_rcon_tool_frontend:${{ github.event.inputs.tag }}
+          tags: dinnamo1927/hll_rcon_tool_frontend:latest,dinnamo1927/hll_rcon_tool_frontend:${{ github.event.inputs.tag }}
       - name: Update repo description
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: cericmathey/hll_rcon_tool
+          repository: dinnamo1927/hll_rcon_tool
       - name: Update repo description
         uses: peter-evans/dockerhub-description@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: cericmathey/hll_rcon_tool_frontend
+          repository: dinnamo1927/hll_rcon_tool_frontend

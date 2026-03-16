@@ -7,9 +7,9 @@ An extended RCON tool for [Hell Let Loose](https://www.hellletloose.com/), meant
 ![Contributors](https://img.shields.io/github/contributors-anon/marechj/hll_rcon_tool)
 ![Discord](https://img.shields.io/discord/685692524442026020?color=%237289da&label=discord)  
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/marechj/hll_rcon_tool)
-![Docker Cloud Automated build](https://img.shields.io/docker/automated/cericmathey/hll_rcon_tool)
-![Docker Cloud Build Status](https://img.shields.io/docker/image-size/cericmathey/hll_rcon_tool)
-![Docker Pulls](https://img.shields.io/docker/pulls/cericmathey/hll_rcon_tool)
+![Docker Cloud Automated build](https://img.shields.io/docker/automated/dinnamo1927/hll_rcon_tool)
+![Docker Cloud Build Status](https://img.shields.io/docker/image-size/dinnamo1927/hll_rcon_tool)
+![Docker Pulls](https://img.shields.io/docker/pulls/dinnamo1927/hll_rcon_tool)
 
 ![Live view](images/README_Views_Live_2024-12-27.png)
 
