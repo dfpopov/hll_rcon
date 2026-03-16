@@ -221,6 +221,7 @@ class VoteMap:
         self.reminder_time_key = "last_vote_reminder"
         self.optin_name = "votemap_reminder"
         self.whitelist_key = "votemap_whitelist"
+        self.saved_rotation_key = "votemap_saved_rotation"
 
     # TODO: fix votes typing
     @staticmethod
@@ -819,3 +820,31 @@ class VoteMap:
 
         if not success:
             logger.warning("Unable to set votemap results")
+
+    def save_rotation(self):
+        """Save current map rotation to Redis"""
+        try:
+            rotation = self.rcon.get_map_rotation()["maps"]
+            rotation_ids = [map_.id for map_ in rotation]
+            self.red.set(
+                self.saved_rotation_key,
+                pickle.dumps(rotation_ids)
+            )
+            logger.info(f"Saved map rotation to Redis: {rotation_ids}")
+        except Exception as e:
+            logger.exception(f"Failed to save rotation: {e}")
+
+    def restore_rotation(self):
+        """Restore saved map rotation from Redis"""
+        try:
+            saved_rotation = self.red.get(self.saved_rotation_key)
+            if saved_rotation:
+                rotation_ids = pickle.loads(saved_rotation)
+                logger.info(f"Restoring saved map rotation: {rotation_ids}")
+                self.rcon.set_map_rotation(rotation_ids)
+                self.red.delete(self.saved_rotation_key)
+                logger.info("Map rotation restored and saved rotation cleared")
+            else:
+                logger.info("No saved rotation found, skipping restoration")
+        except Exception as e:
+            logger.exception(f"Failed to restore rotation: {e}")

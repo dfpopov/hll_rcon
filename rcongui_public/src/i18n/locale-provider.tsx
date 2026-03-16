@@ -1,6 +1,6 @@
-import {useTranslation} from "react-i18next";
+import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import {createContext, ReactNode, useContext, useEffect} from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import 'dayjs/locale/en';
 import 'dayjs/locale/de';
 import 'dayjs/locale/fr';
@@ -11,8 +11,9 @@ import 'dayjs/locale/ko';
 import 'dayjs/locale/pt';
 import 'dayjs/locale/it';
 import 'dayjs/locale/ru';
+import 'dayjs/locale/uk';
 import 'dayjs/locale/cs';
-import {DAYJS_LANGUAGES} from "@/i18n/config";
+import { DAYJS_LANGUAGES } from "@/i18n/config";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -51,7 +52,7 @@ export const useLocale = () => {
 /**
  * handles localization of dayjs
  */
-export const LocaleProvider = ({ children }: { children: ReactNode}) => {
+export const LocaleProvider = ({ children }: { children: ReactNode }) => {
 
   const { i18n } = useTranslation();
 

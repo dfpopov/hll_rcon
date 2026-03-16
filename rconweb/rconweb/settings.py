@@ -143,9 +143,14 @@ ALLOWED_HOSTS = [
     "backend",
     "127.0.0.1",
     "127.0.0.1:3000",
+    "127.0.0.1:8000",
     "localhost",
     "localhost:3000",
+    "localhost:8000",
 ] + os.getenv("DOMAINS", "").split(",")
+# Примечание: backend_1 и api_1 с подчеркиваниями не могут быть в ALLOWED_HOSTS,
+# так как Django не принимает имена хостов с подчеркиваниями согласно RFC 1034/1035.
+# Бот должен использовать алиас "backend" или "localhost"/"127.0.0.1" вместо "backend_1"
 CORS_ALLOWED_ORIGINS = ["http://{}".format(h) for h in ALLOWED_HOSTS if h] + [
     "https://{}".format(h) for h in ALLOWED_HOSTS if h
 ]

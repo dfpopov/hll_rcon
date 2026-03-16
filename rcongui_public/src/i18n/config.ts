@@ -3,12 +3,12 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import resourcesToBackend from 'i18next-resources-to-backend'
 
-export const LANGUAGES = ['en24h', 'en', 'de', 'fr', 'es', 'zh-Hans', 'zh-Hant', 'ja', 'ko', 'pt', 'it', 'ru', 'cs']
+export const LANGUAGES = ['en24h', 'en', 'de', 'fr', 'es', 'zh-Hans', 'zh-Hant', 'ja', 'ko', 'pt', 'it', 'ru', 'uk', 'cs']
 
 /**
  *  Also add import in {@link LocaleHandler}
  */
-export const DAYJS_LANGUAGES = ['en24h', 'en', 'de', 'fr', 'es', 'zh', 'ja', 'ko', 'pt', 'it', 'ru', 'cs'];
+export const DAYJS_LANGUAGES = ['en24h', 'en', 'de', 'fr', 'es', 'zh', 'ja', 'ko', 'pt', 'it', 'ru', 'uk', 'cs'];
 
 i18next
   .use(LanguageDetector)
