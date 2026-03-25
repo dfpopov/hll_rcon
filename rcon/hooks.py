@@ -33,7 +33,7 @@ from rcon.logs.loop import (
 )
 from rcon.maps import UNKNOWN_MAP_NAME, parse_layer
 from rcon.message_variables import format_message_string, populate_message_variables
-from rcon.models import PlayerID, PlayerSoldier, enter_session, GameLayout
+from rcon.models import PlayerID, enter_session, GameLayout
 from rcon.player_history import (
     _get_set_player,
     get_player,

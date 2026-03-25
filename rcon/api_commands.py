@@ -2017,30 +2017,25 @@ class RconAPI(Rcon):
         team_name, squad_name = team_name.lower(), squad_name.lower()
 
         if team_name != "allies" and team_name != "axis":
-            raise HLLCommandFailedError(
-                "Invalid team_name argument. It must be either 'axis' or 'allies'."
-            )
+            raise HLLCommandFailedError("Invalid team_name argument. It must be either 'axis' or 'allies'.")
         if squad_name == "" or squad_name == "unassigned":
-            raise HLLCommandFailedError(
-                "Invalid squad_name argument. It cannot be an empty value or 'unassigned'."
-            )
+            raise HLLCommandFailedError("Invalid squad_name argument. It cannot be an empty value or 'unassigned'.")
 
         online_players = self.get_detailed_players()["players"]
 
         squad_players = list(
-            online_players[id]
-            for id in online_players
-            if online_players[id]["team"] == team_name
-            and online_players[id]["unit_name"] == squad_name
-        )
-
-        if not squad_players:
-            raise HLLCommandFailedError(
-                f"Squad {squad_name} was not found in team {team_name}. It might have been disbanded already."
+                online_players[id]
+                for id in online_players
+                if online_players[id]["team"] == team_name
+                and online_players[id]["unit_name"] == squad_name
             )
 
+        if not squad_players:
+            raise HLLCommandFailedError(f"Squad {squad_name} was not found in team {team_name}. It might have been disbanded already.")
+        
         for player in squad_players:
             super().remove_player_from_squad(player["player_id"], reason)
+
 
         return {
             "team_name": team_name,
