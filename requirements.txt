@@ -1,14 +1,14 @@
-Click==8.3.0
+Click==8.3.1
 Django==4.2.29
 django-cors-headers==4.9.0
-redis==7.0.1
+redis==7.4.0
 sqlalchemy==2.0.45
 channels==4.3.1
 channels-redis==4.3.0
 orjson==3.11.7
 simplejson==3.20.2
 psycopg2-binary
-sentry-sdk[django]==2.53.0
+sentry-sdk[django]==2.54.0
 python-dateutil==2.9.0.post0
 # discord-webhook[async]
 git+https://github.com/cemathey/python-discord-webhook@89ae25140b30a6747de70e5bf16bc5ba04a9b238
