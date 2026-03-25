@@ -1,3 +1,4 @@
+import datetime
 import logging
 import pickle
 import time
@@ -5,9 +6,11 @@ import time
 from rcon.audit import ingame_mods, online_mods
 from rcon.cache_utils import get_redis_client
 from rcon.commands import HLLCommandFailedError
+from rcon.perf_statistics import PerformanceStatistics
 from rcon.rcon import HLLCommandFailedError, Rcon, get_rcon
 from rcon.user_config.auto_kick import AutoVoteKickUserConfig
 from rcon.vote_map import VoteMap
+from rcon.workers import get_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -315,6 +318,14 @@ def auto_disband_empty_squads(rcon: Rcon):
 def run():
     max_fails = 5
     rcon = get_rcon()
+
+    if rcon.performance_stats_interval() > 0:
+        get_scheduler().schedule(
+            scheduled_time=datetime.datetime.now(datetime.UTC),
+            func=dump_rcon_performance_stats,
+            interval=rcon.performance_stats_interval(),
+            id='dump_performance_logs',
+        )
 
     while True:
         try:
