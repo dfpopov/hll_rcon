@@ -1,18 +1,18 @@
-Click==8.3.1
+Click==8.3.2
 Django==4.2.29
 django-cors-headers==4.9.0
 redis==7.4.0
 sqlalchemy==2.0.45
 channels==4.3.2
 channels-redis==4.3.0
-orjson==3.11.7
+orjson==3.11.8
 simplejson==3.20.2
 psycopg2-binary
-sentry-sdk[django]==2.56.0
+sentry-sdk[django]==2.57.0
 python-dateutil==2.9.0.post0
 # discord-webhook[async]
 git+https://github.com/cemathey/python-discord-webhook@89ae25140b30a6747de70e5bf16bc5ba04a9b238
-requests==2.33.0
+requests==2.33.1
 steam==1.4.4
 # Alembic does not use semantic versioning, so be careful with the version numbers https://alembic.sqlalchemy.org/en/latest/front.html#versioning-scheme
 alembic==1.18.4
@@ -22,7 +22,7 @@ paramiko==4.0.0
 ftpretty==0.4.0
 pytz>=2023.3
 pydantic==2.12.5
-discord.py==2.7.0
+discord.py==2.7.1
 # django-directory
 # django-dirctory is currently incompatible with Django 4.0+, PR is pending to fix django-directory upstream
 git+https://github.com/cemathey/django-directory@f51ee1e8dc50edf453fee4a0d9631c0e46fe9433
