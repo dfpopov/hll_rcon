@@ -5,17 +5,27 @@ Common translation set
 for HLL CRCON (https://github.com/MarechJ/hll_rcon_tool)
 custom plugins
 
-Source : https://github.com/ElGuillermo
+Source : https://github.com/ElGuillermo (merged with our Ukrainian translations)
 
 Feel free to use/modify/distribute, as long as you keep this note in your code
 """
 
-# Translations
-# key : english, french, german, spanish, polish, brazilian portuguese, russian, chinese
-# ----------------------------------------------
+# 8 language slots:
+#   0 english, 1 french, 2 german, 3 spanish,
+#   4 polish, 5 brazilian portuguese,
+#   6 russian/ukrainian (UA where we have it, RU otherwise — TODO),
+#   7 chinese
+# Set LANG = 6 in plugin _config to use Ukrainian (or Russian fallback).
 
 TRANSL = {
-    # Roles
+    "allies": ["Allies", "Alliés", "Alliierte", "Aliados", "Alianci", "Aliados", "Союзники", "盟军"],
+    "axis": ["Axis", "Axe", "Achsenmächte", "Eje", "Oś", "Eixo", "Вісь", "轴心国"],
+    "allies_short": ["all", "all", "all", "ali", "ali", "ali", "соз", "盟军"],
+    "axis_short": ["axi", "axe", "ach", "eje", "oś", "eix", "ось", "轴心"],
+    "infantry": ["infantry", "infanterie", "Infanterie", "infantería", "piechota", "infantaria", "пехота", "步兵"],
+    "armor": ["armor", "blindés", "Panzerung", "blindados", "pancerne", "blindados", "бронетехника", "装甲部队"],
+    "artillery": ["artillery", "artillerie", "Artillerie", "artillería", "artyleria", "artilharia", "артиллерия", "火炮"],
+    "recon": ["reconnaissance", "reconnaissance", "Aufklärung", "reconocimiento", "rozpoznanie", "reconhecimento", "разведка", "侦察"],
     "armycommander": ["commander", "commandant", "Kommandant", "comandante", "dowódca", "comandante", "командир", "指挥官"],
     "officer": ["squad leader", "officier", "Offizier", "líder de escuadrón", "dowódca drużyny", "líder de esquadrão", "офіцер", "小队长"],
     "rifleman": ["rifleman", "fusilier", "Schütze", "fusilero", "strzelec", "fuzileiro", "стрілець", "步枪手"],
@@ -28,79 +38,51 @@ TRANSL = {
     "engineer": ["engineer", "ingénieur", "Pionier", "ingeniero", "inżynier", "engenheiro", "інженер", "工兵"],
     "tankcommander": ["tank commander", "commandant de char", "Panzerkommandant", "comandante de tanque", "dowódca czołgu", "comandante de tanque", "командир танка", "坦克指挥官"],
     "crewman": ["crewman", "équipier", "Besatzungsmitglied", "tripulante", "członek załogi", "tripulante", "член екіпажу", "乘员"],
-    "spotter": ["spotter", "observateur", "Späher", "observador", "obserwator", "observador", "спостерігач", "侦察兵"],
-    "sniper": ["sniper", "sniper", "Scharfschütze", "francotirador", "snajper", "atirador de elite", "снайпер", "狙击手"],
     "artilleryobserver": ["artillery observer", "observateur d'artillerie", "Artilleriebeobachter", "observador de artillería", "obserwator artylerii", "observador de artilharia", "артилерійський спостерігач", "炮兵观察员"],
-    "artilleryengineer": ["artillery engineer", "ingénieur d'artillerie", "Artillerieingenieur", "ingeniero de artillería", "inżynier artylerii", "engenheiro de artilharia", "артилерійський інженер", "炮兵工程兵"],
-    "artillerysupport": ["artillery support", "support d'artillerie", "Artillerieunterstützung", "apoyo de artillería", "wsparcie artylerii", "suporte de artilharia", "артилерійська підтримка", "炮兵支援"],
-
-    # Teams
-    "allies": ["Allies", "Alliés", "Alliierte", "Aliados", "Alianci", "Aliados", "Союзники", "盟军"],
-    "axis": ["Axis", "Axe", "Achsenmächte", "Eje", "Oś", "Eixo", "Вісь", "轴心国"],
-
-    # Stats
-    "level": ["level", "niveau", "Level", "nivel", "poziom", "nível", "рівень", "等级"],
-    "lvl": ["lvl", "niv", "Lvl", "nvl", "poz", "nvl", "рів", "级"],
-    "combat": ["combat", "combat", "Kampfeffektivität", "combate", "walka", "combate", "бойова ефективність", "战斗"],
+    "operator": ["artillery operator", "opérateur d'artillerie", "Artilleriebediener", "operador de artillería", "operator artylerii", "operador de artilharia", "оператор артиллерии", "炮兵操作员"],
+    "gunner": ["artillery gunner", "servant d'artillerie", "Artillerieschütze", "artillero", "operator artylerii", "atirador de artilharia", "артиллерист-наводчик", "炮手"],
+    "sniper": ["sniper", "sniper", "Scharfschütze", "francotirador", "snajper", "atirador de elite", "снайпер", "狙击手"],
+    "spotter": ["spotter", "observateur", "Späher", "observador", "obserwator", "observador", "спостерігач", "侦察兵"],
+    "armycommander_short": ["cmd", "cdt", "kdt", "cde", "dow", "cmt", "ком", "指挥官"],
+    "combat": ["combat", "combat", "kampf", "combate", "walka", "combate", "бойова ефективність", "战斗"],
     "offense": ["attack", "attaque", "Angriff", "ataque", "atak", "ataque", "напад", "进攻"],
     "defense": ["defense", "défense", "Verteidigung", "defensa", "obrona", "defesa", "захист", "防御"],
-    # support (already defined in Roles)
-    "kills": ["kills", "kills", "Kills", "muertes", "zabójstwa", "abates", "вбивства", "击杀"],
-    "deaths": ["deaths", "morts", "Deaths", "muertes", "śmierci", "mortes", "смерті", "死亡"],
-
-    # Units
+    "kills": ["kills", "kills", "kills", "bajas", "zabójstwa", "abates", "вбивства", "击杀"],
+    "deaths": ["deaths", "morts", "tode", "muertes", "zgony", "mortes", "смерті", "死亡"],
+    "team_kills": ["team kills", "team kills", "team kills", "team kills", "team kills", "team kills", "убийства своих", "队友击杀"],
+    "vehicle_kills": ["vehicle kills", "kills véhicules", "fahrzeug kills", "bajas de vehículos", "zabójstwa w pojeździe", "abates de veículos", "убийства в технике", "载具击杀"],
+    "vehicles_destroyed": ["vehicles destroyed", "véhicules détruits", "fahrzeuge zerstört", "vehículos destruidos", "pojazdy zniszczone", "veículos destruídos", "техника уничтожена", "载具销毁"],
+    "team_kills_short": ["TK", "TK", "TK", "TK", "TK", "TK", "ТК", "队友击杀"],
+    "teamplay": ["combat + support", "combat + soutien", "kampf + unterstützung", "combate + apoyo", "walka + wsparcie", "combate + apoio", "бой + поддержка", "团队配合"],
+    "offdef": ["offense + defense", "attaque + défense", "offensiv + defensiv", "ofensiva + defensiva", "ataki + obrona", "ofensiva + defensiva", "атака + оборона", "攻防比"],
+    "kd": ["kills / deaths", "kills / morts", "kills / tode", "kills / deaths", "zabójstwa / zgony", "kills / mortes", "убийства / смерти", "KD比"],
+    "kpm": ["kills / minute", "kills / minute", "kills / minute", "bajas / minuto", "zabójstwa / minutę", "abates / minuto", "убийств / минуту", "击杀 / 分"],
     "years": ["years", "années", "Jahre", "años", "lata", "anos", "роки", "年"],
-    "monthes": ["monthes", "mois", "Monate", "meses", "miesiące", "meses", "місяці", "月"],
+    "months": ["months", "mois", "Monate", "meses", "miesiące", "meses", "месяцев", "月"],
     "weeks": ["weeks", "semaines", "Wochen", "semanas", "tygodnie", "semanas", "тижні", "周"],
     "days": ["days", "jours", "Tage", "días", "dni", "dias", "дні", "天"],
     "hours": ["hours", "heures", "Stunden", "horas", "godziny", "horas", "години", "小时"],
     "minutes": ["minutes", "minutes", "Minuten", "minutos", "minuty", "minutos", "хвилини", "分钟"],
     "seconds": ["seconds", "secondes", "Sekunden", "segundos", "sekundy", "segundos", "секунди", "秒"],
-
-    # !me (hooks_custom_chatcommands.py -> WARNING : circular import)
-    # "nopunish": ["None ! Well done !", "Aucune ! Félicitations !", "Keiner! Gut gemacht!"],
-    # "firsttimehere": ["first time here", "tu es venu(e) il y a", "zum ersten Mal hier"],
-    # "gamesessions": ["game sessions", "sessions de jeu", "Spielesitzungen"],
-    # "playedgames": ["played games", "parties jouées", "gespielte Spiele"],
-    # "cumulatedplaytime": ["cumulated play time", "temps de jeu cumulé", "kumulierte Spielzeit"],
-    # "averagesession": ["average session", "session moyenne", "Durchschnittliche Sitzung"],
-    # "punishments": ["punishments", "punitions", "Strafen"],
-    # "favoriteweapons": ["favorite weapons", "armes favorites", "Lieblingswaffen"],
-    # "victims": ["victims", "victimes", "Opfer"],
-    # "nemesis": ["nemesis", "nemesis", "Nemesis"],
-
-    # Various
-    "average": ["average", "moyenne", "Durchschnitt", "promedio", "średnia", "média", "середній", "平均"],
-    # "averages": ["averages", "moyennes", "Durchschnittswerte"],
-    "avg": ["avg", "moy", "avg", "prom", "śr", "méd", "сер", "均"],
-    "distribution": ["distribution", "distribution", "Verteilung", "distribución", "dystrybucja", "distribuição", "розподіл", "分布"],
-    "players": ["players", "joueurs", "Spieler", "jugadores", "gracze", "jogadores", "гравці", "玩家"],
-    "score": ["score", "score", "Punktzahl", "puntuación", "wynik", "pontuação", "рахунок", "得分"],
-    "stats": ["stats", "stats", "Statistiken", "estadísticas", "statystyki", "estatísticas", "статистика", "统计数据"],
-    "total": ["total", "total", "Summe", "total", "suma", "total", "всього", "总计"],
-    # "totals": ["totals", "totaux", "Gesamtsummen"],
-    "tot": ["tot", "tot", "sum", "tot", "suma", "tot", "підсумок", "总"],
-    # "difference": ["difference", "différence", "unterschied"],
-    "officers": ["officers", "officiers", "Offiziere", "oficiales", "oficerowie", "oficiais", "офіцери", "军官"],
-    "punishment": ["punishment", "punition", "Bestrafung", "castigo", "kara", "punição", "покарання", "惩罚"],
-    "ratio": ["ratio", "ratio", "Verhältnis", "ratio", "stosunek", "razão", "співвідношення", "比率"],
-    "victim": ["victim", "victime", "Opfer", "víctima", "ofiara", "vítima", "жертва", "受害者"],
-
-    # automod_forbid_role.py
+    "onfirstsession": ["First time here !\nWelcome !", "C'est ta première visite !\nBienvenue !", "Zum ersten Mal hier!\nWillkommen!", "¡Primera vez aquí!\n¡Bienvenido!", "Pierwszy raz tutaj!\nWitamy!", "Primeira vez aqui!\nBem-vindo!", "Первый раз здесь!\nДобро пожаловать!", "第一次来到这里！\n欢迎！"],
+    "firsttimehere": ["First time here", "Arrivé(e) il y a", "Zum ersten Mal hier", "Primera vez aquí", "Pierwszy raz tutaj", "Primeira vez aqui", "Впервые здесь", "第一次来到这里"],
+    "tot_sessions": ["Game sessions", "Sessions de jeu", "Spielesitzungen", "Sesiones de juego", "Sesji", "Sessões de jogo", "Игровые сессии", "游戏场次"],
+    "playedgames": ["Played games", "Parties jouées", "Gespielte Spiele", "Partidas jugadas", "Rozegranych gier", "Partidas jugadas", "Игр сыграно", "已玩游戏"],
+    "cumulatedplaytime": ["Cumulated play time", "Temps de jeu cumulé", "Kumulierte Spielzeit", "Tiempo de jeu acumulado", "Łączny czas gry", "Tempo de jogo acumulado", "Общее время игры", "累计游戏时长"],
+    "avg_sessiontime": ["Average session", "Session moyenne", "Durchschnittliche Sitzung", "Promedio por sesión", "Średnio na sesje", "Média por sessão", "Средняя сессия", "平均每场时长"],
+    "tot_punishments": ["Punishments", "Punitions", "Strafen", "Castigos", "Kary", "Punições", "Наказания", "惩罚总计"],
+    "nopunish": ["None ! Well done !", "Aucune ! Félicitations !", "Keine! Gut gemacht!", "¡Ninguno! ¡Bien hecho!", "Brak! Dobra robota!", "Nenhuma! Bem feito!", "Нет! Отлично!", "无！干得漂亮！"],
+    "favoriteweapons": ["Favorite weapons", "Armes favorites", "Lieblingswaffen", "Armas favoritas", "Ulubione bronie", "Armas favoritas", "Любимое оружие", "最喜欢的武器"],
+    "games": ["games", "parties", "Spiele", "partidas", "gry", "partidas", "игр", "游戏"],
+    "nemesis": ["Nemesis", "Nemesis", "Nemesis", "Némesis", "Nemesis", "Némesis", "Немезида", "死对头"],
     "play_as": ["Play as", "A pris le rôle", "Spiele als", "Jugar como", "Graj jako", "Jogar como", "Грає як", "扮演"],
     "engaged_action": ["Engaged action :", "Action souhaitée :", "Laufende Aktion", "Acción realizada :", "Podjęte działanie :", "Ação engajada :", "Почата дія :", "进行的操作 :"],
     "reason": ["Reason :", "Raison :", "Ursache :", "Razón :", "Powód :", "Motivo :", "Причина :", "原因 :"],
-    "action_result": ["Action result :", "Résultat de l'action :", "Ergebnis der Aktion", "Resultado de la acción :", "Wynik działania :", "Resultado da ação :", "Результат дії :", "操作结果 :"],
+    "action_result": ["Action result :", "Résultat de l'action :", "Ergebnis der Aktion :", "Resultado de la acción :", "Wynik działania :", "Resultado da ação :", "Результат дії :", "操作结果 :"],
     "success": ["Success", "Réussite", "Erfolg", "Éxito", "Sukces", "Sucesso", "Успіх", "成功"],
     "failure": ["Failure", "Échec", "Fehler", "Fallo", "Niepowodzenie", "Falha", "Провал", "失败"],
     "unknown_action": ["Misconfigured action", "Action mal configurée", "Falsch konfigurierte Aktion", "Acción mal configurada", "Źle skonfigurowana akcja", "Ação mal configurada", "Невірно налаштована дія", "配置错误的操作"],
     "testmode": ["Test mode (no action)", "Mode test (aucune action)", "Testmodus (keine Aktion)", "Modo de prueba (sin acción)", "Tryb testowy (brak akcji)", "Modo de teste (sem ação)", "Тестовий режим (без дій)", "测试模式 (无操作)"],
-
-    # watch_killrate.py
-    "lastusedweapons": ["last used weapon(s)", "dernière(s) arme(s) utilisée(s)", "Zuletzt verwendete Waffe(n)", "última(s) arma(s) usada(s)", "ostatnia(e) użyta(e) broń(e)", "última(s) arma(s) utilizada(s)", "остання(і) використана(і) зброя", "最后使用的武器"],
-    "noweaponfound": ["None (arti charger ? No new kill ?)", "Aucune (chargeur arti ? Pas de nouveau kill ?)", "Keiner (arti Ladegerät ? Kein neuer Kill ?)", "Ninguna (cargador de artillería ? No hay nueva muerte ?)", "Brak (ładowarka artylerii ? Brak nowego zabójstwa ?)", "Nenhuma (carregador de artilharia ? Sem novo abate ?)", "Немає (арти зарядний пристрій ? Немає нового вбивства ?)", "无 (火炮装填 ? 没有新的击杀 ?)"],
-
-    # language_doorkeeper.py
     "expectedanswer": ["Expected answer", "Réponse attendue", "Erwartete Antwort", "Respuesta esperada", "Oczekiwana odpowiedź", "Resposta esperada", "Очікувана відповідь", "预期答案"],
     "receivedanswer": ["Received answer", "Réponse reçue", "Antwort erhalten", "Respuesta recibida", "Otrzymana odpowiedź", "Resposta recebida", "Отримана відповідь", "收到答案"],
     "blank": ["(blank)", "(rien)", "(leer)", "(en blanco)", "(puste)", "(em branco)", "(порожньо)", "(空白)"],
@@ -110,5 +92,41 @@ TRANSL = {
     "disconnectedbeforekick": ["left before the kick.", "est parti avant le kick.", "vor dem Ausschluss verlassen.", "Se fue antes de la expulsión.", "Odszedł przed wykopaniem.", "Saiu antes do kick.", "Пішов до кіка.", "在踢出前离开了。"],
     "hasbeenkicked": ["has been kicked.", "a été kické du serveur.", "wurde vom Server geworfen.", "ha sido expulsado.", "został wyrzucony.", "foi kickado.", "був кікнутий.", "已被踢出服务器。"],
     "flaggedvalid": ["has been flagged as valid.", "a été flaggé 'FR'.", "wurde als gültig gekennzeichnet.", "ha sido marcado como válido.", "został oznaczony jako ważny.", "foi sinalizado como válido.", "був позначений як дійсний.", "已被标记为有效。"],
-    "processingtime": ["Processing time (secs) : ", "Temps de traitement (secs) : ", "Bearbeitungszeit (Sek.) : ", "Tiempo de procesamiento (segundos) : ", "Czas przetwarzania (sek.) : ", "Tempo de processamento (seg) : ", "Час обробки (сек) : ", "处理时间 (秒) : "]
+    "processingtime": ["Processing time (secs) : ", "Temps de traitement (secs) : ", "Bearbeitungszeit (Sek.) : ", "Tiempo de procesamiento (segundos) : ", "Czas przetwarzania (sek.) : ", "Tempo de processamento (seg) : ", "Час обробки (сек) : ", "处理时间 (秒) : "],
+    "gamejustended": ["Game just ended", "Partie terminée", "Spiel beendet", "El juego acaba de terminar", "Gra właśnie się zakończyła", "Jogo acabou", "Игра только что закончилась", "游戏刚刚结束"],
+    "nostatsyet": ["No stats yet", "Pas de stats", "noch keine Statistiken", "Aún no hay estadísticas", "Brak dostępnych statystyk", "Sem estatísticas ainda", "Статистики пока нет", "暂无统计数据"],
+    "top_players": ["top players", "top joueurs", "top spieler", "top jugadores", "top gracze", "top jogadores", "топ игроки", "顶级玩家"],
+    "top_squads": ["top squads", "top escouades", "top trupps", "top patrullas", "top składy", "top esquadrões", "топ отряды", "顶级小队"],
+    "vip_header": ["You are in the topstats!", "Tu es dans les topstats !", "Du bist in den Topstats!", "¡Estás en los topstats!", "Jesteś w topstats!", "Você está nos topstats!", "Вы попали в топ-стат!", "你已进入 顶级统计！"],
+    "already_vip": ["Already VIP !", "Déjà VIP !", "bereits VIP !", "¡Ya es VIP!", "Aktualnie ma VIPa!", "Já é VIP!", "Уже VIP!", "已经是VIP！"],
+    "vip_won": ["You won a VIP until", "Tu as gagné un VIP jusqu'au", "Du hast ein VIP gewonnen bis", "Has ganado un VIP hasta el", "Wygrałeś VIP do", "Você ganhou um VIP até", "Вы выиграли VIP до", "你赢得了VIP，有效期至"],
+    "vip_at": ["at", "à", "um", "a las", "do godziny", "às", "в", "于"],
+    "vip_note": ["earns a VIP", "gagne un VIP", "erhält VIP-Status", "gana un VIP", "otrzymuje VIP", "ganha um VIP", "получает VIP", "获得VIP"],
+    "defense_bonus": ["Defense bonus", "Bonus défense", "Verteidigungsbonus", "Bonus de defensa", "Bonus do obrony", "Bônus de defesa", "Бонус защиты", "防御加成"],
+    "support_bonus": ["Support bonus", "Bonus support", "Unterstützungsbonus", "Bonus de apoyo", "Bonus wsparcia", "Bônus de suporte", "Бонус поддержки", "支援加成"],
+    "all_players": ["all players", "tous les joueurs", "Alle Spieler", "todos los jugadores", "wszyscy gracze", "todos os jogadores", "все игроки", "所有玩家"],
+    "level": ["level", "niveau", "Level", "nivel", "poziom", "nível", "рівень", "等级"],
+    "lvl": ["lvl", "niv", "Lvl", "nvl", "poz", "nvl", "рів", "级"],
+    "average": ["average", "moyenne", "Durchschnitt", "promedio", "średnia", "média", "середній", "平均"],
+    "averages": ["Averages", "Moyennes", "Durchschnittswerte", "Promedios", "Średnie", "Médias", "Средние показатели", "平均值"],
+    "avg": ["avg", "moy", "avg", "prom", "śr", "méd", "сер", "均"],
+    "distribution": ["distribution", "distribution", "Verteilung", "distribución", "dystrybucja", "distribuição", "розподіл", "分布"],
+    "players": ["players", "joueurs", "Spieler", "jugadores", "gracze", "jogadores", "гравці", "玩家"],
+    "squads": ["squads", "escouades", "Trupps", "escuadras", "drużyny", "esquadrões", "отряды", "小队"],
+    "score": ["score", "score", "Punktzahl", "puntuación", "wynik", "pontuação", "рахунок", "得分"],
+    "stats": ["stats", "stats", "Statistiken", "estadísticas", "statystyki", "estatísticas", "статистика", "统计数据"],
+    "total": ["total", "total", "Summe", "total", "suma", "total", "всього", "总计"],
+    "totals": ["Totals", "Totaux", "Gesamtsummen", "Totales", "Łącznie", "Totais", "Итого", "总计"],
+    "tot": ["tot", "tot", "sum", "tot", "suma", "tot", "підсумок", "总"],
+    "officers": ["officers", "officiers", "Offiziere", "oficiales", "oficerowie", "oficiais", "офіцери", "军官"],
+    "punishment": ["punishment", "punition", "Bestrafung", "castigo", "kara", "punição", "покарання", "惩罚"],
+    "ratio": ["ratio", "ratio", "Verhältnis", "ratio", "stosunek", "razão", "співвідношення", "比率"],
+    "victim": ["victim", "victime", "Opfer", "víctima", "ofiara", "vítima", "жертва", "受害者"],
+    "victims": ["Victims", "Victimes", "Opfer", "Víctimas", "Ofiary", "Vítimas", "Жертвы", "受害者"],
+    "na": ["N/A", "N/D", "N.V.", "N/D", "N/D", "B/D", "Н/Д", "无"],
+    "artilleryengineer": ["artillery engineer", "ingénieur d'artillerie", "Artillerieingenieur", "ingeniero de artillería", "inżynier artylerii", "engenheiro de artilharia", "артилерійський інженер", "炮兵工程兵"],
+    "artillerysupport": ["artillery support", "support d'artillerie", "Artillerieunterstützung", "apoyo de artillería", "wsparcie artylerii", "suporte de artilharia", "артилерійська підтримка", "炮兵支援"],
+    "monthes": ["monthes", "mois", "Monate", "meses", "miesiące", "meses", "місяці", "月"],
+    "lastusedweapons": ["last used weapon(s)", "dernière(s) arme(s) utilisée(s)", "Zuletzt verwendete Waffe(n)", "última(s) arma(s) usada(s)", "ostatnia(e) użyta(e) broń(e)", "última(s) arma(s) utilizada(s)", "остання(і) використана(і) зброя", "最后使用的武器"],
+    "noweaponfound": ["None (arti charger ? No new kill ?)", "Aucune (chargeur arti ? Pas de nouveau kill ?)", "Keiner (arti Ladegerät ? Kein neuer Kill ?)", "Ninguna (cargador de artillería ? No hay nueva muerte ?)", "Brak (ładowarka artylerii ? Brak nowego zabójstwa ?)", "Nenhuma (carregador de artilharia ? Sem novo abate ?)", "Немає (арти зарядний пристрій ? Немає нового вбивства ?)", "无 (火炮装填 ? 没有新的击杀 ?)"],
 }
