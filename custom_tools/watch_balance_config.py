@@ -48,16 +48,7 @@ LANG = 6  # 6 = Ukrainian (slot 6 holds UA in our common_translations.py)
 # Dedicated Discord's channel webhook
 # ServerNumber, Webhook, Enabled
 SERVER_CONFIG = [
-    ["https://discord.com/api/webhooks/...", False],  # Server 1
-    ["https://discord.com/api/webhooks/...", False],  # Server 2
-    ["https://discord.com/api/webhooks/...", False],  # Server 3
-    ["https://discord.com/api/webhooks/...", False],  # Server 4
-    ["https://discord.com/api/webhooks/...", False],  # Server 5
-    ["https://discord.com/api/webhooks/...", False],  # Server 6
-    ["https://discord.com/api/webhooks/...", False],  # Server 7
-    ["https://discord.com/api/webhooks/...", False],  # Server 8
-    ["https://discord.com/api/webhooks/...", False],  # Server 9
-    ["https://discord.com/api/webhooks/...", False]  # Server 10
+    ["https://discord.com/api/webhooks/1503407951355056308/rY1bezSI79krp4PYdbGkPf9yPz_wlA3cTuYzMOuYcddUEL0sXvCqxfAu7BS0rmzFX-pW", True],  # Server 1 — enabled
 ]
 
 
@@ -69,7 +60,7 @@ SERVER_CONFIG = [
 #               requiring some amount of data from the game server,
 #               you may encounter slowdowns if done too frequently.
 # Default : 60
-WATCH_INTERVAL_SECS = 60
+WATCH_INTERVAL_SECS = 180  # 3 minutes — embed self-refreshes on each tick
 
 # Bot name that will be displayed in CRCON "audit logs" and Discord embeds
 BOT_NAME = "custom_tools_watch_balance"

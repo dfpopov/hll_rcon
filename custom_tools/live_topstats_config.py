@@ -143,7 +143,7 @@ GRANTED_VIP_HOURS = 24
 # ie : "Europe/Berlin"
 #      "Asia/Shanghai"
 # default : "Etc/UTC"
-LOCAL_TIMEZONE = "Etc/UTC"
+LOCAL_TIMEZONE = "Europe/Kiev"
 
 
 # Discord
