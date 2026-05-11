@@ -21,6 +21,8 @@ import discord
 from rcon.rcon import Rcon, StructuredLogLineWithMetaData
 from rcon.user_config.rcon_server_settings import RconServerSettingsUserConfig
 from rcon.utils import get_server_number
+from rcon.models import enter_session, SteamInfo  # get_player_language
+import threading                                  # _lang_lock
 
 from custom_tools.common_translations import TRANSL
 import custom_tools.live_topstats_config as live_topstats_config
@@ -193,6 +195,39 @@ valid_config = ValidConfig()  # Create a new class
 
 
 num_langs = len(next(iter(TRANSL.values())))
+# Per-player language detection (used by stats_on_chat_command).
+# Serialized with stats_on_match_end via _lang_lock to avoid race conditions
+# when both events fire near-simultaneously (chat command mutates the shared
+# valid_config.lang, matchend reads it — without a lock matchend could see
+# a per-player language instead of the configured one).
+_lang_lock = threading.RLock()
+
+
+def get_player_language(player_id: str) -> int:
+    """
+    Determine the player's language from their Steam country code.
+    Returns 6 (Ukrainian) for UA/RU/BY/MD/KZ/KG/TJ/TM/UZ/AZ/AM/GE,
+    0 (English) for any other resolved country,
+    or valid_config.lang as fallback on error/unknown.
+    """
+    try:
+        with enter_session() as sess:
+            steam_info = sess.query(SteamInfo).join(
+                SteamInfo.player
+            ).filter(
+                SteamInfo.player.has(player_id=player_id)
+            ).first()
+            if steam_info and steam_info.country:
+                country_code = steam_info.country.upper()
+                if country_code in {'UA', 'RU', 'BY', 'MD', 'KZ', 'KG',
+                                    'TJ', 'TM', 'UZ', 'AZ', 'AM', 'GE'}:
+                    return 6  # Ukrainian (slot 6 in our common_translations.py)
+                return 0  # English
+    except Exception as e:
+        logger.debug("Could not determine player language for %s: %s", player_id, e)
+    return valid_config.lang
+
+
 valid_config.lang = \
     validate_config_var(
         live_topstats_config.LANG,
@@ -950,17 +985,27 @@ def stats_on_chat_command(rcon: Rcon, struct_log: StructuredLogLineWithMetaData)
         if player_id is None:
             return
 
-        # Get data from RCON
-        get_team_view_output: dict = rcon.get_team_view()
+        # Per-player language: mutate valid_config.lang inside _lang_lock,
+        # so internal helpers (generate_full_report + its callees) see the
+        # right language. Restored in `finally` to prevent leakage to matchend.
+        with _lang_lock:
+            original_lang = valid_config.lang
+            try:
+                valid_config.lang = get_player_language(player_id)
 
-        # Process data
-        report = generate_full_report(rcon, get_team_view_output, valid_config.stats_to_display, is_match_end=False)  # is_match_end=False disables VIP granting
+                # Get data from RCON
+                get_team_view_output: dict = rcon.get_team_view()
 
-        # Ingame message
-        if not report:
-            message = f"{TRANSL['nostatsyet'][valid_config.lang]}"
-        else:
-            message = f"{report}"
+                # Process data
+                report = generate_full_report(rcon, get_team_view_output, valid_config.stats_to_display, is_match_end=False)  # is_match_end=False disables VIP granting
+
+                # Ingame message
+                if not report:
+                    message = f"{TRANSL['nostatsyet'][valid_config.lang]}"
+                else:
+                    message = f"{report}"
+            finally:
+                valid_config.lang = original_lang
 
         try:
             rcon.message_player(
@@ -990,61 +1035,65 @@ def stats_on_match_end(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
     if not valid_config.display_on_matchend:
         return
 
-    # Get data from RCON
-    get_team_view_output: dict = rcon.get_team_view()
+    # Acquire _lang_lock so concurrent !top commands (which temporarily mutate
+    # valid_config.lang for per-player language) don't bleed into the matchend
+    # broadcast — matchend uses the configured global LANG for all players.
+    with _lang_lock:
+        # Get data from RCON
+        get_team_view_output: dict = rcon.get_team_view()
 
-    # Process data
-    report = generate_full_report(rcon, get_team_view_output, valid_config.stats_to_display, is_match_end=True)  # is_match_end=True enables VIP granting
+        # Process data
+        report = generate_full_report(rcon, get_team_view_output, valid_config.stats_to_display, is_match_end=True)  # is_match_end=True enables VIP granting
 
-    # Prepare ingame message and logs
-    if not report:
-        message = f"{TRANSL['nostatsyet'][valid_config.lang]}"
-    else:
-        message = f"{report}"
+        # Prepare ingame message and logs
+        if not report:
+            message = f"{TRANSL['nostatsyet'][valid_config.lang]}"
+        else:
+            message = f"{report}"
 
-    # logs
-    logger.info("\n%s", message)
+        # logs
+        logger.info("\n%s", message)
 
-    # Ingame message
-    # only if there is stats to display
-    if report:
+        # Ingame message
+        # only if there is stats to display
+        if report:
+            try:
+                rcon.message_all_players(message=message)
+            except Exception as error:
+                logger.error("Ingame message_all_players couldn't be sent : %s", error)
+
+        # Discord
+        # Sending to Discord is disabled for this server
+        if not valid_config.discord_config[server_number - 1][1]:
+            return
+
+        # Get the webhook url from config
+        discord_webhook = valid_config.discord_config[server_number - 1][0]
+
+        # This webhook url is not valid
+        if not validate_url(url=discord_webhook, url_type="discord_webhook"):
+            logger.warning("invalid webhook url for server '%s'. Please check your valid_config.", str(server_number))
+            return
+
+        webhook = discord.SyncWebhook.from_url(discord_webhook)
+
+        embed = discord.Embed(
+            title=TRANSL['gamejustended'][valid_config.lang],
+            url="",
+            description=message,
+            color=0xffffff
+        )
+
+        embed.set_author(
+            name=valid_config.bot_name,
+            url=valid_config.discord_embed_author_url,
+            icon_url=valid_config.discord_embed_author_icon_url
+        )
+
+        embeds = []
+        embeds.append(embed)
+
         try:
-            rcon.message_all_players(message=message)
+            webhook.send(embeds=embeds, wait=True)
         except Exception as error:
-            logger.error("Ingame message_all_players couldn't be sent : %s", error)
-
-    # Discord
-    # Sending to Discord is disabled for this server
-    if not valid_config.discord_config[server_number - 1][1]:
-        return
-
-    # Get the webhook url from config
-    discord_webhook = valid_config.discord_config[server_number - 1][0]
-
-    # This webhook url is not valid
-    if not validate_url(url=discord_webhook, url_type="discord_webhook"):
-        logger.warning("invalid webhook url for server '%s'. Please check your valid_config.", str(server_number))
-        return
-
-    webhook = discord.SyncWebhook.from_url(discord_webhook)
-
-    embed = discord.Embed(
-        title=TRANSL['gamejustended'][valid_config.lang],
-        url="",
-        description=message,
-        color=0xffffff
-    )
-
-    embed.set_author(
-        name=valid_config.bot_name,
-        url=valid_config.discord_embed_author_url,
-        icon_url=valid_config.discord_embed_author_icon_url
-    )
-
-    embeds = []
-    embeds.append(embed)
-
-    try:
-        webhook.send(embeds=embeds, wait=True)
-    except Exception as error:
-        logger.error("Discord embed couldn't be sent : %s", error)
+            logger.error("Discord embed couldn't be sent : %s", error)

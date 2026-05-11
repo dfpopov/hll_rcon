@@ -153,10 +153,7 @@ LOCAL_TIMEZONE = "Europe/Kiev"
 # (the script can run without any Discord output)
 # Syntax : ["webhook url", enabled (True/False)]
 DISCORD_CONFIG = [
-    ("https://discord.com/api/webhooks/...", False),  # Server 1
-    ("https://discord.com/api/webhooks/...", False),  # Server 2
-    ("https://discord.com/api/webhooks/...", False),  # Server 3
-    # (you can add lines if you manage more than 3 servers)
+    ("https://discord.com/api/webhooks/1503466934224556238/53H6vM6HFi-aiJ10vdvzpJPD5LVUuihEgT9J8DywlI6EcD7iiHHwebXH4dUZWL6vYdYw", True),  # Server 1 — enabled for matchend embed
 ]
 
 
