@@ -638,7 +638,7 @@ def get_player_ranking(
 
                     # Add team/squad details
                     if details:
-                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/{TRANSL['armycommander_short'][valid_config.lang].capitalize()}) {name[:19]}"  # [:18] avoids line returns
+                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:23]}"  # commander has no squad, so no /role suffix
 
                     # Add the formatted entry to the global list
                     players_stats.append({
@@ -668,7 +668,7 @@ def get_player_ranking(
                             # [:30] avoids line returns
                             name = p["name"][:28]
                             if details:
-                                name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/{s_name[0].upper()}) {name[:18]}"  # [:18] avoids line returns
+                                name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/{s_name.capitalize()}) {name[:18]}"  # full squad name
 
                             # Add the formatted entry to the global list
                             players_stats.append({
@@ -779,7 +779,7 @@ def get_squad_ranking(get_team_view_output: dict, observed_unit_type: str, score
                     # Retain only squads having score > 0
                     if score and score > 0:
 
-                        name = f"{TRANSL[side][valid_config.lang].capitalize()}/{s_name[0].upper()}"
+                        name = f"{TRANSL[side][valid_config.lang].capitalize()}/{s_name.capitalize()}"
 
                         # Add a formatted line to the global list
                         squads_stats.append({

@@ -42,7 +42,7 @@ TRANSL = {
     "operator": ["artillery operator", "opérateur d'artillerie", "Artilleriebediener", "operador de artillería", "operator artylerii", "operador de artilharia", "оператор артилерії", "炮兵操作员"],
     "gunner": ["artillery gunner", "servant d'artillerie", "Artillerieschütze", "artillero", "operator artylerii", "atirador de artilharia", "артилерист-навідник", "炮手"],
     "sniper": ["sniper", "sniper", "Scharfschütze", "francotirador", "snajper", "atirador de elite", "снайпер", "狙击手"],
-    "spotter": ["spotter", "observateur", "Späher", "observador", "obserwator", "observador", "спостерігач", "侦察兵"],
+    "spotter": ["spotter", "observateur", "Späher", "observador", "obserwator", "observador", "спотер", "侦察兵"],
     "armycommander_short": ["cmd", "cdt", "kdt", "cde", "dow", "cmt", "ком", "指挥官"],
     "combat": ["combat", "combat", "kampf", "combate", "walka", "combate", "бій", "战斗"],
     "offense": ["attack", "attaque", "Angriff", "ataque", "atak", "ataque", "напад", "进攻"],
