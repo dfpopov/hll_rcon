@@ -131,6 +131,20 @@ services:
       common:
       server1:
 
+  # All-time stats web app (FastAPI + React)
+  # http://<host>:7012/  → see stats_app/PLAN.md
+  stats_app:
+    build: ./stats_app
+    image: hll_stats_app:latest
+    restart: unless-stopped
+    ports:
+      - "7012:80"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${HLL_DB_USER}:${HLL_DB_PASSWORD}@${HLL_DB_HOST}:${HLL_DB_HOST_PORT}/${HLL_DB_NAME}
+      ALLOWED_ORIGINS: "http://95.111.230.75:7012,http://localhost:7012,http://localhost:5173"
+    networks:
+      common:
+
   ########### SERVER 2  #############
 
   ########### SERVER 3  #############
