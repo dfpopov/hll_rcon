@@ -640,7 +640,7 @@ def get_player_ranking(
                     if details:
                         c_k = cmd.get("kills", 0)
                         c_d = cmd.get("deaths", 0)
-                        c_kd = f"{c_k / c_d:.1f}" if c_d > 0 else "∞"
+                        c_kd = _fmt_kd(c_k, c_d)
                         name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:16]} K:{c_k} D:{c_d} K/D:{c_kd}"
 
                     # Add the formatted entry to the global list
@@ -664,6 +664,13 @@ def get_player_ranking(
 
                         # Calculate score
                         score = score_func(p)
+
+                        # Min kills threshold for infantry: hide low-kill farmers
+                        # (a player with K=1 D=0 has K/D=∞ but doesn't deserve top spot)
+                        kills_count = p.get("kills", 0)
+                        MIN_KILLS_INFANTRY = 5
+                        if observed_unit_type.lower() == "infantry" and kills_count <= MIN_KILLS_INFANTRY:
+                            continue
 
                         # Retain only players having score > 0
                         if score and score > 0:
@@ -804,6 +811,25 @@ def get_squad_ranking(get_team_view_output: dict, observed_unit_type: str, score
     return formatted_list
 
 
+# Squad/player names treated as phantom buckets (HLL state when squad lead leaves,
+# leftover players land in these — they shouldn't pollute the "top squads" list).
+_SKIPPED_SQUAD_NAMES = {"unassigned", "command", "commander", "none", ""}
+
+
+def _fmt_kd(k: int, d: int) -> str:
+    """K/D formatting with sensible fallbacks:
+      K>0 D>0  → "X.Y"
+      K>0 D=0  → "∞"   (perfect run — earned the badge)
+      K=0 D=0  → "—"   (AFK / just connected — not informative)
+      K=0 D>0  → "0.0"
+    """
+    if d > 0:
+        return f"{k / d:.1f}"
+    if k > 0:
+        return "∞"
+    return "—"
+
+
 def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
     """
     Per-side, per-role squad breakdown showing EVERY squad member with K/D/KD.
@@ -844,14 +870,15 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
             role_squads = [
                 (name, info) for name, info in squads.items()
                 if (info.get("type") or "").lower() == role_key
+                and (name or "").lower() not in _SKIPPED_SQUAD_NAMES
             ]
             if role_squads:
                 role_squads.sort(
                     key=lambda item: sum(p.get("kills", 0) for p in (item[1].get("players") or [])),
                     reverse=True
                 )
-                # Show only top-3 squads per role to stay within Discord/chat limits
-                role_squads = role_squads[:3]
+                # Show only top-1 squad per role (was top-3) — user wants compact view
+                role_squads = role_squads[:1]
                 roles_present.append((role_display, role_squads))
 
         for role_idx, (role_display, role_squads) in enumerate(roles_present):
@@ -867,7 +894,7 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                 players = sq_info.get("players") or []
                 sq_k = sum(p.get("kills", 0) for p in players)
                 sq_d = sum(p.get("deaths", 0) for p in players)
-                sq_kd = f"{sq_k / sq_d:.1f}" if sq_d > 0 else "∞"
+                sq_kd = _fmt_kd(sq_k, sq_d)
 
                 n = len(players)
                 avg_k = sq_k / n if n > 0 else 0
@@ -884,7 +911,7 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                     p_name = (player.get("name") or "?")[:16]
                     p_k = player.get("kills", 0)
                     p_d = player.get("deaths", 0)
-                    p_kd = f"{p_k / p_d:.1f}" if p_d > 0 else "∞"
+                    p_kd = _fmt_kd(p_k, p_d)
                     side_lines.append(
                         f"{role_cont} {squad_cont}  · {p_name}  K:{p_k} D:{p_d} K/D:{p_kd}"
                     )
