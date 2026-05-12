@@ -252,6 +252,24 @@ export interface PlayerDetail {
   top_servers: TopServer[]
   win_rate: WinRate
   hour_distribution: number[]  // length 24, index = hour 0..23
+  played_with_against: PlayedWithAgainst
+  melee_meta: MeleeMeta
+}
+
+export interface PlayedWithAgainst {
+  teammates: { steam_id: string; name: string; matches: number }[]
+  opponents: { steam_id: string; name: string; matches: number }[]
+}
+
+export interface MeleeMeta {
+  last_melee_death: {
+    weapon: string
+    event_time: string | null
+    killer_sid: string | null
+    killer_name: string | null
+    map_name: string | null
+  } | null
+  current_streak: number
 }
 
 export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {

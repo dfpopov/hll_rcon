@@ -402,7 +402,7 @@ export default function PlayerDetailPage() {
       {(data.kills_by_class.Melee || data.deaths_by_class.Melee) && (
         <section className="mb-6 bg-gradient-to-r from-violet-900/30 via-zinc-900 to-rose-900/30 border border-violet-700/40 rounded-lg p-4">
           <h2 className="text-violet-300 uppercase text-xs tracking-widest mb-2">🔪 Ближній бій</h2>
-          <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-violet-300 tabular-nums">{data.kills_by_class.Melee ?? 0}</div>
               <div className="text-xs text-zinc-500">вбито в ближньому бою</div>
@@ -411,6 +411,72 @@ export default function PlayerDetailPage() {
               <div className="text-2xl font-bold text-rose-300 tabular-nums">{data.deaths_by_class.Melee ?? 0}</div>
               <div className="text-xs text-zinc-500">загинуло від ближнього бою</div>
             </div>
+            <div>
+              <div className="text-2xl font-bold text-amber-300 tabular-nums">{data.melee_meta?.current_streak ?? 0}</div>
+              <div className="text-xs text-zinc-500">поточна серія без melee-смерті</div>
+            </div>
+            <div>
+              {data.melee_meta?.last_melee_death ? (
+                <>
+                  <div className="text-sm text-zinc-300 truncate" title={data.melee_meta.last_melee_death.weapon}>
+                    {data.melee_meta.last_melee_death.weapon}
+                  </div>
+                  <div className="text-xs text-zinc-500 mt-1">
+                    остання смерть від мелі
+                    {data.melee_meta.last_melee_death.event_time && (
+                      <> • {new Date(data.melee_meta.last_melee_death.event_time).toLocaleDateString('uk-UA')}</>
+                    )}
+                  </div>
+                  {data.melee_meta.last_melee_death.killer_sid && data.melee_meta.last_melee_death.killer_name && (
+                    <Link
+                      to={`/player/${data.melee_meta.last_melee_death.killer_sid}`}
+                      className="text-xs text-rose-300 hover:underline"
+                    >→ {data.melee_meta.last_melee_death.killer_name}</Link>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-emerald-300">∞</div>
+                  <div className="text-xs text-zinc-500">жодної melee-смерті</div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Most played with / against — co-presence in logged matches */}
+      {(data.played_with_against?.teammates?.length || data.played_with_against?.opponents?.length) && (
+        <section className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+            <h2 className="text-emerald-400 uppercase text-xs tracking-widest mb-3">🤝 Найчастіші союзники</h2>
+            <ol className="space-y-1 text-sm">
+              {data.played_with_against.teammates.map((t, i) => (
+                <li key={t.steam_id} className="flex items-baseline gap-2">
+                  <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-emerald-300 transition-colors" title={t.name}>{t.name}</Link>
+                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
+                </li>
+              ))}
+              {data.played_with_against.teammates.length === 0 && (
+                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
+              )}
+            </ol>
+          </div>
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+            <h2 className="text-rose-400 uppercase text-xs tracking-widest mb-3">⚔ Найчастіші противники</h2>
+            <ol className="space-y-1 text-sm">
+              {data.played_with_against.opponents.map((t, i) => (
+                <li key={t.steam_id} className="flex items-baseline gap-2">
+                  <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={t.name}>{t.name}</Link>
+                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
+                </li>
+              ))}
+              {data.played_with_against.opponents.length === 0 && (
+                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
+              )}
+            </ol>
           </div>
         </section>
       )}

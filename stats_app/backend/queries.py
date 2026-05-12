@@ -573,6 +573,120 @@ def best_single_game(
     return rows
 
 
+def played_with_against(db: Session, steam_id: str, limit: int = 10) -> dict:
+    """Per-player breakdown of frequent teammates vs opponents.
+
+    Uses player_match_side MV to know which side each player was on per
+    match — so only matches with log coverage contribute. Two lists each
+    capped at `limit`. Output:
+      {teammates: [{steam_id, name, matches}], opponents: [...]}
+    """
+    sql = text("""
+        WITH my_sides AS (
+          SELECT pms.match_id, pms.side AS my_side
+          FROM player_match_side pms
+          JOIN steam_id_64 s ON s.id = pms.player_id
+          WHERE s.steam_id_64 = :sid
+        ),
+        teammates AS (
+          SELECT s2.steam_id_64 AS steam_id, MAX(ps2.name) AS name, COUNT(*) AS matches
+          FROM my_sides ms
+          JOIN player_match_side pms2
+            ON pms2.match_id = ms.match_id AND pms2.side = ms.my_side
+          JOIN steam_id_64 s2 ON s2.id = pms2.player_id
+          JOIN player_stats ps2 ON ps2.playersteamid_id = s2.id AND ps2.map_id = ms.match_id
+          WHERE s2.steam_id_64 <> :sid
+          GROUP BY s2.steam_id_64
+          ORDER BY matches DESC
+          LIMIT :limit
+        ),
+        opponents AS (
+          SELECT s2.steam_id_64 AS steam_id, MAX(ps2.name) AS name, COUNT(*) AS matches
+          FROM my_sides ms
+          JOIN player_match_side pms2
+            ON pms2.match_id = ms.match_id AND pms2.side <> ms.my_side
+          JOIN steam_id_64 s2 ON s2.id = pms2.player_id
+          JOIN player_stats ps2 ON ps2.playersteamid_id = s2.id AND ps2.map_id = ms.match_id
+          WHERE s2.steam_id_64 <> :sid
+          GROUP BY s2.steam_id_64
+          ORDER BY matches DESC
+          LIMIT :limit
+        )
+        SELECT 'teammate' AS kind, steam_id, name, matches FROM teammates
+        UNION ALL
+        SELECT 'opponent' AS kind, steam_id, name, matches FROM opponents
+    """)
+    teammates: list[dict] = []
+    opponents: list[dict] = []
+    for r in db.execute(sql, {"sid": steam_id, "limit": limit}):
+        entry = {"steam_id": r.steam_id, "name": r.name, "matches": int(r.matches or 0)}
+        if r.kind == "teammate":
+            teammates.append(entry)
+        else:
+            opponents.append(entry)
+    return {"teammates": teammates, "opponents": opponents}
+
+
+# Melee weapons — narrow enough that hardcoding is fine. Updated from the
+# classify_weapon rules. Used by melee_meta below to filter log_lines.
+MELEE_WEAPONS = [
+    "FELDSPATEN", "KNIFE", "M3 KNIFE", "BAYONET", "MELEE",
+    "M3 FIGHTING KNIFE", "GERBER MARK II",
+]
+
+
+def melee_meta(db: Session, steam_id: str) -> dict:
+    """Melee micro-stats: total kills/deaths + last melee death event +
+    current streak of melee kills since the last melee death."""
+    sql_last_death = text("""
+        SELECT ll.weapon, ll.event_time, p1.steam_id_64 AS killer_sid, ll.raw,
+               (SELECT m.map_name FROM map_history m
+                WHERE ll.event_time BETWEEN m.start AND m.end LIMIT 1) AS map_name,
+               (SELECT regexp_replace(ll.raw, '.*KILL: ([^(]+)\\(.*', '\\1')) AS killer_name
+        FROM log_lines ll
+        JOIN steam_id_64 s ON s.id = ll.player2_steamid
+        LEFT JOIN steam_id_64 p1 ON p1.id = ll.player1_steamid
+        WHERE ll.type = 'KILL'
+          AND s.steam_id_64 = :sid
+          AND ll.weapon = ANY(:melee)
+        ORDER BY ll.event_time DESC
+        LIMIT 1
+    """)
+    last_row = db.execute(sql_last_death, {"sid": steam_id, "melee": MELEE_WEAPONS}).fetchone()
+    last_melee_death = None
+    if last_row:
+        last_melee_death = {
+            "weapon": last_row.weapon,
+            "event_time": last_row.event_time.isoformat() if last_row.event_time else None,
+            "killer_sid": last_row.killer_sid,
+            "killer_name": (last_row.killer_name or "").strip() or None,
+            "map_name": last_row.map_name,
+        }
+
+    sql_streak = text("""
+        WITH last_d AS (
+          SELECT MAX(ll.event_time) AS t
+          FROM log_lines ll
+          JOIN steam_id_64 s ON s.id = ll.player2_steamid
+          WHERE ll.type = 'KILL' AND s.steam_id_64 = :sid AND ll.weapon = ANY(:melee)
+        )
+        SELECT COUNT(*) AS streak
+        FROM log_lines ll
+        JOIN steam_id_64 s ON s.id = ll.player1_steamid, last_d
+        WHERE ll.type = 'KILL'
+          AND s.steam_id_64 = :sid
+          AND ll.weapon = ANY(:melee)
+          AND (last_d.t IS NULL OR ll.event_time > last_d.t)
+    """)
+    streak_row = db.execute(sql_streak, {"sid": steam_id, "melee": MELEE_WEAPONS}).fetchone()
+    current_streak = int(streak_row.streak or 0) if streak_row else 0
+
+    return {
+        "last_melee_death": last_melee_death,
+        "current_streak": current_streak,
+    }
+
+
 def best_single_game_by_class(
     db: Session,
     weapon_class: str,
@@ -973,6 +1087,13 @@ def player_detail(db: Session, steam_id: str):
         if r.h is not None and 0 <= r.h < 24:
             hour_distribution[r.h] = int(r.n or 0)
 
+    # 14) Most played with / against — derived from player_match_side MV.
+    # Restricted to logged matches; older un-tracked matches don't contribute.
+    pwa = played_with_against(db, steam_id, limit=10)
+
+    # 15) Melee micro-stats — last melee death event + current streak.
+    melee = melee_meta(db, steam_id)
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -989,4 +1110,6 @@ def player_detail(db: Session, steam_id: str):
         "top_servers": top_servers,
         "win_rate": win_rate,
         "hour_distribution": hour_distribution,
+        "played_with_against": pwa,
+        "melee_meta": melee,
     }
