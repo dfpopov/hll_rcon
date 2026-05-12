@@ -10,6 +10,12 @@ from sqlalchemy.orm import Session
 from weapon_classes import classify_weapon, all_class_names
 from achievements import compute_achievements, compute_achievement_progress, ACHIEVEMENTS
 from theater_classifier import FACTIONS, maps_for_faction
+from playstyles import (
+    classify_one as classify_playstyle_one,
+    get_cached_stats_or_compute,
+    players_with_playstyle,
+    _aggregate_cache,
+)
 
 
 # Whitelist mapping: API sort param → SQL expression.
@@ -693,6 +699,27 @@ def melee_meta(db: Session, steam_id: str) -> dict:
     }
 
 
+def playstyle_stats(db: Session) -> list[dict]:
+    """Server-wide playstyle distribution. TTL-cached at 1h via playstyles.py
+    module-level cache."""
+    return get_cached_stats_or_compute(lambda: _all_player_profiles(db))
+
+
+def playstyle_players(db: Session, playstyle_id: str, limit: int = 50, offset: int = 0) -> dict:
+    """Players matching one playstyle, paginated. Reads from the same cache
+    as playstyle_stats — re-classifies only if cache is cold."""
+    # Re-use cached buckets if fresh; otherwise compute and update cache.
+    cached = _aggregate_cache.get("buckets")
+    import time as _time
+    if cached is None or _time.time() - _aggregate_cache.get("computed_at", 0) >= 3600:
+        # Force a refresh so subsequent paginated calls hit cache.
+        get_cached_stats_or_compute(lambda: _all_player_profiles(db))
+    # players_with_playstyle re-iterates _all_player_profiles since the cache
+    # only holds samples, not the full bucket. Cost ~1-2s on prod for 28k.
+    profiles = _all_player_profiles(db)
+    return players_with_playstyle(profiles, playstyle_id, limit=limit, offset=offset)
+
+
 def autocomplete_players(db: Session, q: str, limit: int = 10) -> list[dict]:
     """Player autocomplete: returns top matches by ILIKE substring against
     ANY historical name (player_stats.name). One row per steam_id with the
@@ -1206,6 +1233,9 @@ def player_detail(db: Session, steam_id: str):
     # 17) Achievement progress — top-5 closest-to-earning badges.
     ach_progress = compute_achievement_progress(profile, limit=5)
 
+    # 18) Playstyle — single archetype matched by the shared classifier.
+    playstyle = classify_playstyle_one(profile)
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -1225,4 +1255,5 @@ def player_detail(db: Session, steam_id: str):
         "melee_meta": melee,
         "hardcounters": hc,
         "achievement_progress": ach_progress,
+        "playstyle": playstyle,
     }

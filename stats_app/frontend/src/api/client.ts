@@ -275,6 +275,49 @@ export interface PlayerDetail {
   melee_meta: MeleeMeta
   hardcounters: Hardcounter[]
   achievement_progress: AchievementProgress[]
+  playstyle: Playstyle
+}
+
+export interface Playstyle {
+  id: string
+  title: string
+  emoji: string
+  color: string  // Tailwind color class, e.g. "text-cyan-300"
+  description: string
+}
+
+export interface PlaystyleStat extends Playstyle {
+  player_count: number
+  sample_players: {
+    steam_id: string
+    name: string
+    avatar_url: string | null
+    kills: number
+    matches_played: number
+  }[]
+}
+
+export interface PlaystylePlayersResponse {
+  count: number
+  total: number
+  limit: number
+  offset: number
+  playstyle: Playstyle
+  results: PlayerRow[]
+}
+
+export async function fetchPlaystyles(): Promise<PlaystyleStat[]> {
+  const { data } = await api.get<{ playstyles: PlaystyleStat[] }>('/playstyles')
+  return data.playstyles
+}
+
+export async function fetchPlaystylePlayers(
+  id: string, limit = 50, offset = 0,
+): Promise<PlaystylePlayersResponse> {
+  const { data } = await api.get<PlaystylePlayersResponse>(
+    `/playstyles/${encodeURIComponent(id)}/players`, { params: { limit, offset } }
+  )
+  return data
 }
 
 export interface PlayedWithAgainst {

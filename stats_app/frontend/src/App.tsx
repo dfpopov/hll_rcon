@@ -9,6 +9,8 @@ import AchievementDetailPage from './pages/AchievementDetailPage'
 import ComparePage from './pages/ComparePage'
 import HallOfShamePage from './pages/HallOfShamePage'
 import WorldMapPage from './pages/WorldMapPage'
+import PlaystylesPage from './pages/PlaystylesPage'
+import PlaystyleDetailPage from './pages/PlaystyleDetailPage'
 
 export default function App() {
   return (
@@ -25,6 +27,8 @@ export default function App() {
         <Route path="/compare/:ids" element={<ComparePage />} />
         <Route path="/hall-of-shame" element={<HallOfShamePage />} />
         <Route path="/server/countries" element={<WorldMapPage />} />
+        <Route path="/playstyles" element={<PlaystylesPage />} />
+        <Route path="/playstyles/:id" element={<PlaystyleDetailPage />} />
       </Routes>
     </Layout>
   )

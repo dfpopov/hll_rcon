@@ -211,6 +211,26 @@ def get_autocomplete(
     return {"suggestions": queries.autocomplete_players(db, q, limit)}
 
 
+@app.get("/api/playstyles")
+@limiter.limit("30/minute")
+def get_playstyles(request: Request, db: Session = Depends(get_db)):
+    """All playstyle archetypes with player_count + 5 sample top players."""
+    return {"playstyles": queries.playstyle_stats(db)}
+
+
+@app.get("/api/playstyles/{playstyle_id}/players")
+@limiter.limit("30/minute")
+def get_playstyle_players(
+    request: Request,
+    playstyle_id: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """Paginated list of all players matching one playstyle."""
+    return queries.playstyle_players(db, playstyle_id, limit=limit, offset=offset)
+
+
 @app.get("/api/countries")
 @limiter.limit("60/minute")
 def get_countries(request: Request, db: Session = Depends(get_db)):

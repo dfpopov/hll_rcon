@@ -18,6 +18,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/records/all-time" className={navClass}>Рекорди (весь час)</NavLink>
           <NavLink to="/records/single-game" className={navClass}>Рекорди (1 матч)</NavLink>
           <NavLink to="/achievements" className={navClass}>Досягнення</NavLink>
+          <NavLink to="/playstyles" className={navClass}>🎭 Стилі</NavLink>
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
           <NavLink to="/hall-of-shame" className={navClass}>💀 Hall of Shame</NavLink>
           <NavLink to="/server/countries" className={navClass}>🌍 Карта</NavLink>
