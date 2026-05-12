@@ -430,6 +430,7 @@ export default function PlayerDetailPage() {
                   <th className="p-2 text-right">Матчів</th>
                   <th className="p-2 text-right">Kills</th>
                   <th className="p-2 text-right">K/D</th>
+                  <th className="p-2 text-right" title="З матчів, де відома сторона та результат">Win %</th>
                 </tr>
               </thead>
               <tbody>
@@ -439,6 +440,17 @@ export default function PlayerDetailPage() {
                     <td className="p-2 text-right tabular-nums">{m.matches}</td>
                     <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
                     <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
+                    <td className="p-2 text-right tabular-nums">
+                      {m.win_pct !== null ? (
+                        <span className={
+                          m.win_pct >= 65 ? 'text-emerald-400' :
+                          m.win_pct >= 50 ? 'text-amber-400' :
+                          m.win_pct >= 35 ? 'text-orange-400' : 'text-red-400'
+                        } title={`${m.win_pct}% з ${m.known_outcomes} матчів з відомим результатом`}>
+                          {m.win_pct}%
+                        </span>
+                      ) : <span className="text-zinc-600" title="немає лог-покриття">—</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -542,6 +554,7 @@ export default function PlayerDetailPage() {
               <tr>
                 <th className="p-3 text-left">Дата</th>
                 <th className="p-3 text-left">Карта</th>
+                <th className="p-3 text-right" title="% часу матчу, який гравець був присутній">Час %</th>
                 <th className="p-3 text-right">K</th>
                 <th className="p-3 text-right">D</th>
                 <th className="p-3 text-right">K/D</th>
@@ -576,6 +589,14 @@ export default function PlayerDetailPage() {
                         </span>
                       ) : null
                     })()}
+                  </td>
+                  <td className="p-3 text-right tabular-nums text-zinc-400 text-xs">
+                    {m.time_pct !== null && m.time_pct !== undefined ? (
+                      <span className={m.time_pct >= 80 ? 'text-zinc-300' : m.time_pct >= 50 ? 'text-amber-400' : 'text-zinc-500'}
+                        title={`${Math.floor((m.time_seconds || 0) / 60)} хв`}>
+                        {m.time_pct}%
+                      </span>
+                    ) : '—'}
                   </td>
                   <td className="p-3 text-right text-green-400">{m.kills}</td>
                   <td className="p-3 text-right text-red-400">{m.deaths}</td>

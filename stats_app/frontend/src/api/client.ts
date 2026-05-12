@@ -124,6 +124,7 @@ export interface SingleGameRow {
   match_id: number
   map_name: string
   match_date: string | null
+  top_weapon: string | null
 }
 
 export async function fetchBestSingleGame(metric: SingleGameMetric, limit = 10, side?: Side) {
@@ -180,6 +181,8 @@ export interface RecentMatch {
   kd: number | null
   combat: number
   support: number
+  time_seconds: number
+  time_pct: number | null
 }
 
 export interface PlayerOverview {
@@ -194,6 +197,8 @@ export interface PlayerTopMap {
   matches: number
   kills: number
   kd: number | null
+  win_pct: number | null
+  known_outcomes: number
 }
 
 export interface FactionPref {

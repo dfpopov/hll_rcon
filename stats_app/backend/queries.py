@@ -535,6 +535,9 @@ def best_single_game(
         else:
             side_where = "AND FALSE"
 
+    # top_weapon: pick the most-used weapon for this player in this specific
+    # match. Subquery scans the row's weapons jsonb. Skips matches with no
+    # weapons data (returns NULL — UI shows "—").
     sql = text(f"""
         SELECT
             s.steam_id_64 AS steam_id,
@@ -543,7 +546,14 @@ def best_single_game(
             ({expr}) AS value,
             m.id AS match_id,
             m.map_name AS map_name,
-            m.start AS match_date
+            m.start AS match_date,
+            (
+              SELECT key
+              FROM jsonb_each_text(ps.weapons) AS kv(key, val)
+              WHERE ps.weapons IS NOT NULL AND val::int > 0
+              ORDER BY val::int DESC
+              LIMIT 1
+            ) AS top_weapon
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
@@ -646,6 +656,10 @@ def player_detail(db: Session, steam_id: str):
     # 5) Recent matches (last 10) — includes match_id for linking to /games/{id}.
     # Hide barely-played matches (kills=0 AND deaths<=1) — they're usually
     # spectator/disconnect noise, not real games.
+    # time_pct = how much of the match this player was actually present:
+    # ps.time_seconds / match_duration_seconds. Capped at 100 for cases
+    # where the player's time slightly exceeds the recorded match window
+    # (boundary noise).
     sql_recent = text("""
         SELECT
             m.id AS match_id,
@@ -655,7 +669,21 @@ def player_detail(db: Session, steam_id: str):
             ps.deaths AS deaths,
             ps.kill_death_ratio AS kd,
             ps.combat AS combat,
-            ps.support AS support
+            ps.support AS support,
+            ps.time_seconds AS time_seconds,
+            CASE
+              WHEN m.end IS NOT NULL AND m.start IS NOT NULL
+                   AND EXTRACT(EPOCH FROM (m.end - m.start)) > 0
+              THEN LEAST(
+                ROUND(
+                  CAST(ps.time_seconds AS NUMERIC) /
+                  EXTRACT(EPOCH FROM (m.end - m.start)) * 100,
+                  1
+                ),
+                100.0
+              )
+              ELSE NULL
+            END AS time_pct
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
@@ -669,6 +697,8 @@ def player_detail(db: Session, steam_id: str):
         d = dict(row._mapping)
         if d.get("match_date"):
             d["match_date"] = d["match_date"].isoformat()
+        if d.get("time_pct") is not None:
+            d["time_pct"] = float(d["time_pct"])
         recent_matches.append(d)
 
     # 6) Overview meta: first seen + 100+ kill matches + mode distribution.
@@ -697,22 +727,52 @@ def player_detail(db: Session, steam_id: str):
         "total_matches": int(ov.total_matches or 0) if ov else 0,
     }
 
-    # 7) Top maps by matches played, with kills & K/D per map.
+    # 7) Top maps by matches played, with kills, K/D and win rate per map.
+    # Win rate computed by joining the MV (player's side per match) and
+    # map_history.result. Matches without log coverage or with NULL result
+    # don't contribute to known_outcomes — win_pct reflects what's
+    # attributable, not raw count.
     sql_top_maps = text("""
         SELECT
             m.map_name AS map_name,
             COUNT(*) AS matches,
             SUM(ps.kills) AS kills,
-            ROUND(CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0), 2) AS kd
+            ROUND(CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0), 2) AS kd,
+            SUM(
+              CASE
+                WHEN pms.side = 'Allies' AND m.result IS NOT NULL
+                     AND m.result ? 'Allied' AND m.result ? 'Axis'
+                     AND (m.result->>'Allied')::int > (m.result->>'Axis')::int THEN 1
+                WHEN pms.side = 'Axis' AND m.result IS NOT NULL
+                     AND m.result ? 'Allied' AND m.result ? 'Axis'
+                     AND (m.result->>'Axis')::int > (m.result->>'Allied')::int THEN 1
+                ELSE 0
+              END
+            ) AS wins,
+            SUM(
+              CASE
+                WHEN pms.side IS NOT NULL AND m.result IS NOT NULL
+                     AND m.result ? 'Allied' AND m.result ? 'Axis' THEN 1
+                ELSE 0
+              END
+            ) AS known_outcomes
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
+        LEFT JOIN player_match_side pms ON pms.player_id = s.id AND pms.match_id = m.id
         WHERE s.steam_id_64 = :sid
         GROUP BY m.map_name
         ORDER BY matches DESC
         LIMIT 10
     """)
-    top_maps = [dict(r._mapping) for r in db.execute(sql_top_maps, {"sid": steam_id})]
+    top_maps = []
+    for r in db.execute(sql_top_maps, {"sid": steam_id}):
+        d = dict(r._mapping)
+        wins = int(d.pop("wins", 0) or 0)
+        known = int(d.pop("known_outcomes", 0) or 0)
+        d["win_pct"] = round(wins / known * 100, 1) if known > 0 else None
+        d["known_outcomes"] = known
+        top_maps.append(d)
 
     # 8) Faction preference from player_match_side MV. Matches without log
     # coverage are absent — total_known reflects matches we can attribute.

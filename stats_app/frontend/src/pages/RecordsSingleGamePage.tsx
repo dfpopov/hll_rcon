@@ -47,9 +47,14 @@ function SingleGameCard({ title, rows, fmt }: {
               </Link>
               <a href={`${CRCON_PUBLIC_BASE}/games/${r.match_id}`}
                 target="_blank" rel="noopener noreferrer"
-                className="text-xs text-zinc-500 hover:text-amber-400">
+                className="text-xs text-zinc-500 hover:text-amber-400 block truncate">
                 {r.map_name}
               </a>
+              {r.top_weapon && (
+                <span className="text-[10px] text-zinc-600 truncate block" title={`Most used: ${r.top_weapon}`}>
+                  🔫 {r.top_weapon}
+                </span>
+              )}
             </div>
             <span className="font-bold text-zinc-200 tabular-nums">
               {fmt ? fmt(r.value) : r.value.toLocaleString('uk-UA')}
