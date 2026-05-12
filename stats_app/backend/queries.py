@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from weapon_classes import classify_weapon, all_class_names
-from achievements import compute_achievements
+from achievements import compute_achievements, ACHIEVEMENTS
 
 
 # Whitelist mapping: API sort param → SQL expression.
@@ -200,6 +200,131 @@ def get_unique_weapons(db: Session) -> List[str]:
     return [row[0] for row in db.execute(sql)]
 
 
+def _all_player_profiles(db: Session) -> List[dict]:
+    """Fetch one aggregated profile per player. Used for achievement stats.
+    Result is cached at the function level via lru_cache wrapper above the
+    SQLAlchemy session boundary in caller — for simplicity here we just run it.
+    """
+    sql = text("""
+        SELECT
+            s.steam_id_64 AS steam_id,
+            MAX(ps.name) AS name,
+            MAX(ps.level) AS level,
+            SUM(ps.kills) AS kills,
+            SUM(ps.deaths) AS deaths,
+            SUM(ps.teamkills) AS teamkills,
+            SUM(ps.deaths_by_tk) AS deaths_by_tk,
+            ROUND(CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0), 2) AS kd_ratio,
+            COUNT(DISTINCT ps.map_id) AS matches_played,
+            SUM(ps.time_seconds) AS total_seconds,
+            SUM(ps.combat) AS combat,
+            SUM(ps.offense) AS offense,
+            SUM(ps.defense) AS defense,
+            SUM(ps.support) AS support,
+            MAX(ps.kills_streak) AS best_kills_streak,
+            MAX(ps.longest_life_secs) AS longest_life_secs,
+            MAX(si.profile->>'avatarmedium') AS avatar_url,
+            MAX(si.country) AS country
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        LEFT JOIN steam_info si ON si.playersteamid_id = s.id
+        GROUP BY s.steam_id_64
+    """)
+    return [dict(row._mapping) for row in db.execute(sql)]
+
+
+def compute_achievement_stats(db: Session) -> List[dict]:
+    """For each achievement, count how many players have earned it.
+
+    Returns list of {id, title, icon, tier, earned_count, percentage,
+    total_players}.
+    """
+    all_profiles = _all_player_profiles(db)
+    total = len(all_profiles)
+    counts: dict[str, int] = {}
+    for p in all_profiles:
+        for ach in compute_achievements(p):
+            counts[ach["id"]] = counts.get(ach["id"], 0) + 1
+
+    result = []
+    for aid, title, icon, tier, _predicate in ACHIEVEMENTS:
+        c = counts.get(aid, 0)
+        result.append({
+            "id": aid,
+            "title": title,
+            "icon": icon,
+            "tier": tier,
+            "earned_count": c,
+            "percentage": round(c / total * 100, 2) if total > 0 else 0.0,
+            "total_players": total,
+        })
+    return result
+
+
+def players_with_achievement(
+    db: Session,
+    achievement_id: str,
+    limit: int = 50,
+    offset: int = 0,
+) -> dict:
+    """List players who earned a specific achievement.
+
+    Sorted by relevant metric (e.g. kills for kill-based achievements).
+    """
+    # Map achievement_id → predicate + relevant sort key
+    SORT_HINT = {
+        "centurion":     "matches_played",
+        "veteran":       "matches_played",
+        "lifetime":      "matches_played",
+        "sharpshooter":  "kd_ratio",
+        "elite_sniper":  "kd_ratio",
+        "centurion_k":   "kills",
+        "killer_1k":     "kills",
+        "killing_mach":  "kills",
+        "reaper":        "kills",
+        "unstoppable":   "best_kills_streak",
+        "legendary_st":  "best_kills_streak",
+        "god_mode":      "best_kills_streak",
+        "marathon":      "total_seconds",
+        "time_lord":     "total_seconds",
+        "combat_master": "combat",
+        "support_hero":  "support",
+        "defender":      "defense",
+        "attacker":      "offense",
+        "elite":         "level",
+        "legendary_lvl": "level",
+        "mythic_lvl":    "level",
+        "survivor":      "longest_life_secs",
+        "tk_offender":   "teamkills",
+        "clumsy":        "deaths_by_tk",
+    }
+    sort_key = SORT_HINT.get(achievement_id, "kills")
+
+    pred = next((a[4] for a in ACHIEVEMENTS if a[0] == achievement_id), None)
+    if pred is None:
+        return {"count": 0, "total": 0, "results": []}
+
+    all_profiles = _all_player_profiles(db)
+    matching = [p for p in all_profiles if _safe_predicate(pred, p)]
+    matching.sort(key=lambda p: (p.get(sort_key) or 0), reverse=True)
+    paged = matching[offset:offset + limit]
+    return {
+        "count": len(paged),
+        "total": len(matching),
+        "limit": limit,
+        "offset": offset,
+        "sort_key": sort_key,
+        "results": paged,
+    }
+
+
+def _safe_predicate(pred, profile) -> bool:
+    try:
+        return bool(pred(profile))
+    except (TypeError, ValueError):
+        return False
+
+
 def find_player_by_name(db: Session, name: str) -> Optional[str]:
     """Lookup steam_id by exact (then ILIKE) match on player name.
     Used to make PVP victim/killer names clickable. Returns None if not found.
@@ -276,6 +401,7 @@ def best_single_game(db: Session, metric: str = "kills", limit: int = 20):
             ps.name AS name,
             ps.level AS level,
             ({expr}) AS value,
+            m.id AS match_id,
             m.map_name AS map_name,
             m.start AS match_date
         FROM player_stats ps

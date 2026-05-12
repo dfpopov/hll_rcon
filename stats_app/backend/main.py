@@ -169,6 +169,26 @@ def get_player_by_name(
     return {"steam_id": sid, "name": name}
 
 
+@app.get("/api/achievements")
+@limiter.limit("30/minute")  # heavier query — lower limit
+def get_achievements_stats(request: Request, db: Session = Depends(get_db)):
+    """List all achievements with stats: earned_count + percentage of players."""
+    return {"achievements": queries.compute_achievement_stats(db)}
+
+
+@app.get("/api/achievements/{achievement_id}/players")
+@limiter.limit("30/minute")
+def get_players_with_achievement(
+    request: Request,
+    achievement_id: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    db: Session = Depends(get_db),
+):
+    """List players who earned a specific achievement, paginated."""
+    return queries.players_with_achievement(db, achievement_id, limit, offset)
+
+
 @app.get("/api/maps")
 @limiter.limit("60/minute")
 def get_maps(request: Request, db: Session = Depends(get_db)):

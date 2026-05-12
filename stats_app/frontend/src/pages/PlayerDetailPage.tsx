@@ -120,6 +120,20 @@ export default function PlayerDetailPage() {
             Steam ↗
           </a>
         )}
+        <Link to={`/compare/${encodeURIComponent(p.steam_id)}/x`}
+          onClick={(e) => {
+            e.preventDefault()
+            const otherName = prompt(`Порівняти ${p.name} з іншим гравцем — введіть ім'я:`)
+            if (!otherName) return
+            findPlayerByName(otherName).then((sid) => {
+              if (sid) navigate(`/compare/${encodeURIComponent(p.steam_id)}/${encodeURIComponent(sid)}`)
+              else alert(`Гравця "${otherName}" не знайдено`)
+            })
+          }}
+          className="text-xs text-amber-400 hover:text-amber-300 px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
+          title="Порівняти цього гравця з іншим">
+          ⚖ Порівняти
+        </Link>
       </div>
 
       {/* Achievements row */}

@@ -115,6 +115,7 @@ export interface SingleGameRow {
   name: string
   level: number
   value: number
+  match_id: number
   map_name: string
   match_date: string | null
 }
@@ -190,6 +191,44 @@ export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> 
  * Look up steam_id by player name. Returns null if not found (404).
  * Used to make PVP victim/killer names clickable.
  */
+// --- Phase 4: Achievements stats ---
+
+export interface AchievementStat {
+  id: string
+  title: string
+  icon: string
+  tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
+  earned_count: number
+  percentage: number
+  total_players: number
+}
+
+export async function fetchAchievementStats(): Promise<AchievementStat[]> {
+  const { data } = await api.get<{ achievements: AchievementStat[] }>('/achievements')
+  return data.achievements
+}
+
+export interface AchievementHoldersResponse {
+  count: number
+  total: number
+  limit: number
+  offset: number
+  sort_key: string
+  results: PlayerRow[]
+}
+
+export async function fetchAchievementPlayers(
+  achievementId: string,
+  limit = 50,
+  offset = 0,
+): Promise<AchievementHoldersResponse> {
+  const { data } = await api.get<AchievementHoldersResponse>(
+    `/achievements/${encodeURIComponent(achievementId)}/players`,
+    { params: { limit, offset } }
+  )
+  return data
+}
+
 export async function findPlayerByName(name: string): Promise<string | null> {
   try {
     const { data } = await api.get<{ steam_id: string; name: string }>(
