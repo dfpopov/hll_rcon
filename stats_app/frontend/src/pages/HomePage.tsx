@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { fetchTopPlayers, PlayerRow, SortKey, SortOrder } from '../api/client'
+import {
+  fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period,
+} from '../api/client'
+import FilterBar from '../components/FilterBar'
 
 interface ColumnDef {
   key: SortKey
@@ -37,6 +40,7 @@ function levelBadgeColor(level: number): string {
 }
 
 const PAGE_SIZE = 50
+const DEFAULT_MIN_MATCHES = 50
 
 export default function HomePage() {
   const [rows, setRows] = useState<PlayerRow[]>([])
@@ -44,28 +48,50 @@ export default function HomePage() {
   const [page, setPage] = useState(0)
   const [sort, setSort] = useState<SortKey>('kills')
   const [order, setOrder] = useState<SortOrder>('desc')
+  const [minMatches, setMinMatches] = useState<number>(DEFAULT_MIN_MATCHES)
+  const [period, setPeriod] = useState<Period>('')
+  const [weapon, setWeapon] = useState<string>('')
+  const [mapName, setMapName] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
     setError(null)
-    fetchTopPlayers({ sort, order, limit: PAGE_SIZE, offset: page * PAGE_SIZE })
+    fetchTopPlayers({
+      sort, order, limit: PAGE_SIZE, offset: page * PAGE_SIZE,
+      min_matches: minMatches, period: period || undefined,
+      weapon: weapon || undefined, map_name: mapName || undefined,
+    })
       .then((data) => {
         setRows(data.results)
         setTotal(data.total)
       })
       .catch((err) => setError(err?.response?.data?.detail ?? err.message ?? 'unknown error'))
       .finally(() => setLoading(false))
-  }, [sort, order, page])
+  }, [sort, order, page, minMatches, period, weapon, mapName])
 
   const handleSort = (key: SortKey) => {
-    if (key === sort) {
-      setOrder(order === 'desc' ? 'asc' : 'desc')
-    } else {
-      setSort(key)
-      setOrder('desc')
-    }
+    if (key === sort) setOrder(order === 'desc' ? 'asc' : 'desc')
+    else { setSort(key); setOrder('desc') }
+    setPage(0)
+  }
+
+  const handleFilterChange = (next: {
+    period?: Period; minMatches?: number; weapon?: string; mapName?: string
+  }) => {
+    if (next.period !== undefined) setPeriod(next.period)
+    if (next.minMatches !== undefined) setMinMatches(next.minMatches)
+    if (next.weapon !== undefined) setWeapon(next.weapon)
+    if (next.mapName !== undefined) setMapName(next.mapName)
+    setPage(0)
+  }
+
+  const handleReset = () => {
+    setMinMatches(DEFAULT_MIN_MATCHES)
+    setPeriod('')
+    setWeapon('')
+    setMapName('')
     setPage(0)
   }
 
@@ -75,14 +101,21 @@ export default function HomePage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <header className="mb-6 flex items-baseline justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold mb-1">HLL Stats — All time</h1>
-          <p className="text-zinc-400 text-sm">
-            Топ гравці за всю історію матчів • {total.toLocaleString('uk-UA')} гравців у базі
-          </p>
-        </div>
+      <header className="mb-4">
+        <h1 className="text-3xl font-bold mb-1">HLL Stats — All time</h1>
+        <p className="text-zinc-400 text-sm">
+          Топ гравці • <span className="text-zinc-200 font-medium">{total.toLocaleString('uk-UA')}</span> гравців у вибірці
+        </p>
       </header>
+
+      <FilterBar
+        period={period}
+        minMatches={minMatches}
+        weapon={weapon}
+        mapName={mapName}
+        onChange={handleFilterChange}
+        onReset={handleReset}
+      />
 
       {error && (
         <div className="bg-red-900/30 border border-red-700 text-red-200 p-4 rounded mb-4">
@@ -115,10 +148,7 @@ export default function HomePage() {
           </thead>
           <tbody className={loading ? 'opacity-50' : ''}>
             {rows.map((r, i) => (
-              <tr
-                key={r.steam_id}
-                className="border-t border-zinc-800 hover:bg-zinc-700/20"
-              >
+              <tr key={r.steam_id} className="border-t border-zinc-800 hover:bg-zinc-700/20">
                 <td className="p-3 text-zinc-500">{page * PAGE_SIZE + i + 1}</td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
@@ -148,7 +178,7 @@ export default function HomePage() {
             {!loading && rows.length === 0 && (
               <tr>
                 <td colSpan={2 + COLUMNS.length} className="p-8 text-center text-zinc-500">
-                  Немає даних
+                  Немає даних — спробуйте змінити фільтри
                 </td>
               </tr>
             )}
@@ -156,7 +186,6 @@ export default function HomePage() {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between mt-4 text-sm flex-wrap gap-3">
         <div className="text-zinc-400">
           {total > 0
@@ -164,35 +193,23 @@ export default function HomePage() {
             : 'Завантаження…'}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage(0)}
-            disabled={page === 0 || loading}
-            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
+          <button onClick={() => setPage(0)} disabled={page === 0 || loading}
+            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
             « Перша
           </button>
-          <button
-            onClick={() => setPage(Math.max(0, page - 1))}
-            disabled={page === 0 || loading}
-            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
+          <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0 || loading}
+            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
             ‹ Попер.
           </button>
           <span className="text-zinc-300 px-2">
             Сторінка {page + 1} з {totalPages || 1}
           </span>
-          <button
-            onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-            disabled={page >= totalPages - 1 || loading}
-            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
+          <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1 || loading}
+            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
             Наст. ›
           </button>
-          <button
-            onClick={() => setPage(totalPages - 1)}
-            disabled={page >= totalPages - 1 || loading}
-            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed"
-          >
+          <button onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1 || loading}
+            className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
             Остан. »
           </button>
         </div>

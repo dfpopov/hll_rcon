@@ -1,23 +1,16 @@
 import axios from 'axios'
 
-// Same-origin in production (nginx proxies /api/* → backend),
-// uses Vite dev-server proxy in development.
 export const api = axios.create({
   baseURL: '/api',
-  timeout: 15000,
+  timeout: 20000,
 })
 
 export type SortKey =
-  | 'kills'
-  | 'deaths'
-  | 'teamkills'
-  | 'kd_ratio'
-  | 'kpm'
-  | 'playtime'
-  | 'matches'
-  | 'level'
+  | 'kills' | 'deaths' | 'teamkills'
+  | 'kd_ratio' | 'kpm' | 'playtime' | 'matches' | 'level'
 
 export type SortOrder = 'asc' | 'desc'
+export type Period = '7d' | '30d' | '90d' | ''  // empty = all-time
 
 export interface PlayerRow {
   steam_id: string
@@ -39,22 +32,45 @@ export interface TopPlayersResponse {
   offset: number
   sort: SortKey
   order: SortOrder
+  min_matches: number
+  period: Period | null
+  weapon: string | null
+  map_name: string | null
   results: PlayerRow[]
 }
 
-export async function fetchTopPlayers(opts: {
+export interface TopPlayersFilters {
   sort?: SortKey
   order?: SortOrder
   limit?: number
   offset?: number
-} = {}): Promise<TopPlayersResponse> {
-  const { data } = await api.get<TopPlayersResponse>('/top-players', {
-    params: {
-      sort: opts.sort ?? 'kills',
-      order: opts.order ?? 'desc',
-      limit: opts.limit ?? 50,
-      offset: opts.offset ?? 0,
-    },
-  })
+  min_matches?: number
+  period?: Period
+  weapon?: string
+  map_name?: string
+}
+
+export async function fetchTopPlayers(opts: TopPlayersFilters = {}): Promise<TopPlayersResponse> {
+  const params: Record<string, string | number> = {
+    sort: opts.sort ?? 'kills',
+    order: opts.order ?? 'desc',
+    limit: opts.limit ?? 50,
+    offset: opts.offset ?? 0,
+    min_matches: opts.min_matches ?? 50,
+  }
+  if (opts.period) params.period = opts.period
+  if (opts.weapon) params.weapon = opts.weapon
+  if (opts.map_name) params.map_name = opts.map_name
+  const { data } = await api.get<TopPlayersResponse>('/top-players', { params })
   return data
+}
+
+export async function fetchMaps(): Promise<string[]> {
+  const { data } = await api.get<{ maps: string[] }>('/maps')
+  return data.maps
+}
+
+export async function fetchWeapons(): Promise<string[]> {
+  const { data } = await api.get<{ weapons: string[] }>('/weapons')
+  return data.weapons
 }

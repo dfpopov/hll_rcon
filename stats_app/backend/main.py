@@ -1,11 +1,12 @@
 """stats_app FastAPI entrypoint.
 
-Mounts CORS, slowapi rate limiting, health probe, and the unified
-/api/top-players endpoint with sort/order/pagination support.
-Per-resource filters (period/weapon/map/side) and player detail
-arrive in subsequent phases — see PLAN.md.
+Mounts CORS, slowapi rate limiting, health probe, top-players leaderboard
+with sort/order/pagination + period/weapon/map/min_matches filters, and
+dropdown-feeder endpoints /api/maps and /api/weapons.
+Player detail page arrives in Phase 3 (Task #9).
 """
 import os
+from typing import Optional
 from fastapi import FastAPI, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,18 +20,16 @@ from db import get_db
 import queries
 
 # Rate limiter — in-memory, single-container scope.
-# 60 req/min/IP is generous for browsers polling a leaderboard.
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 
 app = FastAPI(
     title="HLL Stats — All-time",
-    version="0.2.0",
+    version="0.3.0",
     description="Public read-only all-time statistics from CRCON DB",
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS — restrictive: only the public host. Extend when Cloudflare DNS is added.
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
     "http://95.111.230.75:7012,http://localhost:7012,http://localhost:5173",
@@ -48,30 +47,45 @@ app.add_middleware(
 @app.get("/api/health")
 @limiter.exempt
 def health(request: Request):
-    return {"status": "ok", "service": "stats_app", "version": "0.2.0"}
+    return {"status": "ok", "service": "stats_app", "version": "0.3.0"}
 
 
 @app.get("/api/top-players")
 @limiter.limit("60/minute")
 def get_top_players(
     request: Request,
-    sort: str = Query(default="kills", description="kills|deaths|teamkills|kd_ratio|kpm|playtime|matches|level"),
-    order: str = Query(default="desc", description="desc|asc"),
+    sort: str = Query(default="kills"),
+    order: str = Query(default="desc"),
     limit: int = Query(default=50, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    min_matches: int = Query(default=50, ge=0, le=10000,
+                              description="Players with fewer than this number of matches are excluded"),
+    period: Optional[str] = Query(default=None, description="7d | 30d | 90d | empty=all"),
+    weapon: Optional[str] = Query(default=None, description="filter players who used this weapon at least once"),
+    map_name: Optional[str] = Query(default=None, description="filter to specific map"),
     db: Session = Depends(get_db),
 ):
-    """Aggregated all-time per-player stats with sort and pagination.
-
-    Filters (period/weapon/map/side) arrive in Phase 2 — see Task #8.
-    """
+    """Aggregated all-time per-player stats with sort, pagination, filters."""
     if sort not in queries.SORT_COLUMNS:
         return JSONResponse(
             {"detail": f"sort must be one of: {sorted(queries.SORT_COLUMNS.keys())}"},
             status_code=400,
         )
-    rows = queries.top_players(db, sort=sort, order=order, limit=limit, offset=offset)
-    total = queries.top_players_count(db)
+    if period is not None and period not in queries.PERIOD_INTERVALS:
+        return JSONResponse(
+            {"detail": f"period must be one of: {sorted(queries.PERIOD_INTERVALS.keys())} or empty"},
+            status_code=400,
+        )
+
+    rows = queries.top_players(
+        db,
+        sort=sort, order=order, limit=limit, offset=offset,
+        min_matches=min_matches, period=period, weapon=weapon, map_name=map_name,
+    )
+    total = queries.top_players_count(
+        db,
+        min_matches=min_matches, period=period, weapon=weapon, map_name=map_name,
+    )
     return {
         "count": len(rows),
         "total": total,
@@ -79,5 +93,23 @@ def get_top_players(
         "offset": offset,
         "sort": sort,
         "order": order,
+        "min_matches": min_matches,
+        "period": period,
+        "weapon": weapon,
+        "map_name": map_name,
         "results": rows,
     }
+
+
+@app.get("/api/maps")
+@limiter.limit("60/minute")
+def get_maps(request: Request, db: Session = Depends(get_db)):
+    """List of distinct map_name values for dropdown."""
+    return {"maps": queries.get_unique_maps(db)}
+
+
+@app.get("/api/weapons")
+@limiter.limit("60/minute")
+def get_weapons(request: Request, db: Session = Depends(get_db)):
+    """List of all weapon names used at least once."""
+    return {"weapons": queries.get_unique_weapons(db)}
