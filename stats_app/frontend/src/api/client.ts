@@ -33,6 +33,8 @@ export interface PlayerRow {
   country?: string | null
 }
 
+export type Side = '' | 'Allies' | 'Axis'
+
 export interface TopPlayersResponse {
   count: number
   total: number
@@ -47,6 +49,7 @@ export interface TopPlayersResponse {
   search: string | null
   game_mode: GameMode | null
   weapon_class: string | null
+  side: Side | null
   results: PlayerRow[]
 }
 
@@ -62,6 +65,7 @@ export interface TopPlayersFilters {
   search?: string
   game_mode?: GameMode
   weapon_class?: string
+  side?: Side
 }
 
 export interface WeaponClass {
@@ -84,6 +88,7 @@ export async function fetchTopPlayers(opts: TopPlayersFilters = {}): Promise<Top
   if (opts.search && opts.search.trim().length >= 2) params.search = opts.search.trim()
   if (opts.game_mode) params.game_mode = opts.game_mode
   if (opts.weapon_class) params.weapon_class = opts.weapon_class
+  if (opts.side) params.side = opts.side
   const { data } = await api.get<TopPlayersResponse>('/top-players', { params })
   return data
 }
@@ -120,9 +125,11 @@ export interface SingleGameRow {
   match_date: string | null
 }
 
-export async function fetchBestSingleGame(metric: SingleGameMetric, limit = 10) {
+export async function fetchBestSingleGame(metric: SingleGameMetric, limit = 10, side?: Side) {
+  const params: Record<string, string | number> = { metric, limit }
+  if (side) params.side = side
   const { data } = await api.get<{ metric: SingleGameMetric; count: number; results: SingleGameRow[] }>(
-    '/best-single-game', { params: { metric, limit } }
+    '/best-single-game', { params }
   )
   return data
 }

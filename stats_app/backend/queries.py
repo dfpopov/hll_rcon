@@ -40,6 +40,9 @@ GAME_MODES = {
     "skirmish": "%skirmish%",
 }
 
+# Recognised values for the `side` filter (data lives in player_match_side MV).
+SIDES = {"Allies", "Axis"}
+
 
 def _build_filters(
     period: Optional[str],
@@ -49,9 +52,16 @@ def _build_filters(
     game_mode: Optional[str] = None,
     weapon_class: Optional[str] = None,
     weapon_names_for_class: Optional[List[str]] = None,
-) -> tuple[list[str], dict]:
-    """Build WHERE clause parts and bound params from optional filters."""
+    side: Optional[str] = None,
+) -> tuple[list[str], list[str], dict]:
+    """Build (extra_joins, where_parts, params) from optional filters.
+
+    Returned extra_joins are appended to the FROM clause; where_parts go into
+    WHERE. Side filter joins player_match_side (matches without log coverage
+    are silently excluded — we can't infer their side).
+    """
     parts: list[str] = []
+    joins: list[str] = []
     params: dict = {}
 
     if period and period in PERIOD_INTERVALS:
@@ -78,7 +88,15 @@ def _build_filters(
         parts.append("ps.name ILIKE :search")
         params["search"] = f"%{search}%"
 
-    return parts, params
+    if side in SIDES:
+        joins.append(
+            "JOIN player_match_side pms "
+            "ON pms.player_id = s.id AND pms.match_id = ps.map_id"
+        )
+        parts.append("pms.side = :side")
+        params["side"] = side
+
+    return joins, parts, params
 
 
 def _expand_weapon_class(db: Session, weapon_class: Optional[str]) -> Optional[List[str]]:
@@ -107,15 +125,17 @@ def top_players(
     search: Optional[str] = None,
     game_mode: Optional[str] = None,
     weapon_class: Optional[str] = None,
+    side: Optional[str] = None,
 ):
     sort_expr = SORT_COLUMNS.get(sort, SORT_COLUMNS["kills"])
     order_dir = "ASC" if order.lower() == "asc" else "DESC"
 
     class_weapons = _expand_weapon_class(db, weapon_class)
-    where_parts, params = _build_filters(
-        period, weapon, map_name, search, game_mode, weapon_class, class_weapons,
+    extra_joins, where_parts, params = _build_filters(
+        period, weapon, map_name, search, game_mode, weapon_class, class_weapons, side,
     )
     where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+    extra_join_clause = "\n        ".join(extra_joins)
 
     params.update({"limit": limit, "offset": offset, "min_matches": min_matches})
 
@@ -145,6 +165,7 @@ def top_players(
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
         LEFT JOIN steam_info si ON si.playersteamid_id = s.id
+        {extra_join_clause}
         {where_clause}
         GROUP BY s.steam_id_64
         HAVING COUNT(DISTINCT ps.map_id) >= :min_matches
@@ -164,19 +185,25 @@ def top_players_count(
     search: Optional[str] = None,
     game_mode: Optional[str] = None,
     weapon_class: Optional[str] = None,
+    side: Optional[str] = None,
 ) -> int:
     class_weapons = _expand_weapon_class(db, weapon_class)
-    where_parts, params = _build_filters(
-        period, weapon, map_name, search, game_mode, weapon_class, class_weapons,
+    extra_joins, where_parts, params = _build_filters(
+        period, weapon, map_name, search, game_mode, weapon_class, class_weapons, side,
     )
     where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
+    extra_join_clause = "\n            ".join(extra_joins)
     params["min_matches"] = min_matches
 
+    # Side join needs s (steam_id_64 alias) for its ON clause — add LEFT JOIN even
+    # when side is unused (cheap, on integer FK), keeps SQL shape stable.
     sql = text(f"""
         SELECT COUNT(*) FROM (
             SELECT ps.playersteamid_id
             FROM player_stats ps
+            JOIN steam_id_64 s ON s.id = ps.playersteamid_id
             JOIN map_history m ON m.id = ps.map_id
+            {extra_join_clause}
             {where_clause}
             GROUP BY ps.playersteamid_id
             HAVING COUNT(DISTINCT ps.map_id) >= :min_matches
@@ -389,12 +416,28 @@ SINGLE_GAME_METRICS = {
 }
 
 
-def best_single_game(db: Session, metric: str = "kills", limit: int = 20):
+def best_single_game(
+    db: Session,
+    metric: str = "kills",
+    limit: int = 20,
+    side: Optional[str] = None,
+):
     """Top single-game records: highest value of `metric` from any single match.
 
-    Returns list of {steam_id, name, level, value, map_name, match_date}.
+    Returns list of {steam_id, name, level, value, match_id, map_name, match_date}.
     """
     expr = SINGLE_GAME_METRICS.get(metric, SINGLE_GAME_METRICS["kills"])
+    params: dict = {"limit": limit}
+    side_join = ""
+    side_where = ""
+    if side in SIDES:
+        side_join = (
+            "JOIN player_match_side pms "
+            "ON pms.player_id = s.id AND pms.match_id = ps.map_id"
+        )
+        side_where = "AND pms.side = :side"
+        params["side"] = side
+
     sql = text(f"""
         SELECT
             s.steam_id_64 AS steam_id,
@@ -407,11 +450,13 @@ def best_single_game(db: Session, metric: str = "kills", limit: int = 20):
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
+        {side_join}
         WHERE ({expr}) IS NOT NULL
+        {side_where}
         ORDER BY ({expr}) DESC NULLS LAST
         LIMIT :limit
     """)
-    result = db.execute(sql, {"limit": limit})
+    result = db.execute(sql, params)
     rows = []
     for row in result:
         d = dict(row._mapping)
@@ -501,7 +546,9 @@ def player_detail(db: Session, steam_id: str):
     """)
     killed_by = [dict(row._mapping) for row in db.execute(sql_killers, {"sid": steam_id})]
 
-    # 5) Recent matches (last 10) — includes match_id for linking to /games/{id}
+    # 5) Recent matches (last 10) — includes match_id for linking to /games/{id}.
+    # Hide barely-played matches (kills=0 AND deaths<=1) — they're usually
+    # spectator/disconnect noise, not real games.
     sql_recent = text("""
         SELECT
             m.id AS match_id,
@@ -516,6 +563,7 @@ def player_detail(db: Session, steam_id: str):
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
         WHERE s.steam_id_64 = :sid
+          AND NOT (COALESCE(ps.kills, 0) = 0 AND COALESCE(ps.deaths, 0) <= 1)
         ORDER BY m.start DESC NULLS LAST
         LIMIT 10
     """)

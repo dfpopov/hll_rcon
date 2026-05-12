@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period, GameMode,
+  fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period, GameMode, Side,
 } from '../api/client'
 import FilterBar from '../components/FilterBar'
 
@@ -51,6 +51,7 @@ export default function HomePage() {
   const [weaponClass, setWeaponClass] = useState<string>('')
   const [mapName, setMapName] = useState<string>('')
   const [search, setSearch] = useState<string>('')
+  const [side, setSide] = useState<Side>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -64,6 +65,7 @@ export default function HomePage() {
       search: search || undefined,
       game_mode: gameMode || undefined,
       weapon_class: weaponClass || undefined,
+      side: side || undefined,
     })
       .then((data) => {
         setRows(data.results)
@@ -71,7 +73,7 @@ export default function HomePage() {
       })
       .catch((err) => setError(err?.response?.data?.detail ?? err.message ?? 'unknown error'))
       .finally(() => setLoading(false))
-  }, [sort, order, page, minMatches, period, weapon, mapName, search, gameMode, weaponClass])
+  }, [sort, order, page, minMatches, period, weapon, mapName, search, gameMode, weaponClass, side])
 
   const handleSort = (key: SortKey) => {
     if (key === sort) setOrder(order === 'desc' ? 'asc' : 'desc')
@@ -81,7 +83,8 @@ export default function HomePage() {
 
   const handleFilterChange = (next: {
     search?: string; period?: Period; gameMode?: GameMode;
-    minMatches?: number; weapon?: string; weaponClass?: string; mapName?: string
+    minMatches?: number; weapon?: string; weaponClass?: string; mapName?: string;
+    side?: Side
   }) => {
     if (next.search !== undefined) setSearch(next.search)
     if (next.period !== undefined) setPeriod(next.period)
@@ -90,6 +93,7 @@ export default function HomePage() {
     if (next.weapon !== undefined) setWeapon(next.weapon)
     if (next.weaponClass !== undefined) setWeaponClass(next.weaponClass)
     if (next.mapName !== undefined) setMapName(next.mapName)
+    if (next.side !== undefined) setSide(next.side)
     setPage(0)
   }
 
@@ -101,6 +105,7 @@ export default function HomePage() {
     setWeaponClass('')
     setMapName('')
     setSearch('')
+    setSide('')
     setPage(0)
   }
 
@@ -125,6 +130,7 @@ export default function HomePage() {
         weapon={weapon}
         weaponClass={weaponClass}
         mapName={mapName}
+        side={side}
         onChange={handleFilterChange}
         onReset={handleReset}
       />

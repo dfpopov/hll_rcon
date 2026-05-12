@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   fetchTopPlayers, fetchWeaponClasses,
-  PlayerRow, SortKey, Period, GameMode, WeaponClass,
+  PlayerRow, SortKey, Period, GameMode, Side, WeaponClass,
 } from '../api/client'
 
 const AGGREGATE_CARDS: { key: SortKey; title: string; valueFmt: (r: PlayerRow) => string | number }[] = [
@@ -68,6 +68,7 @@ export default function RecordsAllTimePage() {
   const [period, setPeriod] = useState<Period>('')
   const [gameMode, setGameMode] = useState<GameMode>('')
   const [weaponClass, setWeaponClass] = useState<string>('')
+  const [side, setSide] = useState<Side>('')
   // Search is split into local (input value, immediate) + committed (debounced,
   // used in queries) — mirrors the pattern in FilterBar.tsx.
   const [localSearch, setLocalSearch] = useState('')
@@ -85,8 +86,8 @@ export default function RecordsAllTimePage() {
   }, [localSearch])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtersKey = useMemo(
-    () => `${minMatches}|${period}|${gameMode}|${weaponClass}|${search}`,
-    [minMatches, period, gameMode, weaponClass, search],
+    () => `${minMatches}|${period}|${gameMode}|${weaponClass}|${search}|${side}`,
+    [minMatches, period, gameMode, weaponClass, search, side],
   )
 
   useEffect(() => { fetchWeaponClasses().then(setClasses).catch(() => {}) }, [])
@@ -100,6 +101,7 @@ export default function RecordsAllTimePage() {
       game_mode: gameMode || undefined,
       weapon_class: weaponClass || undefined,
       search: search || undefined,
+      side: side || undefined,
     }
     // Fetch all aggregate cards in parallel
     const aggPromises = AGGREGATE_CARDS.map((c) =>
@@ -129,9 +131,10 @@ export default function RecordsAllTimePage() {
     setWeaponClass('')
     setLocalSearch('')
     setSearch('')
+    setSide('')
   }
 
-  const hasActive = period || gameMode || weaponClass || search || minMatches !== 50
+  const hasActive = period || gameMode || weaponClass || search || side || minMatches !== 50
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -175,6 +178,20 @@ export default function RecordsAllTimePage() {
               <option value="7d">Останні 7 днів</option>
               <option value="30d">Останні 30 днів</option>
               <option value="90d">Останні 90 днів</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-zinc-400 mb-1">Сторона</label>
+            <select value={side} onChange={(e) => setSide(e.target.value as Side)}
+              className={`px-3 py-2 rounded text-sm min-w-[130px] border ${
+                side === 'Allies' ? 'bg-blue-900/60 border-blue-500/50' :
+                side === 'Axis'   ? 'bg-red-900/60 border-red-500/50' :
+                'bg-zinc-800 border-transparent'
+              }`}
+              title="Старі матчі без лог-покриття при фільтрі виключаються">
+              <option value="">Будь-яка</option>
+              <option value="Allies">🟦 Allies</option>
+              <option value="Axis">🟥 Axis</option>
             </select>
           </div>
           <div>

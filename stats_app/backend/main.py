@@ -68,6 +68,7 @@ def get_top_players(
     game_mode: Optional[str] = Query(default=None, description="warfare | offensive | skirmish"),
     weapon_class: Optional[str] = Query(default=None,
                                          description="Sniper Rifle | Machine Gun | Artillery | ..."),
+    side: Optional[str] = Query(default=None, description="Allies | Axis (matches without log coverage are excluded)"),
     db: Session = Depends(get_db),
 ):
     """Aggregated all-time per-player stats with sort, pagination, filters."""
@@ -86,17 +87,24 @@ def get_top_players(
             {"detail": f"game_mode must be one of: {sorted(queries.GAME_MODES.keys())} or empty"},
             status_code=400,
         )
+    if side is not None and side not in queries.SIDES:
+        return JSONResponse(
+            {"detail": f"side must be one of: {sorted(queries.SIDES)} or empty"},
+            status_code=400,
+        )
 
     rows = queries.top_players(
         db,
         sort=sort, order=order, limit=limit, offset=offset,
         min_matches=min_matches, period=period, weapon=weapon,
         map_name=map_name, search=search, game_mode=game_mode, weapon_class=weapon_class,
+        side=side,
     )
     total = queries.top_players_count(
         db,
         min_matches=min_matches, period=period, weapon=weapon,
         map_name=map_name, search=search, game_mode=game_mode, weapon_class=weapon_class,
+        side=side,
     )
     return {
         "count": len(rows),
@@ -112,6 +120,7 @@ def get_top_players(
         "search": search,
         "game_mode": game_mode,
         "weapon_class": weapon_class,
+        "side": side,
         "results": rows,
     }
 
@@ -129,6 +138,7 @@ def get_best_single_game(
     request: Request,
     metric: str = Query(default="kills"),
     limit: int = Query(default=20, ge=1, le=100),
+    side: Optional[str] = Query(default=None, description="Allies | Axis"),
     db: Session = Depends(get_db),
 ):
     """Single-match records: best `metric` in any single game ever played."""
@@ -137,8 +147,13 @@ def get_best_single_game(
             {"detail": f"metric must be one of: {sorted(queries.SINGLE_GAME_METRICS.keys())}"},
             status_code=400,
         )
-    rows = queries.best_single_game(db, metric=metric, limit=limit)
-    return {"metric": metric, "count": len(rows), "results": rows}
+    if side is not None and side not in queries.SIDES:
+        return JSONResponse(
+            {"detail": f"side must be one of: {sorted(queries.SIDES)} or empty"},
+            status_code=400,
+        )
+    rows = queries.best_single_game(db, metric=metric, limit=limit, side=side)
+    return {"metric": metric, "count": len(rows), "side": side, "results": rows}
 
 
 @app.get("/api/player/{steam_id}")

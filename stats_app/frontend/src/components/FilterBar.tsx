@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchMaps, fetchWeapons, fetchWeaponClasses, Period, GameMode, WeaponClass } from '../api/client'
+import { fetchMaps, fetchWeapons, fetchWeaponClasses, Period, GameMode, Side, WeaponClass } from '../api/client'
 
 interface FilterBarProps {
   search: string
@@ -9,6 +9,7 @@ interface FilterBarProps {
   weapon: string
   weaponClass: string
   mapName: string
+  side: Side
   onChange: (next: {
     search?: string
     period?: Period
@@ -17,12 +18,13 @@ interface FilterBarProps {
     weapon?: string
     weaponClass?: string
     mapName?: string
+    side?: Side
   }) => void
   onReset: () => void
 }
 
 export default function FilterBar({
-  search, period, gameMode, minMatches, weapon, weaponClass, mapName,
+  search, period, gameMode, minMatches, weapon, weaponClass, mapName, side,
   onChange, onReset,
 }: FilterBarProps) {
   const [maps, setMaps] = useState<string[]>([])
@@ -44,7 +46,7 @@ export default function FilterBar({
     return () => clearTimeout(t)
   }, [localSearch])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasActive = period || gameMode || weapon || weaponClass || mapName || search || minMatches !== 50
+  const hasActive = period || gameMode || weapon || weaponClass || mapName || search || side || minMatches !== 50
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 mb-4">
@@ -83,6 +85,24 @@ export default function FilterBar({
             <option value="7d">Останні 7 днів</option>
             <option value="30d">Останні 30 днів</option>
             <option value="90d">Останні 90 днів</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">Сторона</label>
+          <select
+            value={side}
+            onChange={(e) => onChange({ side: e.target.value as Side })}
+            className={`px-3 py-2 rounded text-sm min-w-[130px] border ${
+              side === 'Allies' ? 'bg-blue-900/60 text-blue-100 border-blue-500/50' :
+              side === 'Axis'   ? 'bg-red-900/60 text-red-100 border-red-500/50' :
+              'bg-zinc-800 text-zinc-100 border-transparent'
+            }`}
+            title="Дані доступні лише для матчів з лог-покриттям. Старі матчі без логів виключаються при фільтрі."
+          >
+            <option value="">Будь-яка</option>
+            <option value="Allies">🟦 Allies</option>
+            <option value="Axis">🟥 Axis</option>
           </select>
         </div>
 
