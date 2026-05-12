@@ -24,7 +24,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 
 app = FastAPI(
     title="HLL Stats — All-time",
-    version="0.3.0",
+    version="0.4.0",
     description="Public read-only all-time statistics from CRCON DB",
 )
 app.state.limiter = limiter
@@ -47,7 +47,7 @@ app.add_middleware(
 @app.get("/api/health")
 @limiter.exempt
 def health(request: Request):
-    return {"status": "ok", "service": "stats_app", "version": "0.3.0"}
+    return {"status": "ok", "service": "stats_app", "version": "0.4.0"}
 
 
 @app.get("/api/top-players")
@@ -65,6 +65,9 @@ def get_top_players(
     map_name: Optional[str] = Query(default=None, description="filter to specific map"),
     search: Optional[str] = Query(default=None, min_length=2, max_length=64,
                                    description="case-insensitive substring match on player name"),
+    game_mode: Optional[str] = Query(default=None, description="warfare | offensive | skirmish"),
+    weapon_class: Optional[str] = Query(default=None,
+                                         description="Sniper Rifle | Machine Gun | Artillery | ..."),
     db: Session = Depends(get_db),
 ):
     """Aggregated all-time per-player stats with sort, pagination, filters."""
@@ -78,17 +81,22 @@ def get_top_players(
             {"detail": f"period must be one of: {sorted(queries.PERIOD_INTERVALS.keys())} or empty"},
             status_code=400,
         )
+    if game_mode is not None and game_mode.lower() not in queries.GAME_MODES:
+        return JSONResponse(
+            {"detail": f"game_mode must be one of: {sorted(queries.GAME_MODES.keys())} or empty"},
+            status_code=400,
+        )
 
     rows = queries.top_players(
         db,
         sort=sort, order=order, limit=limit, offset=offset,
         min_matches=min_matches, period=period, weapon=weapon,
-        map_name=map_name, search=search,
+        map_name=map_name, search=search, game_mode=game_mode, weapon_class=weapon_class,
     )
     total = queries.top_players_count(
         db,
         min_matches=min_matches, period=period, weapon=weapon,
-        map_name=map_name, search=search,
+        map_name=map_name, search=search, game_mode=game_mode, weapon_class=weapon_class,
     )
     return {
         "count": len(rows),
@@ -102,8 +110,17 @@ def get_top_players(
         "weapon": weapon,
         "map_name": map_name,
         "search": search,
+        "game_mode": game_mode,
+        "weapon_class": weapon_class,
         "results": rows,
     }
+
+
+@app.get("/api/weapon-classes")
+@limiter.limit("60/minute")
+def get_weapon_classes(request: Request, db: Session = Depends(get_db)):
+    """List of weapon classes with their example weapons and counts."""
+    return {"classes": queries.get_weapon_classes_with_examples(db)}
 
 
 @app.get("/api/maps")

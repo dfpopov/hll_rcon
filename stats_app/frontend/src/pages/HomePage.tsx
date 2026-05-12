@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period,
+  fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period, GameMode,
 } from '../api/client'
 import FilterBar from '../components/FilterBar'
 
@@ -50,7 +50,9 @@ export default function HomePage() {
   const [order, setOrder] = useState<SortOrder>('desc')
   const [minMatches, setMinMatches] = useState<number>(DEFAULT_MIN_MATCHES)
   const [period, setPeriod] = useState<Period>('')
+  const [gameMode, setGameMode] = useState<GameMode>('')
   const [weapon, setWeapon] = useState<string>('')
+  const [weaponClass, setWeaponClass] = useState<string>('')
   const [mapName, setMapName] = useState<string>('')
   const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -64,6 +66,8 @@ export default function HomePage() {
       min_matches: minMatches, period: period || undefined,
       weapon: weapon || undefined, map_name: mapName || undefined,
       search: search || undefined,
+      game_mode: gameMode || undefined,
+      weapon_class: weaponClass || undefined,
     })
       .then((data) => {
         setRows(data.results)
@@ -71,7 +75,7 @@ export default function HomePage() {
       })
       .catch((err) => setError(err?.response?.data?.detail ?? err.message ?? 'unknown error'))
       .finally(() => setLoading(false))
-  }, [sort, order, page, minMatches, period, weapon, mapName, search])
+  }, [sort, order, page, minMatches, period, weapon, mapName, search, gameMode, weaponClass])
 
   const handleSort = (key: SortKey) => {
     if (key === sort) setOrder(order === 'desc' ? 'asc' : 'desc')
@@ -80,12 +84,15 @@ export default function HomePage() {
   }
 
   const handleFilterChange = (next: {
-    search?: string; period?: Period; minMatches?: number; weapon?: string; mapName?: string
+    search?: string; period?: Period; gameMode?: GameMode;
+    minMatches?: number; weapon?: string; weaponClass?: string; mapName?: string
   }) => {
     if (next.search !== undefined) setSearch(next.search)
     if (next.period !== undefined) setPeriod(next.period)
+    if (next.gameMode !== undefined) setGameMode(next.gameMode)
     if (next.minMatches !== undefined) setMinMatches(next.minMatches)
     if (next.weapon !== undefined) setWeapon(next.weapon)
+    if (next.weaponClass !== undefined) setWeaponClass(next.weaponClass)
     if (next.mapName !== undefined) setMapName(next.mapName)
     setPage(0)
   }
@@ -93,7 +100,9 @@ export default function HomePage() {
   const handleReset = () => {
     setMinMatches(DEFAULT_MIN_MATCHES)
     setPeriod('')
+    setGameMode('')
     setWeapon('')
+    setWeaponClass('')
     setMapName('')
     setSearch('')
     setPage(0)
@@ -115,8 +124,10 @@ export default function HomePage() {
       <FilterBar
         search={search}
         period={period}
+        gameMode={gameMode}
         minMatches={minMatches}
         weapon={weapon}
+        weaponClass={weaponClass}
         mapName={mapName}
         onChange={handleFilterChange}
         onReset={handleReset}

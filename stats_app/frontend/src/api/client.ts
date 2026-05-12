@@ -8,9 +8,11 @@ export const api = axios.create({
 export type SortKey =
   | 'kills' | 'deaths' | 'teamkills'
   | 'kd_ratio' | 'kpm' | 'playtime' | 'matches' | 'level'
+  | 'combat' | 'offense' | 'defense' | 'support'
 
 export type SortOrder = 'asc' | 'desc'
-export type Period = '7d' | '30d' | '90d' | ''  // empty = all-time
+export type Period = '7d' | '30d' | '90d' | ''
+export type GameMode = 'warfare' | 'offensive' | 'skirmish' | ''
 
 export interface PlayerRow {
   steam_id: string
@@ -23,6 +25,10 @@ export interface PlayerRow {
   kpm: number | null
   matches_played: number
   total_seconds: number
+  combat?: number
+  offense?: number
+  defense?: number
+  support?: number
 }
 
 export interface TopPlayersResponse {
@@ -37,6 +43,8 @@ export interface TopPlayersResponse {
   weapon: string | null
   map_name: string | null
   search: string | null
+  game_mode: GameMode | null
+  weapon_class: string | null
   results: PlayerRow[]
 }
 
@@ -50,6 +58,14 @@ export interface TopPlayersFilters {
   weapon?: string
   map_name?: string
   search?: string
+  game_mode?: GameMode
+  weapon_class?: string
+}
+
+export interface WeaponClass {
+  name: string
+  count: number
+  examples: string[]
 }
 
 export async function fetchTopPlayers(opts: TopPlayersFilters = {}): Promise<TopPlayersResponse> {
@@ -64,6 +80,8 @@ export async function fetchTopPlayers(opts: TopPlayersFilters = {}): Promise<Top
   if (opts.weapon) params.weapon = opts.weapon
   if (opts.map_name) params.map_name = opts.map_name
   if (opts.search && opts.search.trim().length >= 2) params.search = opts.search.trim()
+  if (opts.game_mode) params.game_mode = opts.game_mode
+  if (opts.weapon_class) params.weapon_class = opts.weapon_class
   const { data } = await api.get<TopPlayersResponse>('/top-players', { params })
   return data
 }
@@ -76,4 +94,9 @@ export async function fetchMaps(): Promise<string[]> {
 export async function fetchWeapons(): Promise<string[]> {
   const { data } = await api.get<{ weapons: string[] }>('/weapons')
   return data.weapons
+}
+
+export async function fetchWeaponClasses(): Promise<WeaponClass[]> {
+  const { data } = await api.get<{ classes: WeaponClass[] }>('/weapon-classes')
+  return data.classes
 }

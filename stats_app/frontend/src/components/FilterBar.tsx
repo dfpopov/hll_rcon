@@ -1,52 +1,57 @@
 import { useEffect, useState } from 'react'
-import { fetchMaps, fetchWeapons, Period } from '../api/client'
+import { fetchMaps, fetchWeapons, fetchWeaponClasses, Period, GameMode, WeaponClass } from '../api/client'
 
 interface FilterBarProps {
   search: string
   period: Period
+  gameMode: GameMode
   minMatches: number
   weapon: string
+  weaponClass: string
   mapName: string
   onChange: (next: {
     search?: string
     period?: Period
+    gameMode?: GameMode
     minMatches?: number
     weapon?: string
+    weaponClass?: string
     mapName?: string
   }) => void
   onReset: () => void
 }
 
 export default function FilterBar({
-  search, period, minMatches, weapon, mapName, onChange, onReset,
+  search, period, gameMode, minMatches, weapon, weaponClass, mapName,
+  onChange, onReset,
 }: FilterBarProps) {
   const [maps, setMaps] = useState<string[]>([])
   const [weapons, setWeapons] = useState<string[]>([])
+  const [classes, setClasses] = useState<WeaponClass[]>([])
   const [localSearch, setLocalSearch] = useState(search)
 
   useEffect(() => {
     fetchMaps().then(setMaps).catch(() => {})
     fetchWeapons().then(setWeapons).catch(() => {})
+    fetchWeaponClasses().then(setClasses).catch(() => {})
   }, [])
 
-  // Sync external search prop changes (e.g. reset) into local input
   useEffect(() => { setLocalSearch(search) }, [search])
 
-  // Debounce: only fire onChange 300ms after user stops typing
   useEffect(() => {
     if (localSearch === search) return
     const t = setTimeout(() => onChange({ search: localSearch }), 300)
     return () => clearTimeout(t)
   }, [localSearch])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasActive = period || weapon || mapName || search || minMatches !== 50
+  const hasActive = period || gameMode || weapon || weaponClass || mapName || search || minMatches !== 50
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 mb-4">
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex-grow min-w-[220px] max-w-md">
           <label className="block text-xs text-zinc-400 mb-1">
-            Пошук гравця <span className="text-zinc-600">(мін. 2 символи, contains)</span>
+            Пошук гравця <span className="text-zinc-600">(мін. 2 символи)</span>
           </label>
           <div className="relative">
             <input
@@ -61,10 +66,8 @@ export default function FilterBar({
               <button
                 onClick={() => setLocalSearch('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
-                title="Очистити пошук"
-              >
-                ✕
-              </button>
+                title="Очистити"
+              >✕</button>
             )}
           </div>
         </div>
@@ -84,11 +87,25 @@ export default function FilterBar({
         </div>
 
         <div>
+          <label className="block text-xs text-zinc-400 mb-1">Режим</label>
+          <select
+            value={gameMode}
+            onChange={(e) => onChange({ gameMode: e.target.value as GameMode })}
+            className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[140px]"
+          >
+            <option value="">Усі режими</option>
+            <option value="warfare">Warfare</option>
+            <option value="offensive">Offensive</option>
+            <option value="skirmish">Skirmish</option>
+          </select>
+        </div>
+
+        <div>
           <label className="block text-xs text-zinc-400 mb-1">Карта</label>
           <select
             value={mapName}
             onChange={(e) => onChange({ mapName: e.target.value })}
-            className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[220px]"
+            className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[200px]"
           >
             <option value="">Усі карти ({maps.length})</option>
             {maps.map((m) => <option key={m} value={m}>{m}</option>)}
@@ -96,7 +113,21 @@ export default function FilterBar({
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Зброя</label>
+          <label className="block text-xs text-zinc-400 mb-1">Клас зброї</label>
+          <select
+            value={weaponClass}
+            onChange={(e) => onChange({ weaponClass: e.target.value })}
+            className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[180px]"
+          >
+            <option value="">Усі класи</option>
+            {classes.map((c) => (
+              <option key={c.name} value={c.name}>{c.name} ({c.count})</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">Конкретна зброя</label>
           <select
             value={weapon}
             onChange={(e) => onChange({ weapon: e.target.value })}
@@ -127,9 +158,7 @@ export default function FilterBar({
             onClick={onReset}
             className="px-3 py-2 rounded bg-zinc-700 hover:bg-zinc-600 text-sm self-end"
             title="Скинути всі фільтри"
-          >
-            ✕ Скинути
-          </button>
+          >✕ Скинути</button>
         )}
       </div>
     </div>
