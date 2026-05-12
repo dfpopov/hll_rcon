@@ -10,6 +10,59 @@ import CountryFlag from '../components/CountryFlag'
 // CRCON public stats site URL — match details available on port 7010
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
 
+// Weapon class display order + colour (matches weapon_classes.py).
+const CLASS_DISPLAY: { name: string; color: string }[] = [
+  { name: 'Rifle',           color: 'bg-green-600' },
+  { name: 'Submachine Gun',  color: 'bg-emerald-600' },
+  { name: 'Machine Gun',     color: 'bg-teal-600' },
+  { name: 'Sniper Rifle',    color: 'bg-sky-600' },
+  { name: 'Pistol',          color: 'bg-cyan-600' },
+  { name: 'Anti-Tank',       color: 'bg-orange-600' },
+  { name: 'Tank Gun',        color: 'bg-amber-600' },
+  { name: 'Artillery',       color: 'bg-yellow-600' },
+  { name: 'Explosive',       color: 'bg-red-600' },
+  { name: 'Mine',            color: 'bg-rose-600' },
+  { name: 'Flame',           color: 'bg-fuchsia-600' },
+  { name: 'Melee',           color: 'bg-violet-600' },
+  { name: 'Vehicle Run-over',color: 'bg-pink-600' },
+  { name: 'Other',           color: 'bg-zinc-600' },
+]
+
+function ClassBreakdownBar({ counts, title }: { counts: Record<string, number>; title: string }) {
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  if (total === 0) return null
+  return (
+    <div>
+      <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">{title}</div>
+      <div className="flex h-3 rounded overflow-hidden bg-zinc-800">
+        {CLASS_DISPLAY.map((c) => {
+          const n = counts[c.name] ?? 0
+          if (n === 0) return null
+          const pct = (n / total) * 100
+          return (
+            <div key={c.name} className={c.color} style={{ width: `${pct}%` }}
+              title={`${c.name}: ${n.toLocaleString('uk-UA')} (${pct.toFixed(1)}%)`} />
+          )
+        })}
+      </div>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs">
+        {CLASS_DISPLAY.map((c) => {
+          const n = counts[c.name] ?? 0
+          if (n === 0) return null
+          const pct = (n / total) * 100
+          return (
+            <span key={c.name} className="flex items-center gap-1">
+              <span className={`inline-block w-2 h-2 rounded-sm ${c.color}`} />
+              <span className="text-zinc-300">{c.name}</span>
+              <span className="text-zinc-500 tabular-nums">{n.toLocaleString('uk-UA')} ({pct.toFixed(1)}%)</span>
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function AddToCompareButton({ steam_id, name }: { steam_id: string; name: string }) {
   const { has, add, remove, list, max } = useCompareList()
   const inList = has(steam_id)
@@ -268,6 +321,32 @@ export default function PlayerDetailPage() {
         </div>
       </section>
 
+      {/* Kill / death type breakdown + melee callout */}
+      <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+          <ClassBreakdownBar counts={data.kills_by_class} title="🔫 Вбивства за типом зброї" />
+        </div>
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+          <ClassBreakdownBar counts={data.deaths_by_class} title="💀 Смерті за типом зброї" />
+        </div>
+      </section>
+
+      {(data.kills_by_class.Melee || data.deaths_by_class.Melee) && (
+        <section className="mb-6 bg-gradient-to-r from-violet-900/30 via-zinc-900 to-rose-900/30 border border-violet-700/40 rounded-lg p-4">
+          <h2 className="text-violet-300 uppercase text-xs tracking-widest mb-2">🔪 Ближній бій</h2>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-2xl font-bold text-violet-300 tabular-nums">{data.kills_by_class.Melee ?? 0}</div>
+              <div className="text-xs text-zinc-500">вбито в ближньому бою</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-rose-300 tabular-nums">{data.deaths_by_class.Melee ?? 0}</div>
+              <div className="text-xs text-zinc-500">загинуло від ближнього бою</div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Top maps */}
       {data.top_maps && data.top_maps.length > 0 && (
         <section className="mb-6">
@@ -289,6 +368,33 @@ export default function PlayerDetailPage() {
                     <td className="p-2 text-right tabular-nums">{m.matches}</td>
                     <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
                     <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* Top servers */}
+      {data.top_servers && data.top_servers.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🖥 Найчастіші сервери</h2>
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-800 text-zinc-400 text-xs uppercase">
+                <tr>
+                  <th className="p-2 text-left">Сервер</th>
+                  <th className="p-2 text-right">Сесій</th>
+                  <th className="p-2 text-right">Годин</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.top_servers.map((s) => (
+                  <tr key={s.server_name} className="border-t border-zinc-800">
+                    <td className="p-2 truncate">{s.server_name}</td>
+                    <td className="p-2 text-right tabular-nums">{s.sessions}</td>
+                    <td className="p-2 text-right tabular-nums">{Math.floor(s.total_seconds / 3600)}</td>
                   </tr>
                 ))}
               </tbody>

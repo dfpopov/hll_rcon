@@ -203,6 +203,12 @@ export interface FactionPref {
   axis_pct: number
 }
 
+export interface TopServer {
+  server_name: string
+  sessions: number
+  total_seconds: number
+}
+
 export interface PlayerDetail {
   profile: PlayerProfile
   achievements: Achievement[]
@@ -214,6 +220,9 @@ export interface PlayerDetail {
   top_maps: PlayerTopMap[]
   faction_pref: FactionPref
   alt_names: string[]
+  kills_by_class: Record<string, number>
+  deaths_by_class: Record<string, number>
+  top_servers: TopServer[]
 }
 
 export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {

@@ -712,6 +712,57 @@ def player_detail(db: Session, steam_id: str):
     """)
     alt_names = [r[0] for r in db.execute(sql_alt, {"sid": steam_id})]
 
+    # 10) Kill / death type breakdown — classify each weapon string via the
+    # shared weapon_classes Python rules. We pull (weapon, sum) pairs and
+    # bucket in Python rather than re-implementing CASE WHEN in SQL.
+    sql_kill_weapons = text("""
+        SELECT key AS weapon, SUM(value::int) AS n
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id,
+             jsonb_each_text(ps.weapons)
+        WHERE s.steam_id_64 = :sid AND ps.weapons IS NOT NULL
+        GROUP BY weapon
+    """)
+    sql_death_weapons = text("""
+        SELECT key AS weapon, SUM(value::int) AS n
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id,
+             jsonb_each_text(ps.death_by_weapons)
+        WHERE s.steam_id_64 = :sid AND ps.death_by_weapons IS NOT NULL
+        GROUP BY weapon
+    """)
+    def _aggregate_by_class(rows) -> dict[str, int]:
+        out: dict[str, int] = {}
+        for r in rows:
+            cls = classify_weapon(r.weapon) or "Other"
+            out[cls] = out.get(cls, 0) + int(r.n or 0)
+        return out
+
+    kills_by_class = _aggregate_by_class(db.execute(sql_kill_weapons, {"sid": steam_id}))
+    deaths_by_class = _aggregate_by_class(db.execute(sql_death_weapons, {"sid": steam_id}))
+
+    # 11) Most played servers — sessions grouped by server_name.
+    sql_servers = text("""
+        SELECT
+          server_name,
+          COUNT(*) AS sessions,
+          COALESCE(EXTRACT(EPOCH FROM SUM(COALESCE("end" - start, INTERVAL '0')))::bigint, 0) AS total_seconds
+        FROM player_sessions ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        WHERE s.steam_id_64 = :sid AND server_name IS NOT NULL
+        GROUP BY server_name
+        ORDER BY sessions DESC
+        LIMIT 5
+    """)
+    top_servers = [
+        {
+            "server_name": r.server_name,
+            "sessions": int(r.sessions or 0),
+            "total_seconds": int(r.total_seconds or 0),
+        }
+        for r in db.execute(sql_servers, {"sid": steam_id})
+    ]
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -723,4 +774,7 @@ def player_detail(db: Session, steam_id: str):
         "top_maps": top_maps,
         "faction_pref": faction_pref,
         "alt_names": alt_names,
+        "kills_by_class": kills_by_class,
+        "deaths_by_class": deaths_by_class,
+        "top_servers": top_servers,
     }
