@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
 import CompareBar from './CompareBar'
+import NavSearch from './NavSearch'
 
 function navClass({ isActive }: { isActive: boolean }) {
   return `text-sm hover:text-amber-400 transition-colors ${
@@ -22,6 +23,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
           <NavLink to="/hall-of-shame" className={navClass}>💀 Hall of Shame</NavLink>
           <NavLink to="/server/countries" className={navClass}>🌍 Карта</NavLink>
+          <NavSearch />
         </div>
       </nav>
       <main className="flex-1 pb-24">{children}</main>
