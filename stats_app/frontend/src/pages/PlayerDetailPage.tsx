@@ -6,6 +6,8 @@ import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import AchievementBadge from '../components/AchievementBadge'
 import CountryFlag from '../components/CountryFlag'
+import PlayerRadar from '../components/PlayerRadar'
+import ProgressionSparkline from '../components/ProgressionSparkline'
 
 // CRCON public stats site URL — match details available on port 7010
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
@@ -366,6 +368,21 @@ export default function PlayerDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Radar + progression sparkline */}
+      <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2 text-center">⭐ Стиль гри</div>
+          <PlayerRadar p={p} />
+        </div>
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 flex flex-col">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">📈 K/D тренд по останніх матчах</div>
+          <div className="flex-1">
+            <ProgressionSparkline matches={data.recent_matches} />
+          </div>
+          <div className="text-xs text-zinc-600 text-center mt-1">пунктир = K/D 1.0</div>
+        </div>
+      </section>
 
       {/* Kill / death type breakdown + melee callout */}
       <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
