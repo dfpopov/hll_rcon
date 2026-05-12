@@ -641,7 +641,7 @@ def get_player_ranking(
                         c_k = cmd.get("kills", 0)
                         c_d = cmd.get("deaths", 0)
                         c_kd = f"{c_k / c_d:.1f}" if c_d > 0 else "∞"
-                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:18]} K:{c_k} D:{c_d} K/D:{c_kd}"
+                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:16]} K:{c_k} D:{c_d} K/D:{c_kd}"
 
                     # Add the formatted entry to the global list
                     players_stats.append({
@@ -671,7 +671,7 @@ def get_player_ranking(
                             # [:30] avoids line returns
                             name = p["name"][:28]
                             if details:
-                                name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/{s_name.capitalize()}) {name[:18]}"  # full squad name
+                                name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/{s_name.capitalize()}) {name[:16]}"  # full squad name
 
                             # Add the formatted entry to the global list
                             players_stats.append({
@@ -850,6 +850,8 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                     key=lambda item: sum(p.get("kills", 0) for p in (item[1].get("players") or [])),
                     reverse=True
                 )
+                # Show only top-3 squads per role to stay within Discord/chat limits
+                role_squads = role_squads[:3]
                 roles_present.append((role_display, role_squads))
 
         for role_idx, (role_display, role_squads) in enumerate(roles_present):
@@ -875,7 +877,7 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                 players_sorted = sorted(players, key=lambda p: p.get("kills", 0), reverse=True)
                 squad_cont = " " if is_last_squad else "│"
                 for player in players_sorted:
-                    p_name = (player.get("name") or "?")[:20]
+                    p_name = (player.get("name") or "?")[:16]
                     p_k = player.get("kills", 0)
                     p_d = player.get("deaths", 0)
                     p_kd = f"{p_k / p_d:.1f}" if p_d > 0 else "∞"
