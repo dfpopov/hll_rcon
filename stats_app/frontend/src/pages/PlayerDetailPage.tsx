@@ -263,11 +263,19 @@ export default function PlayerDetailPage() {
                   // total_seconds → hours
                   return `${Math.floor(v / 3600)} год`
                 }
+                // Ratio thresholds (kd_ratio = 2.0, 3.0) — show 2 decimals
+                // so "1.85 / 2.00" is honest instead of being rounded to 2/2.
+                if (p.threshold < 10) return v.toFixed(2)
                 if (p.threshold % 1 !== 0) return v.toFixed(2)
                 return String(Math.round(v))
               }
               return (
-                <div key={p.id} className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
+                <Link
+                  key={p.id}
+                  to={`/achievements/${p.id}`}
+                  className="bg-zinc-900/60 border border-zinc-800 rounded p-3 hover:border-amber-700/50 hover:bg-zinc-900 transition-colors block"
+                  title="Натисни щоб подивитись усіх власників"
+                >
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-xl leading-none">{p.icon}</span>
                     <span className="font-medium text-sm truncate flex-1" title={p.description}>{p.title}</span>
@@ -280,7 +288,7 @@ export default function PlayerDetailPage() {
                     <span>{fmt(p.current)} / {fmt(p.threshold)}</span>
                     <span className="text-amber-400 font-medium">{p.pct}%</span>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
