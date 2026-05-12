@@ -97,9 +97,9 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     # ── Weapon-class specialists (need top_kill_class enrichment) ──────
     {
         "id": "knife_master", "title": "Майстер ножа", "emoji": "🔪", "color": "text-rose-300",
-        "description": "Топ зброя — ближній бій (Melee), 20+ melee-вбивств",
+        "description": "Топ зброя — ближній бій (Melee), 10+ melee-вбивств",
         "predicate": lambda p, c: (p.get("top_kill_class") == "Melee"
-                                    and (p.get("top_kill_class_kills") or 0) >= 20),
+                                    and (p.get("top_kill_class_kills") or 0) >= 10),
     },
     {
         "id": "artilleryman", "title": "Артилерист", "emoji": "💥", "color": "text-yellow-300",
@@ -348,6 +348,10 @@ def compute_playstyle_stats(profiles: List[Dict[str, Any]]) -> List[Dict[str, An
         ctx = _compute_ctx(p)
         primary_assigned = False
         for ps in PLAYSTYLES:
+            # versatile's predicate is always True — counting it as "also"
+            # would tag every player, making the metric useless.
+            if ps["id"] == "versatile":
+                continue
             try:
                 if ps["predicate"](p, ctx):
                     total_counts[ps["id"]] += 1
@@ -356,6 +360,9 @@ def compute_playstyle_stats(profiles: List[Dict[str, Any]]) -> List[Dict[str, An
                         primary_assigned = True
             except (TypeError, ValueError, ZeroDivisionError):
                 continue
+        # If no real archetype matched, assign to versatile as primary.
+        if not primary_assigned:
+            primary_buckets["versatile"].append(p)
     result = []
     for ps in PLAYSTYLES:
         bucket = primary_buckets[ps["id"]]
@@ -416,19 +423,26 @@ def players_with_playstyle(
         if (p.get("matches_played") or 0) < _AGGREGATE_MIN_MATCHES:
             continue
         ctx = _compute_ctx(p)
-        first_match_idx: Optional[int] = None
-        for idx, ps in enumerate(PLAYSTYLES):
+        # Iterate skipping versatile (always-true catch-all) — track which
+        # real archetypes match. If none, the player is purely versatile.
+        matched_ids: list = []
+        for ps in PLAYSTYLES:
+            if ps["id"] == "versatile":
+                continue
             try:
                 if ps["predicate"](p, ctx):
-                    if first_match_idx is None:
-                        first_match_idx = idx
-                    if ps["id"] == playstyle_id:
-                        # Hit — mark whether this was the first match (primary).
-                        enriched = {**p, "is_primary": first_match_idx == idx}
-                        bucket.append(enriched)
-                        break
+                    matched_ids.append(ps["id"])
             except (TypeError, ValueError, ZeroDivisionError):
                 continue
+
+        if playstyle_id == "versatile":
+            # Only include players with no real archetype match.
+            if not matched_ids:
+                bucket.append({**p, "is_primary": True})
+        else:
+            if playstyle_id in matched_ids:
+                is_primary = (matched_ids[0] == playstyle_id)
+                bucket.append({**p, "is_primary": is_primary})
     # Sort primary-first, then by kills.
     bucket.sort(key=lambda x: (not x.get("is_primary"), -(x.get("kills") or 0)))
     paged = bucket[offset:offset + limit]
