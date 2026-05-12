@@ -91,12 +91,17 @@ export default function FilterBar({
           <select
             value={gameMode}
             onChange={(e) => onChange({ gameMode: e.target.value as GameMode })}
-            className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[140px]"
+            className={`px-3 py-2 rounded text-sm min-w-[140px] border ${
+              gameMode === 'warfare'   ? 'bg-sky-900/60 text-sky-100 border-sky-500/50' :
+              gameMode === 'offensive' ? 'bg-orange-900/60 text-orange-100 border-orange-500/50' :
+              gameMode === 'skirmish'  ? 'bg-emerald-900/60 text-emerald-100 border-emerald-500/50' :
+              'bg-zinc-800 text-zinc-100 border-transparent'
+            }`}
           >
             <option value="">Усі режими</option>
-            <option value="warfare">Warfare</option>
-            <option value="offensive">Offensive</option>
-            <option value="skirmish">Skirmish</option>
+            <option value="warfare">⚔️ Warfare</option>
+            <option value="offensive">🗡 Offensive</option>
+            <option value="skirmish">🎯 Skirmish</option>
           </select>
         </div>
 

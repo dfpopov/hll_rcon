@@ -29,6 +29,8 @@ export interface PlayerRow {
   offense?: number
   defense?: number
   support?: number
+  avatar_url?: string | null
+  country?: string | null
 }
 
 export interface TopPlayersResponse {
@@ -144,6 +146,17 @@ export interface PlayerProfile {
   support: number
   best_kills_streak: number
   longest_life_secs: number
+  avatar_url: string | null
+  persona_name: string | null
+  profile_url: string | null
+  country: string | null
+}
+
+export interface Achievement {
+  id: string
+  title: string
+  icon: string
+  tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
 }
 
 export interface WeaponKills { weapon: string; kills: number }
@@ -160,6 +173,7 @@ export interface RecentMatch {
 
 export interface PlayerDetail {
   profile: PlayerProfile
+  achievements: Achievement[]
   top_weapons: WeaponKills[]
   most_killed: { victim: string; kills: number }[]
   killed_by: { killer: string; deaths: number }[]

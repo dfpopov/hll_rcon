@@ -31,14 +31,8 @@ function formatPlaytime(seconds: number): string {
   return `${hours}h ${minutes}m`
 }
 
-function levelBadgeColor(level: number): string {
-  if (level >= 250) return 'bg-gradient-to-br from-red-500 to-red-700'
-  if (level >= 200) return 'bg-gradient-to-br from-orange-500 to-red-600'
-  if (level >= 150) return 'bg-gradient-to-br from-yellow-500 to-orange-600'
-  if (level >= 100) return 'bg-gradient-to-br from-amber-500 to-yellow-600'
-  if (level >= 50)  return 'bg-gradient-to-br from-emerald-500 to-emerald-700'
-  return 'bg-gradient-to-br from-zinc-500 to-zinc-700'
-}
+import LevelBadge from '../components/LevelBadge'
+import Avatar from '../components/Avatar'
 
 const PAGE_SIZE = 50
 const DEFAULT_MIN_MATCHES = 50
@@ -169,14 +163,8 @@ export default function HomePage() {
                 <td className="p-3 text-zinc-500">{page * PAGE_SIZE + i + 1}</td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center justify-center min-w-[2.5rem] px-1.5 py-0.5 rounded text-xs font-bold text-white ${levelBadgeColor(
-                        r.level,
-                      )}`}
-                      title={`Рівень ${r.level}`}
-                    >
-                      {r.level}
-                    </span>
+                    <Avatar url={r.avatar_url} name={r.name} size={28} />
+                    <LevelBadge level={r.level} />
                     <Link
                       to={`/player/${r.steam_id}`}
                       className="font-medium hover:text-amber-400 transition-colors"

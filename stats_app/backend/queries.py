@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from weapon_classes import classify_weapon, all_class_names
+from achievements import compute_achievements
 
 
 # Whitelist mapping: API sort param → SQL expression.
@@ -137,10 +138,13 @@ def top_players(
             SUM(ps.combat) AS combat,
             SUM(ps.offense) AS offense,
             SUM(ps.defense) AS defense,
-            SUM(ps.support) AS support
+            SUM(ps.support) AS support,
+            MAX(si.profile->>'avatarmedium') AS avatar_url,
+            MAX(si.country) AS country
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         JOIN map_history m ON m.id = ps.map_id
+        LEFT JOIN steam_info si ON si.playersteamid_id = s.id
         {where_clause}
         GROUP BY s.steam_id_64
         HAVING COUNT(DISTINCT ps.map_id) >= :min_matches
@@ -263,7 +267,7 @@ def player_detail(db: Session, steam_id: str):
 
     Returns: {profile, top_weapons, most_killed, killed_by, recent_matches} or None.
     """
-    # 1) Profile aggregation
+    # 1) Profile aggregation + steam_info join for avatar/country
     sql_profile = text("""
         SELECT
             s.steam_id_64 AS steam_id,
@@ -282,9 +286,14 @@ def player_detail(db: Session, steam_id: str):
             SUM(ps.defense) AS defense,
             SUM(ps.support) AS support,
             MAX(ps.kills_streak) AS best_kills_streak,
-            MAX(ps.longest_life_secs) AS longest_life_secs
+            MAX(ps.longest_life_secs) AS longest_life_secs,
+            MAX(si.profile->>'avatarfull') AS avatar_url,
+            MAX(si.profile->>'personaname') AS persona_name,
+            MAX(si.profile->>'profileurl') AS profile_url,
+            MAX(si.country) AS country
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        LEFT JOIN steam_info si ON si.playersteamid_id = s.id
         WHERE s.steam_id_64 = :sid
         GROUP BY s.steam_id_64
     """)
@@ -292,6 +301,7 @@ def player_detail(db: Session, steam_id: str):
     if not profile_row:
         return None
     profile = dict(profile_row._mapping)
+    achievements_list = compute_achievements(profile)
 
     # 2) Top weapons used (sum kills per weapon across all matches)
     sql_weapons = text("""
@@ -358,6 +368,7 @@ def player_detail(db: Session, steam_id: str):
 
     return {
         "profile": profile,
+        "achievements": achievements_list,
         "top_weapons": top_weapons,
         "most_killed": most_killed,
         "killed_by": killed_by,

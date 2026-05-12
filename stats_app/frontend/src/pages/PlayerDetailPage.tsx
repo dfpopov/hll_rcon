@@ -1,21 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchPlayerDetail, PlayerDetail } from '../api/client'
+import LevelBadge from '../components/LevelBadge'
+import Avatar from '../components/Avatar'
+import AchievementBadge from '../components/AchievementBadge'
 
 function formatPlaytime(seconds: number): string {
   if (!seconds) return '—'
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   return `${hours}h ${minutes}m`
-}
-
-function levelBadgeColor(level: number): string {
-  if (level >= 250) return 'bg-gradient-to-br from-red-500 to-red-700'
-  if (level >= 200) return 'bg-gradient-to-br from-orange-500 to-red-600'
-  if (level >= 150) return 'bg-gradient-to-br from-yellow-500 to-orange-600'
-  if (level >= 100) return 'bg-gradient-to-br from-amber-500 to-yellow-600'
-  if (level >= 50)  return 'bg-gradient-to-br from-emerald-500 to-emerald-700'
-  return 'bg-gradient-to-br from-zinc-500 to-zinc-700'
 }
 
 function StatCard({ label, value, accent }: { label: string; value: string | number; accent?: string }) {
@@ -84,17 +78,41 @@ export default function PlayerDetailPage() {
       </div>
 
       {/* Header */}
-      <div className="mb-6 flex items-center gap-4 flex-wrap">
-        <span
-          className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-2 rounded text-lg font-bold text-white ${levelBadgeColor(
-            p.level,
-          )}`}
-        >
-          {p.level}
-        </span>
-        <h1 className="text-3xl font-bold flex-1 break-all">{p.name}</h1>
-        <span className="text-xs text-zinc-500 font-mono">{p.steam_id}</span>
+      <div className="mb-4 flex items-center gap-4 flex-wrap">
+        <Avatar url={p.avatar_url} name={p.name} size={80} />
+        <LevelBadge level={p.level} size="md" />
+        <div className="flex-1 min-w-0">
+          <h1 className="text-3xl font-bold break-all">{p.name}</h1>
+          {p.country && (
+            <div className="text-zinc-400 text-sm mt-1">
+              <span className="font-mono">{p.country}</span>
+              {p.persona_name && p.persona_name !== p.name && (
+                <span className="ml-3 text-zinc-500">Steam: {p.persona_name}</span>
+              )}
+            </div>
+          )}
+        </div>
+        {p.profile_url && (
+          <a href={p.profile_url} target="_blank" rel="noopener noreferrer"
+             className="text-xs text-amber-400 hover:text-amber-300 px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
+            Steam ↗
+          </a>
+        )}
       </div>
+
+      {/* Achievements row */}
+      {data.achievements && data.achievements.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-2">
+            Досягнення ({data.achievements.length})
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {data.achievements.map((a) => (
+              <AchievementBadge key={a.id} a={a} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Overview stats */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
