@@ -61,7 +61,7 @@ STATS_TO_DISPLAY = {
             # {"score": "player_vehicle_kills", "display": 3, "details": True, "vip_winners": 0},
             # {"score": "player_vehicles_destroyed", "display": 3, "details": True, "vip_winners": 0},
             # player_teamplay + player_offdef removed per user request — focus on raw stats only
-            {"score": "kills", "display": 3, "details": True, "vip_winners": 0},                       # raw kills count
+            {"score": "kills", "display": 3, "details": True, "vip_winners": 3},                       # raw kills count — VIP for top-3
             {"score": "player_kd", "display": 3, "details": True, "vip_winners": 0},                   # kills / deaths
             {"score": "player_kpm", "display": 3, "details": True, "vip_winners": 0}                   # kills per minute
         ],
