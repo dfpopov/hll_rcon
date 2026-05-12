@@ -197,6 +197,20 @@ def get_best_single_game(
     return {"metric": metric, "count": len(rows), "side": side, "results": rows}
 
 
+@app.get("/api/players/autocomplete")
+@limiter.limit("120/minute")  # higher cap since this fires on every keystroke
+def get_autocomplete(
+    request: Request,
+    q: str = Query(min_length=2, max_length=64),
+    limit: int = Query(default=10, ge=1, le=25),
+    db: Session = Depends(get_db),
+):
+    """Lightweight player suggestions for the search box. Matches across
+    historical names; returns one row per steam_id with canonical name +
+    avatar."""
+    return {"suggestions": queries.autocomplete_players(db, q, limit)}
+
+
 @app.get("/api/countries")
 @limiter.limit("60/minute")
 def get_countries(request: Request, db: Session = Depends(get_db)):

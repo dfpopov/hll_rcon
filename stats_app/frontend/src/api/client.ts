@@ -143,6 +143,21 @@ export async function fetchBestSingleGameByClass(weapon_class: string, limit = 1
   return data
 }
 
+export interface AutocompletePlayer {
+  steam_id: string
+  name: string
+  avatar_url: string | null
+  matches: number
+}
+
+export async function fetchAutocomplete(q: string, limit = 8): Promise<AutocompletePlayer[]> {
+  if (!q || q.trim().length < 2) return []
+  const { data } = await api.get<{ suggestions: AutocompletePlayer[] }>(
+    '/players/autocomplete', { params: { q: q.trim(), limit } }
+  )
+  return data.suggestions
+}
+
 export interface CountryEntry {
   country: string
   players: number

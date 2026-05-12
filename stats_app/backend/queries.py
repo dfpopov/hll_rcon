@@ -93,7 +93,13 @@ def _build_filters(
         params["map_name"] = map_name
 
     if search:
-        parts.append("ps.name ILIKE :search")
+        # Match against ANY of the player's historical names (alt names),
+        # not just the latest. EXISTS subquery limited to the same player.
+        parts.append(
+            "EXISTS (SELECT 1 FROM player_stats ps_alt "
+            "WHERE ps_alt.playersteamid_id = ps.playersteamid_id "
+            "AND ps_alt.name ILIKE :search)"
+        )
         params["search"] = f"%{search}%"
 
     if side in SIDES:
@@ -685,6 +691,37 @@ def melee_meta(db: Session, steam_id: str) -> dict:
         "last_melee_death": last_melee_death,
         "current_streak": current_streak,
     }
+
+
+def autocomplete_players(db: Session, q: str, limit: int = 10) -> list[dict]:
+    """Player autocomplete: returns top matches by ILIKE substring against
+    ANY historical name (player_stats.name). One row per steam_id with the
+    canonical (most-recent / MAX) display name and avatar.
+    Ordered by matches_played desc — typed prefix hits the active veterans
+    first."""
+    sql = text("""
+        SELECT
+          s.steam_id_64 AS steam_id,
+          MAX(ps.name) AS name,
+          MAX(si.profile->>'avatarmedium') AS avatar_url,
+          COUNT(DISTINCT ps.map_id) AS matches
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        LEFT JOIN steam_info si ON si.playersteamid_id = s.id
+        WHERE ps.name ILIKE :pattern
+        GROUP BY s.steam_id_64
+        ORDER BY matches DESC
+        LIMIT :limit
+    """)
+    return [
+        {
+            "steam_id": r.steam_id,
+            "name": r.name,
+            "avatar_url": r.avatar_url,
+            "matches": int(r.matches or 0),
+        }
+        for r in db.execute(sql, {"pattern": f"%{q}%", "limit": limit})
+    ]
 
 
 def country_distribution(db: Session) -> list[dict]:
