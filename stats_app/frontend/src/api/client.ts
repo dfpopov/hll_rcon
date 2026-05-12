@@ -248,11 +248,23 @@ export interface PlayerDetail {
   played_with_against: PlayedWithAgainst
   melee_meta: MeleeMeta
   hardcounters: Hardcounter[]
+  achievement_progress: AchievementProgress[]
 }
 
 export interface PlayedWithAgainst {
   teammates: { steam_id: string; name: string; matches: number }[]
   opponents: { steam_id: string; name: string; matches: number }[]
+}
+
+export interface AchievementProgress {
+  id: string
+  title: string
+  icon: string
+  tier: Achievement['tier']
+  description: string
+  current: number
+  threshold: number
+  pct: number
 }
 
 export interface Hardcounter {

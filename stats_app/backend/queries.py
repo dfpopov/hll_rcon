@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from weapon_classes import classify_weapon, all_class_names
-from achievements import compute_achievements, ACHIEVEMENTS
+from achievements import compute_achievements, compute_achievement_progress, ACHIEVEMENTS
 from theater_classifier import FACTIONS, maps_for_faction
 
 
@@ -1134,6 +1134,9 @@ def player_detail(db: Session, steam_id: str):
     # 16) Hardcounters — players with positive K/D against this player.
     hc = hardcounters(db, steam_id, min_deaths=5, limit=5)
 
+    # 17) Achievement progress — top-5 closest-to-earning badges.
+    ach_progress = compute_achievement_progress(profile, limit=5)
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -1152,4 +1155,5 @@ def player_detail(db: Session, steam_id: str):
         "played_with_against": pwa,
         "melee_meta": melee,
         "hardcounters": hc,
+        "achievement_progress": ach_progress,
     }

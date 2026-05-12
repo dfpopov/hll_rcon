@@ -95,6 +95,76 @@ def _support_dominant(p: Dict[str, Any]) -> bool:
     return (p.get("support") or 0) / total >= 0.60
 
 
+# For each simple "metric >= threshold" achievement, the metric field name
+# in the profile + the threshold value. Used by compute_achievement_progress
+# to show "X more to next badge" progress bars. Composite/relative achievements
+# (balanced, iron_apron, supply_main, exact_one) deliberately excluded —
+# their predicates don't fit a single-axis progress display.
+SIMPLE_THRESHOLDS: Dict[str, tuple] = {
+    "centurion":     ("matches_played",     100),
+    "veteran":       ("matches_played",     500),
+    "lifetime":      ("matches_played",     1000),
+    "sharpshooter":  ("kd_ratio",           2.0),
+    "elite_sniper":  ("kd_ratio",           3.0),
+    "centurion_k":   ("kills",              100),
+    "killer_1k":     ("kills",              1000),
+    "killing_mach":  ("kills",              5000),
+    "reaper":        ("kills",              10000),
+    "unstoppable":   ("best_kills_streak",  30),
+    "legendary_st":  ("best_kills_streak",  60),
+    "god_mode":      ("best_kills_streak",  88),
+    "marathon":      ("total_seconds",      100 * 3600),
+    "time_lord":     ("total_seconds",      500 * 3600),
+    "combat_master": ("combat",             100000),
+    "support_hero":  ("support",            300000),
+    "defender":      ("defense",            200000),
+    "attacker":      ("offense",            100000),
+    "elite":         ("level",              200),
+    "legendary_lvl": ("level",              250),
+    "mythic_lvl":    ("level",              300),
+    "survivor":      ("longest_life_secs",  600),
+    "tk_offender":   ("teamkills",          100),
+    "clumsy":        ("deaths_by_tk",       100),
+}
+
+
+def compute_achievement_progress(profile: Dict[str, Any], limit: int = 5) -> List[Dict[str, Any]]:
+    """Top-N closest-to-earning achievements for this profile.
+
+    Returns each as {id, title, icon, tier, description, current, threshold, pct}.
+    Sorted by completion % descending. Excludes already-earned and
+    excludes composite predicates that don't fit the simple progress model.
+    """
+    earned_ids = {a["id"] for a in compute_achievements(profile)}
+    rows: List[Dict[str, Any]] = []
+    for aid, (key, threshold) in SIMPLE_THRESHOLDS.items():
+        if aid in earned_ids:
+            continue
+        try:
+            current = profile.get(key) or 0
+            current_f = float(current)
+        except (TypeError, ValueError):
+            continue
+        if threshold <= 0:
+            continue
+        pct = min(99.0, (current_f / threshold) * 100)
+        meta = next((a for a in ACHIEVEMENTS if a[0] == aid), None)
+        if not meta:
+            continue
+        rows.append({
+            "id": aid,
+            "title": meta[1],
+            "icon": meta[2],
+            "tier": meta[3],
+            "description": meta[4],
+            "current": current_f,
+            "threshold": threshold,
+            "pct": round(pct, 1),
+        })
+    rows.sort(key=lambda r: r["pct"], reverse=True)
+    return rows[:limit]
+
+
 def compute_achievements(profile: Dict[str, Any]) -> List[Dict[str, str]]:
     """Return list of earned achievements for a player profile."""
     earned = []

@@ -248,6 +248,45 @@ export default function PlayerDetailPage() {
         </section>
       )}
 
+      {/* Achievement progress — closest-to-earning badges */}
+      {data.achievement_progress && data.achievement_progress.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-2">
+            📈 Близькі досягнення
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
+            {data.achievement_progress.map((p) => {
+              // Format current/threshold according to the metric scale.
+              const fmt = (v: number) => {
+                if (p.threshold >= 100000) return Math.round(v).toLocaleString('uk-UA')
+                if (p.threshold >= 3600 && p.id !== 'survivor') {
+                  // total_seconds → hours
+                  return `${Math.floor(v / 3600)} год`
+                }
+                if (p.threshold % 1 !== 0) return v.toFixed(2)
+                return String(Math.round(v))
+              }
+              return (
+                <div key={p.id} className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="text-xl leading-none">{p.icon}</span>
+                    <span className="font-medium text-sm truncate flex-1" title={p.description}>{p.title}</span>
+                  </div>
+                  <div className="text-xs text-zinc-500 mb-2 truncate" title={p.description}>{p.description}</div>
+                  <div className="h-2 bg-zinc-800 rounded overflow-hidden mb-1">
+                    <div className="bg-amber-500 h-full" style={{ width: `${p.pct}%` }} />
+                  </div>
+                  <div className="text-xs text-zinc-400 flex items-baseline justify-between tabular-nums">
+                    <span>{fmt(p.current)} / {fmt(p.threshold)}</span>
+                    <span className="text-amber-400 font-medium">{p.pct}%</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Playstyle classifier — personality tag derived from score distribution */}
       <PlaystyleCard p={p} />
 
