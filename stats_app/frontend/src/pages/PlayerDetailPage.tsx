@@ -8,6 +8,7 @@ import AchievementBadge from '../components/AchievementBadge'
 import CountryFlag from '../components/CountryFlag'
 import PlayerRadar from '../components/PlayerRadar'
 import ProgressionSparkline from '../components/ProgressionSparkline'
+import { NemesisStamp, LovedHatedMap, PlaystyleCard } from '../components/PlayerMemes'
 
 // CRCON public stats site URL — match details available on port 7010
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
@@ -235,6 +236,9 @@ export default function PlayerDetailPage() {
         </section>
       )}
 
+      {/* Playstyle classifier — personality tag derived from score distribution */}
+      <PlaystyleCard p={p} />
+
       {/* Overview stats */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
         <StatCard label="Kills"          value={p.kills.toLocaleString('uk-UA')} accent="text-green-400" />
@@ -411,6 +415,9 @@ export default function PlayerDetailPage() {
       )}
 
       {/* Top maps */}
+      {/* Loved / Hated map cards — best vs worst K/D among top played maps */}
+      <LovedHatedMap topMaps={data.top_maps ?? []} />
+
       {data.top_maps && data.top_maps.length > 0 && (
         <section className="mb-6">
           <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🗺 Топ-10 карт за матчами</h2>
@@ -465,6 +472,9 @@ export default function PlayerDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Nemesis stamp — top killer highlighted as eternal rival */}
+      <NemesisStamp d={data} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PVP: most killed */}
