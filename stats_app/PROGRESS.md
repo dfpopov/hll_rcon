@@ -50,6 +50,26 @@ Pages live:
 
 ## Findings (chronological)
 
+### 2026-05-13 — Layout refresh + Hardcounters + Achievement progress + World Map (C1-C4)
+
+User-driven follow-up sprint. Layout was getting cluttered after the
+B-batch — restructured PlayerDetail into 5 thematic blocks separated
+by SectionDividers, trimmed top-N lists from 10 to 5, removed
+top_servers section since the production has one dominant server.
+
+| Commit | Phase | Scope |
+|---|---|---|
+| `6b332086` | C1 | Layout: 5 blocks, top-N → 5, dropped top_servers |
+| `75aa008d` | C2 | Hardcounters — players with positive K/D against this profile |
+| `9f192c40` | C3 | Achievement progress — top-5 closest-to-earning badges with progress bars |
+| `bcc724d8` | C4 | World map at /server/countries — react-simple-maps + ISO alpha-2 to numeric lookup |
+| `9a9e7dac` | C4 fix | Filter steam_info.country to real 2-letter ISO codes ("private" was leaking in) |
+
+Real samples:
+- Hardcounters for Пакет: BaNnY +200, [BWR]PEKLA +81, Heartattack333 +61
+- Closest progress for Пакет: Mythic lvl 300+ at 91.7% (275/300), Нестримний 30+ streak at 90% (27/30)
+- Top countries: GB 1114, UA 807, DE 712, US 628, PL 467
+
 ### 2026-05-12 — HLL-Records parity (B1+B2+B3): playtime%, win/map, top weapon, per-class, with/against, melee
 
 Post-Roadmap pass closing visible gaps vs hllrecords.com layout.
