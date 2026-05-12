@@ -50,6 +50,35 @@ Pages live:
 
 ## Findings (chronological)
 
+### 2026-05-12 — Roadmap COMPLETE: P0+P1+P2+P3+P4 all deployed
+
+Full sequence of commits since the post-Phase-5 Roadmap was written:
+
+| Commit | Phase | Scope |
+|---|---|---|
+| `23ea6a81` | P0#1 | Country flag → flagcdn.com PNG (Windows fix) |
+| `f609c110` | P0#2,#3 | Achievement descriptions visible + MV refresh thread |
+| `346277bf` | P1 | Multi-player compare via localStorage, /compare/:ids |
+| `50942260` | P2a | First seen, mode/faction pref, top maps, alt names |
+| `0d090488` | P2b1 | Kill/death by class + melee callout + top servers |
+| `48f46da1` | P2b2 | Win rate per side (Allies/Axis) |
+| `84b8e444` | P2c | Recharts radar + progression sparkline |
+| `977fc617` | P3 | Faction split filter (US/GB/USSR/Wehrmacht/DAK) |
+| `623f7913` | P4a | Nemesis stamp + Loved/Hated map + Playstyle card |
+| `df5fb20e` | P4b | Hall of Shame page + deaths_by_tk sort |
+| `3d08e2f8` | P4c | Time-of-day heatmap + match titles + 4 hidden achievements |
+
+Production sanity checks done after each deploy. Real samples:
+
+- Side filter Axis (top kills): 287ms via player_match_side MV join.
+- Head-to-head: Пакет с пакетами 112 vs BaNnY 308 (FG42 x4 most used).
+- Faction USSR: 2 qualifying players over min_matches=50 (small slice
+  because Eastern Front has narrower coverage in the MV).
+- Win rate: BaNnY 59.9% overall, Axis 63.1% > Allies 57.1%.
+- Hour distribution: prime time 18-22 for active players.
+- Achievement pool: 24 → 28 (4 new hidden tier rare/epic).
+- Hall of Shame top "Незграби": Heartattack333 (194), ᛋᛏᚨᛋ (159).
+
 ### 2026-05-12 — Roadmap P0/P1: country flag + ach descriptions + MV cron + multi-compare
 
 - **P0 #1 country flag** (commit `23ea6a81`): switched from Unicode RIS letters
