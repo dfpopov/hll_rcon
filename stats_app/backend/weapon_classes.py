@@ -16,12 +16,13 @@ WEAPON_CLASS_PATTERNS: list[tuple[str, list[str]]] = [
     # Specific must come before more general (e.g. "ARTILLERY" patterns before tank-gun "GUN")
     ("Artillery",  ["HOWITZER", "WERFER", "150MM", "152MM", "122MM", "105MM"]),
     ("Anti-Tank",  ["PANZERSCHRECK", "BAZOOKA", "FAUST", "PIAT", "PTRS", "PTRD", "AT MINE", "ATR"]),
-    ("Tank Gun",   ["GUN [", "MAIN GUN", "COAXIAL", "HULL MG"]),
-    ("Machine Gun", ["MG34", "MG42", "BROWNING", "M1919", "M2 BROWNING", "BREN", "DP-27", "DP27",
+    ("Tank Gun",   ["GUN [", "CANNON [", "MAIN GUN", "COAXIAL", "HULL MG", "HALF-TRACK"]),
+    ("Machine Gun", ["MG34", "MG42", "BROWNING M1919", "M1919", "M2 BROWNING", "BREN", "DP-27", "DP27",
                       "VICKERS", "MG-34", "MG-42", "ZB-26", "HEAVY MG"]),
     ("Submachine Gun", ["MP40", "MP-40", "MP41", "THOMPSON", "STEN", "PPSH", "PPS-43", "GREASE GUN",
-                          "MAS-38", "M3", "STG44", "STG 44", "SUOMI"]),
-    ("Sniper Rifle", ["SNIPER", "G43", "SCOPE"]),
+                          "MAS-38", "M3 SMG", "M3 GREASE", "STG44", "STG 44", "SUOMI"]),
+    # Sniper rifles: explicit "SNIPER", "SCOPE", or HLL's "x8" suffix (8x scope variant)
+    ("Sniper Rifle", ["SNIPER", "SCOPE", "K x8", " x8", "X8"]),
     ("Rifle",      ["KARABINER 98K", "K98", "M1 GARAND", "M1903", "MOSIN", "LEE-ENFIELD",
                       "LEE ENFIELD", "SVT-40", "SVT40", "GEWEHR"]),
     ("Pistol",     ["LUGER", "WALTHER", "TT-33", "TT33", "WEBLEY", "COLT", "M1911", "M1A1"]),
