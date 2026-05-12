@@ -17,6 +17,7 @@ SORT_COLUMNS = {
     "kills": "SUM(ps.kills)",
     "deaths": "SUM(ps.deaths)",
     "teamkills": "SUM(ps.teamkills)",
+    "deaths_by_tk": "SUM(ps.deaths_by_tk)",
     "kd_ratio": "CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0)",
     "kpm": "AVG(ps.kills_per_minute)",
     "playtime": "SUM(ps.time_seconds)",
@@ -168,6 +169,7 @@ def top_players(
             SUM(ps.kills) AS kills,
             SUM(ps.deaths) AS deaths,
             SUM(ps.teamkills) AS teamkills,
+            SUM(ps.deaths_by_tk) AS deaths_by_tk,
             ROUND(
                 CAST(SUM(ps.kills) AS NUMERIC) /
                 NULLIF(SUM(ps.deaths), 0),

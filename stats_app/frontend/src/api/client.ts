@@ -6,7 +6,7 @@ export const api = axios.create({
 })
 
 export type SortKey =
-  | 'kills' | 'deaths' | 'teamkills'
+  | 'kills' | 'deaths' | 'teamkills' | 'deaths_by_tk'
   | 'kd_ratio' | 'kpm' | 'playtime' | 'matches' | 'level'
   | 'combat' | 'offense' | 'defense' | 'support'
 
@@ -21,6 +21,7 @@ export interface PlayerRow {
   kills: number
   deaths: number
   teamkills: number
+  deaths_by_tk?: number
   kd_ratio: number | null
   kpm: number | null
   matches_played: number

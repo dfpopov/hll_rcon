@@ -19,6 +19,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/records/single-game" className={navClass}>Рекорди (1 матч)</NavLink>
           <NavLink to="/achievements" className={navClass}>Досягнення</NavLink>
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
+          <NavLink to="/hall-of-shame" className={navClass}>💀 Hall of Shame</NavLink>
         </div>
       </nav>
       <main className="flex-1 pb-24">{children}</main>

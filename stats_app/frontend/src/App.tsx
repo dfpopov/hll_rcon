@@ -7,6 +7,7 @@ import PlayerDetailPage from './pages/PlayerDetailPage'
 import AchievementsPage from './pages/AchievementsPage'
 import AchievementDetailPage from './pages/AchievementDetailPage'
 import ComparePage from './pages/ComparePage'
+import HallOfShamePage from './pages/HallOfShamePage'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/achievements/:id" element={<AchievementDetailPage />} />
         <Route path="/compare" element={<ComparePage />} />
         <Route path="/compare/:ids" element={<ComparePage />} />
+        <Route path="/hall-of-shame" element={<HallOfShamePage />} />
       </Routes>
     </Layout>
   )
