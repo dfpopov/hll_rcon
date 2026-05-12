@@ -636,9 +636,12 @@ def get_player_ranking(
                     # [:28] avoids line returns
                     name = cmd["name"][:28]
 
-                    # Add team/squad details
+                    # Add team/squad details + K/D info inline
                     if details:
-                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:23]}"  # commander has no squad, so no /role suffix
+                        c_k = cmd.get("kills", 0)
+                        c_d = cmd.get("deaths", 0)
+                        c_kd = f"{c_k / c_d:.1f}" if c_d > 0 else "∞"
+                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:18]} K:{c_k} D:{c_d} K/D:{c_kd}"
 
                     # Add the formatted entry to the global list
                     players_stats.append({
@@ -801,6 +804,90 @@ def get_squad_ranking(get_team_view_output: dict, observed_unit_type: str, score
     return formatted_list
 
 
+def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
+    """
+    Per-side, per-role squad breakdown showing EVERY squad member with K/D/KD.
+
+    Layout:
+        ТОП ЗАГОНИ — СОЮЗ
+        ├ Піхота
+        │ ├ Загін Able (4 гр., K:47 D:18 K/D:2.6)
+        │ │  · PlayerName  K:15 D:5 K/D:3.0
+        ...
+
+    Skips: artillery (per user preference). Commander is shown in players section.
+    """
+    result = get_team_view_output.get("result", get_team_view_output)
+
+    sides = [
+        ("allies", TRANSL.get("allies_short", ["all"] * 8)[lang]),
+        ("axis", TRANSL.get("axis_short", ["axi"] * 8)[lang]),
+    ]
+    role_order = [
+        ("infantry", TRANSL["infantry"][lang].capitalize()),
+        ("armor", TRANSL["armor"][lang].capitalize()),
+        ("recon", TRANSL["recon"][lang].capitalize()),
+    ]
+
+    blocks = []
+    for side_key, side_short in sides:
+        side_data = result.get(side_key, {})
+        squads = side_data.get("squads", {}) or {}
+        if not squads:
+            continue
+
+        side_display = side_short.upper()
+        side_lines = [f"{TRANSL['top_squads'][lang].upper()} — {side_display}"]
+
+        roles_present = []
+        for role_key, role_display in role_order:
+            role_squads = [
+                (name, info) for name, info in squads.items()
+                if (info.get("type") or "").lower() == role_key
+            ]
+            if role_squads:
+                role_squads.sort(
+                    key=lambda item: sum(p.get("kills", 0) for p in (item[1].get("players") or [])),
+                    reverse=True
+                )
+                roles_present.append((role_display, role_squads))
+
+        for role_idx, (role_display, role_squads) in enumerate(roles_present):
+            is_last_role = role_idx == len(roles_present) - 1
+            role_branch = "└" if is_last_role else "├"
+            role_cont = " " if is_last_role else "│"
+            side_lines.append(f"{role_branch} {role_display}")
+
+            for sq_idx, (sq_name, sq_info) in enumerate(role_squads):
+                is_last_squad = sq_idx == len(role_squads) - 1
+                squad_branch = "└" if is_last_squad else "├"
+
+                players = sq_info.get("players") or []
+                sq_k = sum(p.get("kills", 0) for p in players)
+                sq_d = sum(p.get("deaths", 0) for p in players)
+                sq_kd = f"{sq_k / sq_d:.1f}" if sq_d > 0 else "∞"
+
+                side_lines.append(
+                    f"{role_cont} {squad_branch} Загін {sq_name.capitalize()}"
+                    f" ({len(players)} гр., K:{sq_k} D:{sq_d} K/D:{sq_kd})"
+                )
+
+                players_sorted = sorted(players, key=lambda p: p.get("kills", 0), reverse=True)
+                squad_cont = " " if is_last_squad else "│"
+                for player in players_sorted:
+                    p_name = (player.get("name") or "?")[:20]
+                    p_k = player.get("kills", 0)
+                    p_d = player.get("deaths", 0)
+                    p_kd = f"{p_k / p_d:.1f}" if p_d > 0 else "∞"
+                    side_lines.append(
+                        f"{role_cont} {squad_cont}  · {p_name}  K:{p_k} D:{p_d} K/D:{p_kd}"
+                    )
+
+        blocks.append("\n".join(side_lines))
+
+    return "\n\n".join(blocks)
+
+
 def generate_full_report(rcon, get_team_view_output, stats_to_display, is_match_end: bool = False):
     """
     Calls children functions to get/sort/format rankings for players and squads,
@@ -895,7 +982,8 @@ def generate_full_report(rcon, get_team_view_output, stats_to_display, is_match_
     # Final report construction
     # -------------------- -------------------- --------------------
     player_lines = process_config_category("players", get_player_ranking, "top_players")
-    squad_lines = process_config_category("squads", get_squad_ranking, "top_squads")
+    squads_breakdown = generate_squads_breakdown(get_team_view_output, valid_config.lang)
+    squad_lines = []  # legacy variable kept for bonus-note logic compatibility
 
     # VIP legend
     # --------------------
@@ -952,10 +1040,10 @@ def generate_full_report(rcon, get_team_view_output, stats_to_display, is_match_
     if player_lines:
         report_sections.append("\n".join(player_lines))
 
-    # Top squads
+    # Top squads (new per-side breakdown with all members)
     # --------------------
-    if squad_lines:
-        report_sections.append("\n".join(squad_lines))
+    if squads_breakdown:
+        report_sections.append(squads_breakdown)
 
     return "\n\n".join(report_sections)
 
