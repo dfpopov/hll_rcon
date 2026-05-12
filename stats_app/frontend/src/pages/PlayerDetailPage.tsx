@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { fetchPlayerDetail, PlayerDetail } from '../api/client'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { fetchPlayerDetail, findPlayerByName, PlayerDetail } from '../api/client'
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import AchievementBadge from '../components/AchievementBadge'
+import CountryFlag from '../components/CountryFlag'
+
+// CRCON public stats site URL — match details available on port 7010
+const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
 
 function formatPlaytime(seconds: number): string {
   if (!seconds) return '—'
@@ -21,13 +25,19 @@ function StatCard({ label, value, accent }: { label: string; value: string | num
   )
 }
 
-function BarRow({ name, value, max, color }: {
-  name: string; value: number; max: number; color: string
+function BarRow({ name, value, max, color, onClick }: {
+  name: string; value: number; max: number; color: string; onClick?: () => void
 }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex items-center gap-2 text-sm">
-      <span className="w-44 truncate" title={name}>{name}</span>
+      <span
+        className={`w-44 truncate ${onClick ? 'cursor-pointer hover:text-amber-400 transition-colors' : ''}`}
+        title={onClick ? `${name} — клікніть для профілю` : name}
+        onClick={onClick}
+      >
+        {name}
+      </span>
       <div className="flex-1 bg-zinc-800 rounded h-5 overflow-hidden relative">
         <div className={`${color} h-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
@@ -38,6 +48,7 @@ function BarRow({ name, value, max, color }: {
 
 export default function PlayerDetailPage() {
   const { steamId } = useParams<{ steamId: string }>()
+  const navigate = useNavigate()
   const [data, setData] = useState<PlayerDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +62,17 @@ export default function PlayerDetailPage() {
       .catch((err) => setError(err?.response?.data?.detail ?? err.message ?? 'unknown error'))
       .finally(() => setLoading(false))
   }, [steamId])
+
+  const handlePvpClick = async (name: string) => {
+    const sid = await findPlayerByName(name)
+    if (sid) {
+      navigate(`/player/${encodeURIComponent(sid)}`)
+    } else {
+      // Show subtle feedback that this name doesn't have a profile
+      // (could be opponent from another server, ghost record etc.)
+      console.warn('PVP player not found in DB:', name)
+    }
+  }
 
   if (loading) {
     return <div className="max-w-6xl mx-auto p-6 text-zinc-400">Завантаження…</div>
@@ -83,11 +105,11 @@ export default function PlayerDetailPage() {
         <LevelBadge level={p.level} size="md" />
         <div className="flex-1 min-w-0">
           <h1 className="text-3xl font-bold break-all">{p.name}</h1>
-          {p.country && (
-            <div className="text-zinc-400 text-sm mt-1">
-              <span className="font-mono">{p.country}</span>
+          {(p.country || p.persona_name) && (
+            <div className="text-zinc-400 text-sm mt-1 flex items-center gap-3 flex-wrap">
+              {p.country && <CountryFlag iso={p.country} showCode />}
               {p.persona_name && p.persona_name !== p.name && (
-                <span className="ml-3 text-zinc-500">Steam: {p.persona_name}</span>
+                <span className="text-zinc-500">Steam: {p.persona_name}</span>
               )}
             </div>
           )}
@@ -140,7 +162,8 @@ export default function PlayerDetailPage() {
             {data.most_killed.length === 0 && <div className="text-zinc-600 text-sm">немає даних</div>}
             {data.most_killed.map((v) => (
               <BarRow key={v.victim} name={v.victim} value={v.kills} max={maxKilled}
-                color="bg-gradient-to-r from-green-700 to-green-500" />
+                color="bg-gradient-to-r from-green-700 to-green-500"
+                onClick={() => handlePvpClick(v.victim)} />
             ))}
           </div>
         </section>
@@ -154,7 +177,8 @@ export default function PlayerDetailPage() {
             {data.killed_by.length === 0 && <div className="text-zinc-600 text-sm">немає даних</div>}
             {data.killed_by.map((k) => (
               <BarRow key={k.killer} name={k.killer} value={k.deaths} max={maxKillers}
-                color="bg-gradient-to-r from-red-700 to-red-500" />
+                color="bg-gradient-to-r from-red-700 to-red-500"
+                onClick={() => handlePvpClick(k.killer)} />
             ))}
           </div>
         </section>
@@ -194,11 +218,21 @@ export default function PlayerDetailPage() {
             </thead>
             <tbody>
               {data.recent_matches.map((m, i) => (
-                <tr key={i} className="border-t border-zinc-800">
+                <tr key={i} className="border-t border-zinc-800 hover:bg-zinc-800/40">
                   <td className="p-3 text-zinc-400 text-xs whitespace-nowrap">
                     {m.match_date ? new Date(m.match_date).toLocaleDateString('uk-UA') : '—'}
                   </td>
-                  <td className="p-3">{m.map_name}</td>
+                  <td className="p-3">
+                    <a
+                      href={`${CRCON_PUBLIC_BASE}/games/${m.match_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-amber-400 hover:text-amber-300 hover:underline"
+                      title="Відкрити деталі матчу в CRCON ↗"
+                    >
+                      {m.map_name}
+                    </a>
+                  </td>
                   <td className="p-3 text-right text-green-400">{m.kills}</td>
                   <td className="p-3 text-right text-red-400">{m.deaths}</td>
                   <td className="p-3 text-right">{m.kd?.toFixed?.(2) ?? '—'}</td>

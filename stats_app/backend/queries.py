@@ -200,6 +200,39 @@ def get_unique_weapons(db: Session) -> List[str]:
     return [row[0] for row in db.execute(sql)]
 
 
+def find_player_by_name(db: Session, name: str) -> Optional[str]:
+    """Lookup steam_id by exact (then ILIKE) match on player name.
+    Used to make PVP victim/killer names clickable. Returns None if not found.
+    """
+    if not name:
+        return None
+    # Try exact match first (faster, more correct for ambiguous cases)
+    sql_exact = text("""
+        SELECT s.steam_id_64
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        WHERE ps.name = :name
+        GROUP BY s.steam_id_64
+        ORDER BY COUNT(*) DESC
+        LIMIT 1
+    """)
+    row = db.execute(sql_exact, {"name": name}).fetchone()
+    if row:
+        return row[0]
+    # Fallback to case-insensitive
+    sql_ci = text("""
+        SELECT s.steam_id_64
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        WHERE ps.name ILIKE :name
+        GROUP BY s.steam_id_64
+        ORDER BY COUNT(*) DESC
+        LIMIT 1
+    """)
+    row = db.execute(sql_ci, {"name": name}).fetchone()
+    return row[0] if row else None
+
+
 def get_weapon_classes_with_examples(db: Session) -> List[dict]:
     """Return weapon class list with example weapons per class for the UI."""
     weapons = get_unique_weapons(db)
@@ -342,9 +375,10 @@ def player_detail(db: Session, steam_id: str):
     """)
     killed_by = [dict(row._mapping) for row in db.execute(sql_killers, {"sid": steam_id})]
 
-    # 5) Recent matches (last 10)
+    # 5) Recent matches (last 10) — includes match_id for linking to /games/{id}
     sql_recent = text("""
         SELECT
+            m.id AS match_id,
             m.map_name AS map_name,
             m.start AS match_date,
             ps.kills AS kills,

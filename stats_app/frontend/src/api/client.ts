@@ -162,6 +162,7 @@ export interface Achievement {
 export interface WeaponKills { weapon: string; kills: number }
 export interface PvpEntry { victim?: string; killer?: string; kills?: number; deaths?: number }
 export interface RecentMatch {
+  match_id: number
   map_name: string
   match_date: string | null
   kills: number
@@ -183,4 +184,19 @@ export interface PlayerDetail {
 export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {
   const { data } = await api.get<PlayerDetail>(`/player/${encodeURIComponent(steamId)}`)
   return data
+}
+
+/**
+ * Look up steam_id by player name. Returns null if not found (404).
+ * Used to make PVP victim/killer names clickable.
+ */
+export async function findPlayerByName(name: string): Promise<string | null> {
+  try {
+    const { data } = await api.get<{ steam_id: string; name: string }>(
+      '/player-by-name', { params: { name } }
+    )
+    return data.steam_id
+  } catch {
+    return null
+  }
 }

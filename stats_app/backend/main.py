@@ -155,6 +155,20 @@ def get_player_detail(
     return result
 
 
+@app.get("/api/player-by-name")
+@limiter.limit("60/minute")
+def get_player_by_name(
+    request: Request,
+    name: str = Query(min_length=1, max_length=100),
+    db: Session = Depends(get_db),
+):
+    """Lookup steam_id by player name (used to make PVP names clickable)."""
+    sid = queries.find_player_by_name(db, name)
+    if not sid:
+        return JSONResponse({"detail": "player not found"}, status_code=404)
+    return {"steam_id": sid, "name": name}
+
+
 @app.get("/api/maps")
 @limiter.limit("60/minute")
 def get_maps(request: Request, db: Session = Depends(get_db)):

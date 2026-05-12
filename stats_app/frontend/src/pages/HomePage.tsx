@@ -33,6 +33,7 @@ function formatPlaytime(seconds: number): string {
 
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
+import CountryFlag from '../components/CountryFlag'
 
 const PAGE_SIZE = 50
 const DEFAULT_MIN_MATCHES = 50
@@ -165,6 +166,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-2">
                     <Avatar url={r.avatar_url} name={r.name} size={28} />
                     <LevelBadge level={r.level} />
+                    <CountryFlag iso={r.country} />
                     <Link
                       to={`/player/${r.steam_id}`}
                       className="font-medium hover:text-amber-400 transition-colors"
