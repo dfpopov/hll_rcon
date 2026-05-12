@@ -148,6 +148,14 @@ export default function PlayerDetailPage() {
               )}
             </div>
           )}
+          {data.alt_names && data.alt_names.filter((n) => n !== p.name).length > 0 && (
+            <div className="text-zinc-500 text-xs mt-2 flex items-center gap-1.5 flex-wrap">
+              <span className="uppercase tracking-widest text-zinc-600">Aka:</span>
+              {data.alt_names.filter((n) => n !== p.name).slice(0, 8).map((n) => (
+                <span key={n} className="px-1.5 py-0.5 rounded bg-zinc-800/60 border border-zinc-800">{n}</span>
+              ))}
+            </div>
+          )}
         </div>
         {p.profile_url && (
           <a href={p.profile_url} target="_blank" rel="noopener noreferrer"
@@ -187,6 +195,107 @@ export default function PlayerDetailPage() {
         <StatCard label="Support"        value={p.support?.toLocaleString('uk-UA') ?? '—'} />
         <StatCard label="Best kill streak" value={p.best_kills_streak ?? '—'} accent="text-emerald-400" />
       </section>
+
+      {/* Profile overview: first seen, 100+ kill matches, faction & mode preference */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">Перший матч</div>
+          <div className="text-base font-medium mt-1">
+            {data.overview.first_seen
+              ? new Date(data.overview.first_seen).toLocaleDateString('uk-UA', { year: 'numeric', month: 'short', day: 'numeric' })
+              : '—'}
+          </div>
+          <div className="text-xs text-zinc-500 mt-1">{data.overview.total_matches} матчів усього</div>
+        </div>
+
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">100+ kill матчів</div>
+          <div className="text-2xl font-bold mt-1 tabular-nums text-emerald-400">{data.overview.matches_100plus}</div>
+          <div className="text-xs text-zinc-500 mt-1">
+            {data.overview.total_matches > 0
+              ? `${(data.overview.matches_100plus / data.overview.total_matches * 100).toFixed(2)}% усіх ігор`
+              : '—'}
+          </div>
+        </div>
+
+        {/* Game mode preference */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">Режими</div>
+          {(() => {
+            const m = data.overview.mode_counts
+            const total = m.warfare + m.offensive + m.skirmish
+            if (total === 0) return <div className="text-zinc-600 text-sm">немає даних</div>
+            const seg = (n: number, color: string, label: string) => {
+              const pct = n / total * 100
+              if (pct < 0.5) return null
+              return (
+                <div key={label} className="flex items-center gap-2 text-xs">
+                  <div className={`h-1.5 ${color} rounded`} style={{ width: `${pct}%` }} />
+                  <span className="text-zinc-400 tabular-nums">{label} {pct.toFixed(0)}%</span>
+                </div>
+              )
+            }
+            return (
+              <div className="space-y-1.5">
+                {seg(m.warfare,   'bg-sky-500',    '⚔️ Warfare')}
+                {seg(m.offensive, 'bg-orange-500', '🗡 Offensive')}
+                {seg(m.skirmish,  'bg-emerald-500','🎯 Skirmish')}
+              </div>
+            )
+          })()}
+        </div>
+
+        {/* Faction preference */}
+        <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">
+            Сторона <span className="text-zinc-600 normal-case">(з логів)</span>
+          </div>
+          {data.faction_pref.total_known === 0 ? (
+            <div className="text-zinc-600 text-sm">матчі без лог-покриття</div>
+          ) : (
+            <>
+              <div className="flex h-3 rounded overflow-hidden bg-zinc-800">
+                <div className="bg-blue-500" style={{ width: `${data.faction_pref.allies_pct}%` }} title={`Allies: ${data.faction_pref.allies}`} />
+                <div className="bg-red-500" style={{ width: `${data.faction_pref.axis_pct}%` }} title={`Axis: ${data.faction_pref.axis}`} />
+              </div>
+              <div className="flex justify-between text-xs mt-2">
+                <span className="text-blue-400">🟦 Allies {data.faction_pref.allies_pct}%</span>
+                <span className="text-red-400">🟥 Axis {data.faction_pref.axis_pct}%</span>
+              </div>
+              <div className="text-xs text-zinc-500 mt-1">з {data.faction_pref.total_known} відомих матчів</div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* Top maps */}
+      {data.top_maps && data.top_maps.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🗺 Топ-10 карт за матчами</h2>
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-800 text-zinc-400 text-xs uppercase">
+                <tr>
+                  <th className="p-2 text-left">Карта</th>
+                  <th className="p-2 text-right">Матчів</th>
+                  <th className="p-2 text-right">Kills</th>
+                  <th className="p-2 text-right">K/D</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.top_maps.map((m) => (
+                  <tr key={m.map_name} className="border-t border-zinc-800">
+                    <td className="p-2">{m.map_name}</td>
+                    <td className="p-2 text-right tabular-nums">{m.matches}</td>
+                    <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
+                    <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* PVP: most killed */}

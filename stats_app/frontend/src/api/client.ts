@@ -181,6 +181,28 @@ export interface RecentMatch {
   support: number
 }
 
+export interface PlayerOverview {
+  first_seen: string | null
+  matches_100plus: number
+  mode_counts: { warfare: number; offensive: number; skirmish: number }
+  total_matches: number
+}
+
+export interface PlayerTopMap {
+  map_name: string
+  matches: number
+  kills: number
+  kd: number | null
+}
+
+export interface FactionPref {
+  allies: number
+  axis: number
+  total_known: number
+  allies_pct: number
+  axis_pct: number
+}
+
 export interface PlayerDetail {
   profile: PlayerProfile
   achievements: Achievement[]
@@ -188,6 +210,10 @@ export interface PlayerDetail {
   most_killed: { victim: string; kills: number }[]
   killed_by: { killer: string; deaths: number }[]
   recent_matches: RecentMatch[]
+  overview: PlayerOverview
+  top_maps: PlayerTopMap[]
+  faction_pref: FactionPref
+  alt_names: string[]
 }
 
 export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {

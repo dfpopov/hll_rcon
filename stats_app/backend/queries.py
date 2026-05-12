@@ -636,6 +636,82 @@ def player_detail(db: Session, steam_id: str):
             d["match_date"] = d["match_date"].isoformat()
         recent_matches.append(d)
 
+    # 6) Overview meta: first seen + 100+ kill matches + mode distribution.
+    sql_overview = text("""
+        SELECT
+            MIN(m.start) AS first_seen,
+            COUNT(*) FILTER (WHERE COALESCE(ps.kills, 0) >= 100) AS matches_100plus,
+            COUNT(*) FILTER (WHERE m.map_name ILIKE '%warfare%') AS warfare,
+            COUNT(*) FILTER (WHERE m.map_name ILIKE '%offensive%') AS offensive,
+            COUNT(*) FILTER (WHERE m.map_name ILIKE '%skirmish%') AS skirmish,
+            COUNT(*) AS total_matches
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id
+        WHERE s.steam_id_64 = :sid
+    """)
+    ov = db.execute(sql_overview, {"sid": steam_id}).fetchone()
+    overview = {
+        "first_seen": ov.first_seen.isoformat() if ov and ov.first_seen else None,
+        "matches_100plus": int(ov.matches_100plus or 0) if ov else 0,
+        "mode_counts": {
+            "warfare": int(ov.warfare or 0) if ov else 0,
+            "offensive": int(ov.offensive or 0) if ov else 0,
+            "skirmish": int(ov.skirmish or 0) if ov else 0,
+        },
+        "total_matches": int(ov.total_matches or 0) if ov else 0,
+    }
+
+    # 7) Top maps by matches played, with kills & K/D per map.
+    sql_top_maps = text("""
+        SELECT
+            m.map_name AS map_name,
+            COUNT(*) AS matches,
+            SUM(ps.kills) AS kills,
+            ROUND(CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0), 2) AS kd
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id
+        WHERE s.steam_id_64 = :sid
+        GROUP BY m.map_name
+        ORDER BY matches DESC
+        LIMIT 10
+    """)
+    top_maps = [dict(r._mapping) for r in db.execute(sql_top_maps, {"sid": steam_id})]
+
+    # 8) Faction preference from player_match_side MV. Matches without log
+    # coverage are absent — total_known reflects matches we can attribute.
+    sql_faction = text("""
+        SELECT pms.side, COUNT(*) AS n
+        FROM player_match_side pms
+        JOIN steam_id_64 s ON s.id = pms.player_id
+        WHERE s.steam_id_64 = :sid
+        GROUP BY pms.side
+    """)
+    side_counts = {"Allies": 0, "Axis": 0}
+    for r in db.execute(sql_faction, {"sid": steam_id}):
+        if r.side in side_counts:
+            side_counts[r.side] = int(r.n or 0)
+    total_known = side_counts["Allies"] + side_counts["Axis"]
+    faction_pref = {
+        "allies": side_counts["Allies"],
+        "axis": side_counts["Axis"],
+        "total_known": total_known,
+        "allies_pct": round(side_counts["Allies"] / total_known * 100, 1) if total_known > 0 else 0.0,
+        "axis_pct":   round(side_counts["Axis"]   / total_known * 100, 1) if total_known > 0 else 0.0,
+    }
+
+    # 9) Alt names — distinct player_stats.name values for this player.
+    sql_alt = text("""
+        SELECT DISTINCT ps.name
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        WHERE s.steam_id_64 = :sid AND ps.name IS NOT NULL AND ps.name <> ''
+        ORDER BY ps.name
+        LIMIT 20
+    """)
+    alt_names = [r[0] for r in db.execute(sql_alt, {"sid": steam_id})]
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -643,4 +719,8 @@ def player_detail(db: Session, steam_id: str):
         "most_killed": most_killed,
         "killed_by": killed_by,
         "recent_matches": recent_matches,
+        "overview": overview,
+        "top_maps": top_maps,
+        "faction_pref": faction_pref,
+        "alt_names": alt_names,
     }
