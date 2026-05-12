@@ -694,13 +694,17 @@ def country_distribution(db: Session) -> list[dict]:
     world map. Returns sorted descending by player count, with percentage
     against the total known-country population.
     """
+    # Steam stores 'private' (literal) for users with hidden profiles. Filter
+    # to real 2-letter alpha-2 ISO codes only. Pattern matches A-Z exactly 2.
     sql = text("""
         SELECT
-          si.country AS country,
+          UPPER(si.country) AS country,
           COUNT(DISTINCT si.playersteamid_id) AS players
         FROM steam_info si
-        WHERE si.country IS NOT NULL AND si.country <> ''
-        GROUP BY si.country
+        WHERE si.country IS NOT NULL
+          AND LENGTH(si.country) = 2
+          AND si.country ~ '^[A-Za-z]{2}$'
+        GROUP BY UPPER(si.country)
         ORDER BY players DESC
     """)
     rows = list(db.execute(sql))
