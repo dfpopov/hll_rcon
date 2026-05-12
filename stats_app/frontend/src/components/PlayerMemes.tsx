@@ -146,23 +146,39 @@ export function classifyPlaystyle(p: PlayerProfile): Playstyle {
 
 /** Auto-generated meme-y title for an outstanding match. Returns null when
  *  the match is unremarkable and no title should be shown. */
-export function matchTitle(m: { kills: number; deaths: number; kd: number | null; combat: number; support: number; map_name: string }): string | null {
+export function matchTitle(m: {
+  kills: number; deaths: number; kd: number | null;
+  combat: number; support: number; map_name: string;
+  time_seconds?: number;
+}): string | null {
+  const kd = m.kd ?? 0
+
   // Disaster cases first — more interesting than "good match"
+  if (m.kills === 0 && m.deaths === 0 && (m.time_seconds ?? 0) >= 300) return '🛌 Глядач'
   if (m.deaths >= 50 && m.kills < 10) return '☠ Сафарі для ворога'
   if (m.kills === 0 && m.deaths >= 20) return '💀 Жертовний'
   if (m.kills <= 5 && m.deaths >= 30) return '🪦 Чорна година'
+  if (m.deaths >= 40) return '🩸 Бійня для тебе'
+
+  // God-tier ratios (must come before generic high-volume so they win priority)
+  if (kd >= 10 && m.kills >= 10) return '🐍 Снайпер духу'
+  if (m.kills >= 20 && m.deaths === 0) return '🥇 Ідеальний'
 
   // High volume
+  if (m.kills >= 100) return '👹 Терор'
   if (m.kills >= 80) return '🔥 Різанина'
-  if (m.kills >= 50 && (m.kd ?? 0) >= 3) return '⚡ Бог війни'
-  if (m.kills >= 30 && (m.kd ?? 0) >= 5) return '🎯 Невловимий'
-  if ((m.kd ?? 0) >= 5 && m.kills >= 20) return '👑 Холоднокровний'
+  if (m.kills >= 50 && kd >= 3) return '⚡ Бог війни'
+  if (m.kills >= 30 && kd >= 5) return '🎯 Невловимий'
+  if (kd >= 5 && m.kills >= 20) return '👑 Холоднокровний'
 
-  // Support hero
+  // Support / defense heroes
+  if (m.support > 8000 && m.kills < 5) return '📦 Невидимий помічник'
   if (m.support > 5000 && m.kills < 10) return '📦 Тиха перемога'
+  if (m.combat > 3000 && m.deaths <= 3) return '🏯 Стіна'
 
-  // Edge case meme
+  // Edge case memes
   if (m.kills === m.deaths && m.kills >= 30) return '⚖ Дзеркало'
+  if (m.kills === m.deaths && m.kills >= 10 && m.kills < 30) return '🎲 Дзен'
 
   return null
 }

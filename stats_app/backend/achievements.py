@@ -54,6 +54,20 @@ ACHIEVEMENTS = [
     ("tk_offender",  "TK провокатор",      "⚠️",  "common",    "Зробити 100+ team kills (своїх)",     lambda p: p.get("teamkills", 0) >= 100),
     ("clumsy",       "Незграба",           "😅", "uncommon",  "Загинути 100+ разів від ТК своїх",    lambda p: p.get("deaths_by_tk", 0) >= 100),
 
+    # Long-tenure / dedication (D-batch additions)
+    ("disciplined",  "Дисциплінований",    "🎖", "uncommon",  "Зіграти 100+ матчів з TK rate < 10%",
+        lambda p: (p.get("matches_played") or 0) >= 100 and (p.get("teamkills") or 0) * 10 < (p.get("kills") or 0)),
+    ("spotless",     "Чисте сумління",     "🕊", "rare",       "Зіграти 100+ матчів і жодного разу не вмерти від ТК своїх",
+        lambda p: (p.get("matches_played") or 0) >= 100 and (p.get("deaths_by_tk") or 0) == 0),
+    ("fortress",     "Фортеця",            "🏯", "epic",       "Накопичити 500K+ defense score",
+        lambda p: (p.get("defense") or 0) >= 500000),
+    ("tireless",     "Невтомний",          "⏰", "legendary",  "Зіграти 1000+ годин у грі",
+        lambda p: (p.get("total_seconds") or 0) >= 1000 * 3600),
+    ("lone_survivor","Самотній виживальник","🌵", "epic",       "Прожити 30+ хвилин без смерті",
+        lambda p: (p.get("longest_life_secs") or 0) >= 1800),
+    ("old_guard",    "Стара гвардія",      "🪖", "legendary",  "Зіграти 2000+ матчів",
+        lambda p: (p.get("matches_played") or 0) >= 2000),
+
     # Hidden achievements / easter eggs. Pure aggregate from profile — no
     # per-match data needed. These reward unusual statistical signatures
     # rather than raw volume.
@@ -125,6 +139,12 @@ SIMPLE_THRESHOLDS: Dict[str, tuple] = {
     "survivor":      ("longest_life_secs",  600),
     "tk_offender":   ("teamkills",          100),
     "clumsy":        ("deaths_by_tk",       100),
+    # D-batch — only the single-axis ones; disciplined / spotless are
+    # compound predicates and are skipped from progress UI.
+    "fortress":      ("defense",            500000),
+    "tireless":      ("total_seconds",      1000 * 3600),
+    "lone_survivor": ("longest_life_secs",  1800),
+    "old_guard":     ("matches_played",     2000),
 }
 
 

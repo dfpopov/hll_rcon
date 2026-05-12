@@ -705,6 +705,7 @@ export default function PlayerDetailPage() {
                       const t = matchTitle({
                         kills: m.kills, deaths: m.deaths, kd: m.kd,
                         combat: m.combat, support: m.support, map_name: m.map_name,
+                        time_seconds: m.time_seconds,
                       })
                       return t ? (
                         <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-900/40 border border-amber-700/40 text-amber-200">
