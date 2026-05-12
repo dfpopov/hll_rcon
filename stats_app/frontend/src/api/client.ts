@@ -216,12 +216,6 @@ export interface FactionPref {
   axis_pct: number
 }
 
-export interface TopServer {
-  server_name: string
-  sessions: number
-  total_seconds: number
-}
-
 export interface WinRate {
   total: number
   wins: number
@@ -249,7 +243,6 @@ export interface PlayerDetail {
   alt_names: string[]
   kills_by_class: Record<string, number>
   deaths_by_class: Record<string, number>
-  top_servers: TopServer[]
   win_rate: WinRate
   hour_distribution: number[]  // length 24, index = hour 0..23
   played_with_against: PlayedWithAgainst

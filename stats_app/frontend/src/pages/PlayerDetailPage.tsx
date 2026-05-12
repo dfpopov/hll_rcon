@@ -67,6 +67,17 @@ function ClassBreakdownBar({ counts, title }: { counts: Record<string, number>; 
   )
 }
 
+/** Visual divider between thematic blocks on the player profile. */
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="mt-10 mb-4 flex items-center gap-3">
+      <h2 className="text-zinc-500 uppercase text-xs tracking-widest whitespace-nowrap">{label}</h2>
+      <div className="flex-1 h-px bg-zinc-800" />
+    </div>
+  )
+}
+
+
 function AddToCompareButton({ steam_id, name }: { steam_id: string; name: string }) {
   const { has, add, remove, list, max } = useCompareList()
   const inList = has(steam_id)
@@ -240,6 +251,8 @@ export default function PlayerDetailPage() {
       {/* Playstyle classifier — personality tag derived from score distribution */}
       <PlaystyleCard p={p} />
 
+      <SectionDivider label="📊 Цифри" />
+
       {/* Overview stats */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
         <StatCard label="Kills"          value={p.kills.toLocaleString('uk-UA')} accent="text-green-400" />
@@ -327,6 +340,8 @@ export default function PlayerDetailPage() {
           )}
         </div>
       </section>
+
+      <SectionDivider label="🎯 Як грає" />
 
       {/* Win rate — overall + per side */}
       {data.win_rate && data.win_rate.total > 0 && (
@@ -445,117 +460,12 @@ export default function PlayerDetailPage() {
         </section>
       )}
 
-      {/* Most played with / against — co-presence in logged matches */}
-      {(data.played_with_against?.teammates?.length || data.played_with_against?.opponents?.length) && (
-        <section className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-emerald-400 uppercase text-xs tracking-widest mb-3">🤝 Найчастіші союзники</h2>
-            <ol className="space-y-1 text-sm">
-              {data.played_with_against.teammates.map((t, i) => (
-                <li key={t.steam_id} className="flex items-baseline gap-2">
-                  <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
-                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-emerald-300 transition-colors" title={t.name}>{t.name}</Link>
-                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
-                </li>
-              ))}
-              {data.played_with_against.teammates.length === 0 && (
-                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
-              )}
-            </ol>
-          </div>
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-rose-400 uppercase text-xs tracking-widest mb-3">⚔ Найчастіші противники</h2>
-            <ol className="space-y-1 text-sm">
-              {data.played_with_against.opponents.map((t, i) => (
-                <li key={t.steam_id} className="flex items-baseline gap-2">
-                  <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
-                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={t.name}>{t.name}</Link>
-                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
-                </li>
-              ))}
-              {data.played_with_against.opponents.length === 0 && (
-                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
-              )}
-            </ol>
-          </div>
-        </section>
-      )}
-
-      {/* Top maps */}
-      {/* Loved / Hated map cards — best vs worst K/D among top played maps */}
-      <LovedHatedMap topMaps={data.top_maps ?? []} />
-
-      {data.top_maps && data.top_maps.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🗺 Топ-10 карт за матчами</h2>
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-zinc-800 text-zinc-400 text-xs uppercase">
-                <tr>
-                  <th className="p-2 text-left">Карта</th>
-                  <th className="p-2 text-right">Матчів</th>
-                  <th className="p-2 text-right">Kills</th>
-                  <th className="p-2 text-right">K/D</th>
-                  <th className="p-2 text-right" title="З матчів, де відома сторона та результат">Win %</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.top_maps.map((m) => (
-                  <tr key={m.map_name} className="border-t border-zinc-800">
-                    <td className="p-2">{m.map_name}</td>
-                    <td className="p-2 text-right tabular-nums">{m.matches}</td>
-                    <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
-                    <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
-                    <td className="p-2 text-right tabular-nums">
-                      {m.win_pct !== null ? (
-                        <span className={
-                          m.win_pct >= 65 ? 'text-emerald-400' :
-                          m.win_pct >= 50 ? 'text-amber-400' :
-                          m.win_pct >= 35 ? 'text-orange-400' : 'text-red-400'
-                        } title={`${m.win_pct}% з ${m.known_outcomes} матчів з відомим результатом`}>
-                          {m.win_pct}%
-                        </span>
-                      ) : <span className="text-zinc-600" title="немає лог-покриття">—</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      {/* Top servers */}
-      {data.top_servers && data.top_servers.length > 0 && (
-        <section className="mb-6">
-          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🖥 Найчастіші сервери</h2>
-          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-zinc-800 text-zinc-400 text-xs uppercase">
-                <tr>
-                  <th className="p-2 text-left">Сервер</th>
-                  <th className="p-2 text-right">Сесій</th>
-                  <th className="p-2 text-right">Годин</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.top_servers.map((s) => (
-                  <tr key={s.server_name} className="border-t border-zinc-800">
-                    <td className="p-2 truncate">{s.server_name}</td>
-                    <td className="p-2 text-right tabular-nums">{s.sessions}</td>
-                    <td className="p-2 text-right tabular-nums">{Math.floor(s.total_seconds / 3600)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      <SectionDivider label="⚔ PVP" />
 
       {/* Nemesis stamp — top killer highlighted as eternal rival */}
       <NemesisStamp d={data} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* PVP: most killed */}
         <section>
           <h2 className="text-amber-400 uppercase text-xs tracking-widest mb-3">
@@ -600,6 +510,88 @@ export default function PlayerDetailPage() {
           </div>
         </section>
       </div>
+
+      {/* Most played with / against — co-presence in logged matches */}
+      {(data.played_with_against?.teammates?.length || data.played_with_against?.opponents?.length) && (
+        <section className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+            <h2 className="text-emerald-400 uppercase text-xs tracking-widest mb-3">🤝 Найчастіші союзники</h2>
+            <ol className="space-y-1 text-sm">
+              {data.played_with_against.teammates.map((t, i) => (
+                <li key={t.steam_id} className="flex items-baseline gap-2">
+                  <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-emerald-300 transition-colors" title={t.name}>{t.name}</Link>
+                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
+                </li>
+              ))}
+              {data.played_with_against.teammates.length === 0 && (
+                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
+              )}
+            </ol>
+          </div>
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+            <h2 className="text-rose-400 uppercase text-xs tracking-widest mb-3">⚔ Найчастіші противники</h2>
+            <ol className="space-y-1 text-sm">
+              {data.played_with_against.opponents.map((t, i) => (
+                <li key={t.steam_id} className="flex items-baseline gap-2">
+                  <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={t.name}>{t.name}</Link>
+                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
+                </li>
+              ))}
+              {data.played_with_against.opponents.length === 0 && (
+                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
+              )}
+            </ol>
+          </div>
+        </section>
+      )}
+
+      <SectionDivider label="🗺 Активність та історія" />
+
+      {/* Loved / Hated map cards — best vs worst K/D among top played maps */}
+      <LovedHatedMap topMaps={data.top_maps ?? []} />
+
+      {/* Top maps table */}
+      {data.top_maps && data.top_maps.length > 0 && (
+        <section className="mb-6">
+          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🗺 Топ-10 карт за матчами</h2>
+          <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-800 text-zinc-400 text-xs uppercase">
+                <tr>
+                  <th className="p-2 text-left">Карта</th>
+                  <th className="p-2 text-right">Матчів</th>
+                  <th className="p-2 text-right">Kills</th>
+                  <th className="p-2 text-right">K/D</th>
+                  <th className="p-2 text-right" title="З матчів, де відома сторона та результат">Win %</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.top_maps.map((m) => (
+                  <tr key={m.map_name} className="border-t border-zinc-800">
+                    <td className="p-2">{m.map_name}</td>
+                    <td className="p-2 text-right tabular-nums">{m.matches}</td>
+                    <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
+                    <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
+                    <td className="p-2 text-right tabular-nums">
+                      {m.win_pct !== null ? (
+                        <span className={
+                          m.win_pct >= 65 ? 'text-emerald-400' :
+                          m.win_pct >= 50 ? 'text-amber-400' :
+                          m.win_pct >= 35 ? 'text-orange-400' : 'text-red-400'
+                        } title={`${m.win_pct}% з ${m.known_outcomes} матчів з відомим результатом`}>
+                          {m.win_pct}%
+                        </span>
+                      ) : <span className="text-zinc-600" title="немає лог-покриття">—</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       {/* Time-of-day heatmap */}
       <section className="mt-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">

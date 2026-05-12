@@ -777,6 +777,8 @@ def player_detail(db: Session, steam_id: str):
     achievements_list = compute_achievements(profile)
 
     # 2) Top weapons used (sum kills per weapon across all matches)
+    # Top-N lists trimmed to 5 — PVP grid columns are narrow, top-10 was
+    # forcing horizontal scroll on mobile and burying signal.
     sql_weapons = text("""
         SELECT key AS weapon, SUM(value::int) AS kills
         FROM player_stats ps
@@ -785,7 +787,7 @@ def player_detail(db: Session, steam_id: str):
         WHERE s.steam_id_64 = :sid AND ps.weapons IS NOT NULL
         GROUP BY key
         ORDER BY kills DESC
-        LIMIT 10
+        LIMIT 5
     """)
     top_weapons = [dict(row._mapping) for row in db.execute(sql_weapons, {"sid": steam_id})]
 
@@ -798,7 +800,7 @@ def player_detail(db: Session, steam_id: str):
         WHERE s.steam_id_64 = :sid AND ps.most_killed IS NOT NULL
         GROUP BY key
         ORDER BY kills DESC
-        LIMIT 10
+        LIMIT 5
     """)
     most_killed = [dict(row._mapping) for row in db.execute(sql_killed, {"sid": steam_id})]
 
@@ -811,7 +813,7 @@ def player_detail(db: Session, steam_id: str):
         WHERE s.steam_id_64 = :sid AND ps.death_by IS NOT NULL
         GROUP BY key
         ORDER BY deaths DESC
-        LIMIT 10
+        LIMIT 5
     """)
     killed_by = [dict(row._mapping) for row in db.execute(sql_killers, {"sid": steam_id})]
 
@@ -1049,29 +1051,7 @@ def player_detail(db: Session, steam_id: str):
         "axis_win_pct": round(wins_as_axis / matches_as_axis * 100, 1) if matches_as_axis > 0 else 0.0,
     }
 
-    # 12) Most played servers — sessions grouped by server_name.
-    sql_servers = text("""
-        SELECT
-          server_name,
-          COUNT(*) AS sessions,
-          COALESCE(EXTRACT(EPOCH FROM SUM(COALESCE("end" - start, INTERVAL '0')))::bigint, 0) AS total_seconds
-        FROM player_sessions ps
-        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
-        WHERE s.steam_id_64 = :sid AND server_name IS NOT NULL
-        GROUP BY server_name
-        ORDER BY sessions DESC
-        LIMIT 5
-    """)
-    top_servers = [
-        {
-            "server_name": r.server_name,
-            "sessions": int(r.sessions or 0),
-            "total_seconds": int(r.total_seconds or 0),
-        }
-        for r in db.execute(sql_servers, {"sid": steam_id})
-    ]
-
-    # 13) Hour-of-day distribution — when does this player actually play?
+    # 12) Hour-of-day distribution — when does this player actually play?
     # Used by the time-of-day heatmap on PlayerDetail.
     sql_hours = text("""
         SELECT EXTRACT(HOUR FROM m.start)::int AS h, COUNT(*) AS n
@@ -1089,7 +1069,7 @@ def player_detail(db: Session, steam_id: str):
 
     # 14) Most played with / against — derived from player_match_side MV.
     # Restricted to logged matches; older un-tracked matches don't contribute.
-    pwa = played_with_against(db, steam_id, limit=10)
+    pwa = played_with_against(db, steam_id, limit=5)
 
     # 15) Melee micro-stats — last melee death event + current streak.
     melee = melee_meta(db, steam_id)
@@ -1107,7 +1087,6 @@ def player_detail(db: Session, steam_id: str):
         "alt_names": alt_names,
         "kills_by_class": kills_by_class,
         "deaths_by_class": deaths_by_class,
-        "top_servers": top_servers,
         "win_rate": win_rate,
         "hour_distribution": hour_distribution,
         "played_with_against": pwa,
