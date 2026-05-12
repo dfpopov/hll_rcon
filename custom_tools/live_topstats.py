@@ -665,10 +665,8 @@ def get_player_ranking(
                         # Calculate score
                         score = score_func(p)
 
-                        # Min kills threshold for infantry: hide low-kill farmers
-                        # (a player with K=1 D=0 has K/D=∞ but doesn't deserve top spot)
+                        # Min kills threshold for infantry (uses module-level constant)
                         kills_count = p.get("kills", 0)
-                        MIN_KILLS_INFANTRY = 5
                         if observed_unit_type.lower() == "infantry" and kills_count <= MIN_KILLS_INFANTRY:
                             continue
 
@@ -815,6 +813,11 @@ def get_squad_ranking(get_team_view_output: dict, observed_unit_type: str, score
 # leftover players land in these — they shouldn't pollute the "top squads" list).
 _SKIPPED_SQUAD_NAMES = {"unassigned", "command", "commander", "none", ""}
 
+# Min kills required to appear in any infantry top-N or squad-member row.
+# Applies in both get_player_ranking (TOP GRAVCI) and generate_squads_breakdown
+# (TOP ZAGONI player rows). Squad header totals/averages still count ALL members.
+MIN_KILLS_INFANTRY = 5
+
 
 def _fmt_kd(k: int, d: int) -> str:
     """K/D formatting with sensible fallbacks:
@@ -902,14 +905,18 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                 side_lines.append(
                     f"{role_cont} {squad_branch} Загін {sq_name.capitalize()}"
                     f" [{n} в загоні] — всього K:{sq_k} D:{sq_d} K/D:{sq_kd}"
-                    f" (сер. K:{avg_k:.1f} D:{avg_d:.1f})"
+                    f" (avg K:{avg_k:.1f} D:{avg_d:.1f})"
                 )
 
+                # Show only members above kills threshold — squad header still
+                # reflects ALL members (sq_k, sq_d, n).
                 players_sorted = sorted(players, key=lambda p: p.get("kills", 0), reverse=True)
                 squad_cont = " " if is_last_squad else "│"
                 for player in players_sorted:
-                    p_name = (player.get("name") or "?")[:16]
                     p_k = player.get("kills", 0)
+                    if p_k <= MIN_KILLS_INFANTRY:
+                        continue
+                    p_name = (player.get("name") or "?")[:16]
                     p_d = player.get("deaths", 0)
                     p_kd = _fmt_kd(p_k, p_d)
                     side_lines.append(

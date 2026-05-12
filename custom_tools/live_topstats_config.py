@@ -60,10 +60,10 @@ STATS_TO_DISPLAY = {
             # {"score": "player_team_kills", "display": 3, "details": True, "vip_winners": 0},
             # {"score": "player_vehicle_kills", "display": 3, "details": True, "vip_winners": 0},
             # {"score": "player_vehicles_destroyed", "display": 3, "details": True, "vip_winners": 0},
-            # player_teamplay + player_offdef removed per user request — focus on raw stats only
-            {"score": "kills", "display": 3, "details": True, "vip_winners": 3},                       # raw kills count — VIP for top-3
-            {"score": "player_kd", "display": 3, "details": True, "vip_winners": 0},                   # kills / deaths
-            {"score": "player_kpm", "display": 3, "details": True, "vip_winners": 0}                   # kills per minute
+            # Simplified per user request: one infantry category only — top-5 by raw kills,
+            # VIP awarded to top-3. K/D and KPM categories removed (were dominated by
+            # 1-kill 0-death farmers and not informative for casual players).
+            {"score": "kills", "display": 5, "details": True, "vip_winners": 3},                       # top-5 by raw kills, VIP for top-3
         ],
         "armor": [
             # add any stat using the templates above
