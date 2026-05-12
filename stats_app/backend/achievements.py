@@ -18,8 +18,8 @@ ACHIEVEMENTS = [
     ("lifetime",     "Lifetime гравець",   "👑", "legendary", "Зіграти 1000+ матчів",                lambda p: p.get("matches_played", 0) >= 1000),
 
     # Skill (K/D)
-    ("sharpshooter", "Влучний",            "🎯", "uncommon",  "Мати K/D 2.0+",                       lambda p: (p.get("kd_ratio") or 0) >= 2.0),
-    ("elite_sniper", "Елітний снайпер",    "🔭", "epic",      "Мати K/D 3.0+",                       lambda p: (p.get("kd_ratio") or 0) >= 3.0),
+    ("sharpshooter", "Влучний",            "🎯", "uncommon",  "Мати K/D 2.0+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 2.0 and (p.get("matches_played") or 0) >= 30),
+    ("elite_sniper", "Елітний снайпер",    "🔭", "epic",      "Мати K/D 3.0+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 3.0 and (p.get("matches_played") or 0) >= 30),
 
     # Pure damage
     ("centurion_k",  "100 вбивств",        "💀", "common",    "Зробити 100+ вбивств за весь час",    lambda p: p.get("kills", 0) >= 100),

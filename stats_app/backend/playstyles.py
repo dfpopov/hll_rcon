@@ -127,8 +127,8 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     },
     {
         "id": "ritual", "title": "Ритуал", "emoji": "⏰", "color": "text-violet-200",
-        "description": "60%+ матчів в одну й ту саму годину — людина-розклад",
-        "predicate": lambda p, c: ((p.get("peak_hour_pct") or 0) >= 60
+        "description": "30%+ матчів в одну й ту саму годину — людина-розклад",
+        "predicate": lambda p, c: ((p.get("peak_hour_pct") or 0) >= 30
                                     and (p.get("matches_played") or 0) >= 50),
     },
 
@@ -230,9 +230,9 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     },
     {
         "id": "sharp_versatile", "title": "Влучний універсал", "emoji": "🦅", "color": "text-amber-300",
-        "description": "K/D 2.0+ зі збалансованими score-категоріями",
+        "description": "K/D 2.0+ при 30+ матчах",
         "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
-                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+                                    and (p.get("matches_played") or 0) >= 30),
     },
 
     # ── Fill-in archetypes for the "normal" middle ─────────────────────
