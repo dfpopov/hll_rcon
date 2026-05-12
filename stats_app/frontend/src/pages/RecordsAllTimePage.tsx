@@ -6,15 +6,22 @@ import {
 } from '../api/client'
 import MiniCompareButton from '../components/MiniCompareButton'
 
-const AGGREGATE_CARDS: { key: SortKey; title: string; valueFmt: (r: PlayerRow) => string | number }[] = [
+// Per-card min_matches override. Most cards leave it at 0 — no global gate.
+// K/D and KPM are ratios that need a floor to filter out single-match outliers.
+const AGGREGATE_CARDS: {
+  key: SortKey;
+  title: string;
+  valueFmt: (r: PlayerRow) => string | number;
+  min_matches?: number;
+}[] = [
   { key: 'kills',     title: 'Найбільше вбивств',       valueFmt: (r) => r.kills },
   { key: 'playtime',  title: 'Найбільше часу гри',      valueFmt: (r) => `${Math.floor(r.total_seconds / 3600)} год` },
   { key: 'combat',    title: 'Combat (бойова еф-сть)',  valueFmt: (r) => (r as any).combat ?? '—' },
   { key: 'support',   title: 'Support',                 valueFmt: (r) => (r as any).support ?? '—' },
   { key: 'offense',   title: 'Offense',                 valueFmt: (r) => (r as any).offense ?? '—' },
   { key: 'defense',   title: 'Defense',                 valueFmt: (r) => (r as any).defense ?? '—' },
-  { key: 'kd_ratio',  title: 'K/D ratio',               valueFmt: (r) => r.kd_ratio ?? '—' },
-  { key: 'kpm',       title: 'Kills per minute',        valueFmt: (r) => r.kpm ?? '—' },
+  { key: 'kd_ratio',  title: 'K/D ratio (≥30 матчів)',  valueFmt: (r) => r.kd_ratio ?? '—', min_matches: 30 },
+  { key: 'kpm',       title: 'KPM (≥30 матчів)',        valueFmt: (r) => r.kpm ?? '—', min_matches: 30 },
   { key: 'teamkills', title: 'Team kills (анти-топ)',   valueFmt: (r) => r.teamkills },
   { key: 'matches',   title: 'Найбільше матчів',        valueFmt: (r) => r.matches_played },
 ]
@@ -65,8 +72,9 @@ function Card({ title, rows, fmt, accent = 'amber' }: {
 }
 
 export default function RecordsAllTimePage() {
-  // Filters subset (no map_name — would be too narrow for records grid)
-  const [minMatches, setMinMatches] = useState(50)
+  // Filters subset (no map_name — would be too narrow for records grid).
+  // No min_matches slider — most cards run unfiltered, only K/D and KPM
+  // cards hardcode a 30-match floor to filter ratio outliers.
   const [period, setPeriod] = useState<Period>('')
   const [gameMode, setGameMode] = useState<GameMode>('')
   const [weaponClass, setWeaponClass] = useState<string>('')
@@ -88,32 +96,31 @@ export default function RecordsAllTimePage() {
   }, [localSearch])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtersKey = useMemo(
-    () => `${minMatches}|${period}|${gameMode}|${weaponClass}|${search}|${side}`,
-    [minMatches, period, gameMode, weaponClass, search, side],
+    () => `${period}|${gameMode}|${weaponClass}|${search}|${side}`,
+    [period, gameMode, weaponClass, search, side],
   )
 
   useEffect(() => { fetchWeaponClasses().then(setClasses).catch(() => {}) }, [])
 
   useEffect(() => {
     setLoading(true)
-    const opts = {
+    const baseOpts = {
       limit: 10,
-      min_matches: minMatches,
       period: period || undefined,
       game_mode: gameMode || undefined,
       weapon_class: weaponClass || undefined,
       search: search || undefined,
       side: side || undefined,
     }
-    // Fetch all aggregate cards in parallel
+    // Per-card min_matches: K/D and KPM cards floor at 30, everything else 0.
     const aggPromises = AGGREGATE_CARDS.map((c) =>
-      fetchTopPlayers({ ...opts, sort: c.key })
+      fetchTopPlayers({ ...baseOpts, sort: c.key, min_matches: c.min_matches ?? 0 })
         .then((r) => [c.key, r.results] as const)
         .catch(() => [c.key, []] as const)
     )
     // Per-class top kills (only when classes loaded and no weapon_class filter)
     const classPromises = (weaponClass ? [] : classes).map((cls) =>
-      fetchTopPlayers({ ...opts, sort: 'kills', weapon_class: cls.name, limit: 5 })
+      fetchTopPlayers({ ...baseOpts, sort: 'kills', weapon_class: cls.name, limit: 5, min_matches: 0 })
         .then((r) => [cls.name, r.results] as const)
         .catch(() => [cls.name, []] as const)
     )
@@ -127,7 +134,6 @@ export default function RecordsAllTimePage() {
   }, [filtersKey, classes.length])  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleReset = () => {
-    setMinMatches(50)
     setPeriod('')
     setGameMode('')
     setWeaponClass('')
@@ -136,7 +142,7 @@ export default function RecordsAllTimePage() {
     setSide('')
   }
 
-  const hasActive = period || gameMode || weaponClass || search || side || minMatches !== 50
+  const hasActive = period || gameMode || weaponClass || search || side
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -231,14 +237,6 @@ export default function RecordsAllTimePage() {
               <option value="">Усі класи</option>
               {classes.map((c) => <option key={c.name} value={c.name}>{c.name} ({c.count})</option>)}
             </select>
-          </div>
-          <div>
-            <label className="block text-xs text-zinc-400 mb-1">
-              Мін. матчів: <span className="text-amber-400 font-bold">{minMatches}</span>
-            </label>
-            <input type="range" min={0} max={500} step={10} value={minMatches}
-              onChange={(e) => setMinMatches(Number(e.target.value))}
-              className="w-48 accent-amber-500" />
           </div>
           {hasActive && (
             <button onClick={handleReset}

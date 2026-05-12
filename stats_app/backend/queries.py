@@ -253,11 +253,19 @@ def get_unique_maps(db: Session) -> List[str]:
 
 
 def get_unique_weapons(db: Session) -> List[str]:
+    """Weapons with > 0 total kills, sorted by usage descending.
+
+    Filters out weapons that exist as jsonb keys but never accumulated kills
+    (game data has ~100 such ghost entries). Sorting by usage puts common
+    weapons at the top of the filter dropdown.
+    """
     sql = text("""
-        SELECT DISTINCT w
-        FROM player_stats, jsonb_object_keys(weapons) AS w
+        SELECT key AS w, SUM(value::int) AS total
+        FROM player_stats, jsonb_each_text(weapons) AS kv(key, value)
         WHERE weapons IS NOT NULL
-        ORDER BY w
+        GROUP BY key
+        HAVING SUM(value::int) > 0
+        ORDER BY total DESC
     """)
     return [row[0] for row in db.execute(sql)]
 

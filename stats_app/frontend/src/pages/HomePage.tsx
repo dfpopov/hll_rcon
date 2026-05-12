@@ -37,7 +37,7 @@ import CountryFlag from '../components/CountryFlag'
 import MiniCompareButton from '../components/MiniCompareButton'
 
 const PAGE_SIZE = 50
-const DEFAULT_MIN_MATCHES = 50
+const DEFAULT_MIN_MATCHES = 30
 
 export default function HomePage() {
   const [rows, setRows] = useState<PlayerRow[]>([])

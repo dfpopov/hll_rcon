@@ -33,8 +33,8 @@ ACHIEVEMENTS = [
     ("god_mode",     "Режим бога",         "💫", "mythic",    "Серія 88+ вбивств в одному матчі",    lambda p: (p.get("best_kills_streak") or 0) >= 88),
 
     # Playtime
-    ("marathon",     "Марафонець",         "⏱",  "uncommon",  "Зіграти 100+ годин у грі",            lambda p: p.get("total_seconds", 0) >= 100 * 3600),
-    ("time_lord",    "Володар часу",       "⏳", "epic",      "Зіграти 500+ годин у грі",            lambda p: p.get("total_seconds", 0) >= 500 * 3600),
+    ("marathon",     "Марафонець",         "⏱",  "uncommon",  "Провести 100+ годин на сервері",      lambda p: p.get("total_seconds", 0) >= 100 * 3600),
+    ("time_lord",    "Володар часу",       "⏳", "epic",      "Провести 500+ годин на сервері",      lambda p: p.get("total_seconds", 0) >= 500 * 3600),
 
     # Score components
     ("combat_master","Майстер бою",        "⚔️",  "rare",      "Накопичити 100K+ combat score",       lambda p: (p.get("combat") or 0) >= 100000),
@@ -61,7 +61,7 @@ ACHIEVEMENTS = [
         lambda p: (p.get("matches_played") or 0) >= 100 and (p.get("deaths_by_tk") or 0) == 0),
     ("fortress",     "Фортеця",            "🏯", "epic",       "Накопичити 500K+ defense score",
         lambda p: (p.get("defense") or 0) >= 500000),
-    ("tireless",     "Невтомний",          "⏰", "legendary",  "Зіграти 1000+ годин у грі",
+    ("tireless",     "Невтомний",          "⏰", "legendary",  "Провести 1000+ годин на сервері",
         lambda p: (p.get("total_seconds") or 0) >= 1000 * 3600),
     ("lone_survivor","Самотній виживальник","🌵", "epic",       "Прожити 30+ хвилин без смерті",
         lambda p: (p.get("longest_life_secs") or 0) >= 1800),

@@ -88,7 +88,7 @@ export default function FilterBar({
     }
   }, [])
 
-  const hasActive = period || gameMode || weapon || weaponClass || mapName || search || side || minMatches !== 50
+  const hasActive = period || gameMode || weapon || weaponClass || mapName || search || side || minMatches !== 30
 
   return (
     <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 mb-4">

@@ -36,10 +36,10 @@ def _compute_ctx(p: Dict[str, Any]) -> Dict[str, float]:
     }
 
 
-_MIN_MATCHES = 10
+_MIN_MATCHES = 5
 # Players below this are excluded from aggregate playstyle stats — single-match
 # accounts are noise that overwhelm the Універсал bucket otherwise.
-_AGGREGATE_MIN_MATCHES = 10
+_AGGREGATE_MIN_MATCHES = 5
 
 
 # (id, title, emoji, color, description, predicate)
@@ -84,22 +84,9 @@ PLAYSTYLES: List[Dict[str, Any]] = [
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
-        "id": "survivor_master", "title": "Майстер жити", "emoji": "🛡", "color": "text-cyan-300",
-        "description": "Найдовше життя — 20+ хвилин без смерті",
-        "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 1200
-                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
-    },
-    {
         "id": "zerg", "title": "Зерг", "emoji": "🐝", "color": "text-amber-400",
-        "description": "5000+ kills при K/D < 1.0 — кількість понад якість",
-        "predicate": lambda p, c: (p.get("kills") or 0) >= 5000 and (p.get("kd_ratio") or 0) < 1.0,
-    },
-    {
-        "id": "glider", "title": "Глайдер", "emoji": "🪂", "color": "text-sky-300",
-        "description": "10+ хв життя без активності, K/D <1.5",
-        "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 600
-                                    and (p.get("kd_ratio") or 0) < 1.5
-                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+        "description": "3000+ kills при K/D < 1.0 — кількість понад якість",
+        "predicate": lambda p, c: (p.get("kills") or 0) >= 3000 and (p.get("kd_ratio") or 0) < 1.0,
     },
     {
         "id": "lone_wolf", "title": "Соло-вовк", "emoji": "🐺", "color": "text-zinc-300",
@@ -125,26 +112,26 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     # ── Combat-heavy archetypes ────────────────────────────────────────
     {
         "id": "trench_defender", "title": "Захисник окопу", "emoji": "🏰", "color": "text-emerald-300",
-        "description": "Combat 50%+ з ухилом у захист (10+ матчів)",
+        "description": "Combat 50%+ з ухилом у захист (5+ матчів)",
         "predicate": lambda p, c: (c["combat_pct"] >= 50 and c["defense_pct"] > c["offense_pct"]
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "combat_reaper", "title": "Бойовий жнець", "emoji": "⚔️", "color": "text-red-300",
-        "description": "Combat 50%+ з ухилом в атаку (10+ матчів)",
+        "description": "Combat 50%+ з ухилом в атаку (5+ матчів)",
         "predicate": lambda p, c: c["combat_pct"] >= 50 and (p.get("matches_played") or 0) >= _MIN_MATCHES,
     },
 
     # ── Generic geometric splits (now gated so they don't catch newbies) ──
     {
         "id": "wall", "title": "Стіна", "emoji": "🛡", "color": "text-blue-300",
-        "description": "Defense значно більше за offense — тримає точку (10+ матчів)",
+        "description": "Defense значно більше за offense — тримає точку (5+ матчів)",
         "predicate": lambda p, c: (c["defense_pct"] > c["offense_pct"] + 15
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "assault", "title": "Штурмовик", "emoji": "🗡", "color": "text-orange-300",
-        "description": "Offense значно більше за defense — перший на точці (10+ матчів)",
+        "description": "Offense значно більше за defense — перший на точці (5+ матчів)",
         "predicate": lambda p, c: (c["offense_pct"] > c["defense_pct"] + 15
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
@@ -153,6 +140,49 @@ PLAYSTYLES: List[Dict[str, Any]] = [
         "description": "K/D 2.0+ зі збалансованими score-категоріями",
         "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+
+    # ── Fill-in archetypes for the "normal" middle ─────────────────────
+    {
+        "id": "active_player", "title": "Активний", "emoji": "✅", "color": "text-emerald-300",
+        "description": "50+ матчів, K/D від 1.0 до 2.0 — рівний середняк",
+        "predicate": lambda p, c: ((p.get("matches_played") or 0) >= 50
+                                    and 1.0 <= (p.get("kd_ratio") or 0) <= 2.0),
+    },
+    {
+        "id": "combat_fly", "title": "Бойова муха", "emoji": "🦟", "color": "text-orange-200",
+        "description": "Менш ніж 50 матчів, K/D 1.0+ — швидко вчиться",
+        "predicate": lambda p, c: ((p.get("matches_played") or 0) < 50
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES
+                                    and (p.get("kd_ratio") or 0) >= 1.0),
+    },
+    {
+        "id": "explorer", "title": "Дослідник", "emoji": "🧭", "color": "text-sky-200",
+        "description": "10-49 матчів — пробує гру",
+        "predicate": lambda p, c: (10 <= (p.get("matches_played") or 0) < 50),
+    },
+    {
+        "id": "rookie", "title": "Початківець", "emoji": "🌱", "color": "text-zinc-200",
+        "description": "Менш ніж 10 матчів — ще не зрозумів куди стріляти",
+        "predicate": lambda p, c: ((p.get("matches_played") or 0) < 10
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+
+    # ── Long-life patterns — moved to the END so they don't shadow more
+    # specific styles. longest_life_secs is per-match peak, so even one good
+    # match qualifies — should only fire when nothing else describes the player.
+    {
+        "id": "glider", "title": "Глайдер", "emoji": "🪂", "color": "text-sky-300",
+        "description": "15+ хв життя без активності, K/D <1.0",
+        "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 900
+                                    and (p.get("kd_ratio") or 0) < 1.0
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
+        "id": "survivor_master", "title": "Майстер жити", "emoji": "🛡", "color": "text-cyan-300",
+        "description": "Найдовше життя — 30+ хвилин без смерті, 100+ матчів",
+        "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 1800
+                                    and (p.get("matches_played") or 0) >= 100),
     },
 
     # ── Default catcher ────────────────────────────────────────────────
