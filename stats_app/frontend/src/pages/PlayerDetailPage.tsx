@@ -321,6 +321,52 @@ export default function PlayerDetailPage() {
         </div>
       </section>
 
+      {/* Win rate — overall + per side */}
+      {data.win_rate && data.win_rate.total > 0 && (
+        <section className="mb-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <div className="text-center">
+              <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Win rate</div>
+              <div className={`text-4xl font-bold tabular-nums ${
+                data.win_rate.win_pct >= 60 ? 'text-emerald-400' :
+                data.win_rate.win_pct >= 50 ? 'text-amber-400' : 'text-red-400'
+              }`}>{data.win_rate.win_pct}%</div>
+              <div className="text-xs text-zinc-500 mt-1">
+                {data.win_rate.wins}W / {data.win_rate.losses}L
+                {data.win_rate.draws > 0 ? ` / ${data.win_rate.draws}D` : ''} з {data.win_rate.total}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-blue-400 uppercase tracking-widest mb-1">🟦 Як Allies</div>
+              {data.win_rate.allies_total > 0 ? (
+                <>
+                  <div className="text-2xl font-bold text-blue-300 tabular-nums">{data.win_rate.allies_win_pct}%</div>
+                  <div className="text-xs text-zinc-500">{data.win_rate.allies_wins} перемог з {data.win_rate.allies_total}</div>
+                  <div className="h-1.5 bg-zinc-800 rounded mt-2 overflow-hidden">
+                    <div className="bg-blue-500 h-full" style={{ width: `${data.win_rate.allies_win_pct}%` }} />
+                  </div>
+                </>
+              ) : <div className="text-zinc-600 text-sm">немає даних</div>}
+            </div>
+            <div>
+              <div className="text-xs text-red-400 uppercase tracking-widest mb-1">🟥 Як Axis</div>
+              {data.win_rate.axis_total > 0 ? (
+                <>
+                  <div className="text-2xl font-bold text-red-300 tabular-nums">{data.win_rate.axis_win_pct}%</div>
+                  <div className="text-xs text-zinc-500">{data.win_rate.axis_wins} перемог з {data.win_rate.axis_total}</div>
+                  <div className="h-1.5 bg-zinc-800 rounded mt-2 overflow-hidden">
+                    <div className="bg-red-500 h-full" style={{ width: `${data.win_rate.axis_win_pct}%` }} />
+                  </div>
+                </>
+              ) : <div className="text-zinc-600 text-sm">немає даних</div>}
+            </div>
+          </div>
+          <div className="text-xs text-zinc-600 mt-3 text-center">
+            На основі матчів з відомою стороною та збереженим результатом
+          </div>
+        </section>
+      )}
+
       {/* Kill / death type breakdown + melee callout */}
       <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">

@@ -741,7 +741,58 @@ def player_detail(db: Session, steam_id: str):
     kills_by_class = _aggregate_by_class(db.execute(sql_kill_weapons, {"sid": steam_id}))
     deaths_by_class = _aggregate_by_class(db.execute(sql_death_weapons, {"sid": steam_id}))
 
-    # 11) Most played servers — sessions grouped by server_name.
+    # 11) Win rate — JOIN player_match_side MV with map_history.result
+    # (result jsonb shape: {"Allied": <sectors>, "Axis": <sectors>}). A match
+    # is a win when the player's side captured more sectors. Matches with
+    # equal sectors → draw. Excludes matches where result is NULL/empty or
+    # MV has no side for the player (logs predate capture).
+    sql_winrate = text("""
+        SELECT
+          pms.side,
+          CASE
+            WHEN (m.result->>'Allied')::int > (m.result->>'Axis')::int THEN 'Allies'
+            WHEN (m.result->>'Axis')::int   > (m.result->>'Allied')::int THEN 'Axis'
+            ELSE 'Draw'
+          END AS winner,
+          COUNT(*) AS n
+        FROM player_match_side pms
+        JOIN steam_id_64 s ON s.id = pms.player_id
+        JOIN map_history m ON m.id = pms.match_id
+        WHERE s.steam_id_64 = :sid
+          AND m.result IS NOT NULL
+          AND (m.result ? 'Allied') AND (m.result ? 'Axis')
+        GROUP BY pms.side, winner
+    """)
+    wr_buckets: dict[tuple[str, str], int] = {}
+    for r in db.execute(sql_winrate, {"sid": steam_id}):
+        wr_buckets[(r.side, r.winner)] = int(r.n or 0)
+
+    def _bucket(side: str, winner: str) -> int:
+        return wr_buckets.get((side, winner), 0)
+
+    matches_as_allies = _bucket("Allies", "Allies") + _bucket("Allies", "Axis") + _bucket("Allies", "Draw")
+    matches_as_axis   = _bucket("Axis",   "Allies") + _bucket("Axis",   "Axis") + _bucket("Axis",   "Draw")
+    wins_as_allies = _bucket("Allies", "Allies")
+    wins_as_axis   = _bucket("Axis",   "Axis")
+    total = matches_as_allies + matches_as_axis
+    wins = wins_as_allies + wins_as_axis
+    draws = _bucket("Allies", "Draw") + _bucket("Axis", "Draw")
+    losses = total - wins - draws
+    win_rate = {
+        "total": total,
+        "wins": wins,
+        "losses": losses,
+        "draws": draws,
+        "win_pct": round(wins / total * 100, 1) if total > 0 else 0.0,
+        "allies_total": matches_as_allies,
+        "allies_wins": wins_as_allies,
+        "allies_win_pct": round(wins_as_allies / matches_as_allies * 100, 1) if matches_as_allies > 0 else 0.0,
+        "axis_total": matches_as_axis,
+        "axis_wins": wins_as_axis,
+        "axis_win_pct": round(wins_as_axis / matches_as_axis * 100, 1) if matches_as_axis > 0 else 0.0,
+    }
+
+    # 12) Most played servers — sessions grouped by server_name.
     sql_servers = text("""
         SELECT
           server_name,
@@ -777,4 +828,5 @@ def player_detail(db: Session, steam_id: str):
         "kills_by_class": kills_by_class,
         "deaths_by_class": deaths_by_class,
         "top_servers": top_servers,
+        "win_rate": win_rate,
     }

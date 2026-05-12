@@ -209,6 +209,20 @@ export interface TopServer {
   total_seconds: number
 }
 
+export interface WinRate {
+  total: number
+  wins: number
+  losses: number
+  draws: number
+  win_pct: number
+  allies_total: number
+  allies_wins: number
+  allies_win_pct: number
+  axis_total: number
+  axis_wins: number
+  axis_win_pct: number
+}
+
 export interface PlayerDetail {
   profile: PlayerProfile
   achievements: Achievement[]
@@ -223,6 +237,7 @@ export interface PlayerDetail {
   kills_by_class: Record<string, number>
   deaths_by_class: Record<string, number>
   top_servers: TopServer[]
+  win_rate: WinRate
 }
 
 export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {
