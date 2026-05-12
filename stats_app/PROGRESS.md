@@ -50,6 +50,22 @@ Pages live:
 
 ## Findings (chronological)
 
+### 2026-05-12 — HLL-Records parity (B1+B2+B3): playtime%, win/map, top weapon, per-class, with/against, melee
+
+Post-Roadmap pass closing visible gaps vs hllrecords.com layout.
+
+| Commit | Phase | Scope |
+|---|---|---|
+| `39d1b04e` | B1 | recent_matches.time_pct, top_maps.win_pct, best_single_game.top_weapon |
+| `2554bddb` | B1-fix + B2 | ROUND-numeric-cast fix, /api/best-single-game-by-class endpoint, 9 per-class cards on RecordsSingleGame |
+| `f7ae789c` | B3 | played_with_against (teammates+opponents from MV self-join), melee_meta (last melee death + current streak) |
+
+Real prod numbers worth keeping:
+- Best single-match melee record: [86] UA Melitopol — 79 kills with M3 KNIFE on mortain_warfare_day.
+- Пакет с пакетами top teammate Шихта (183 matches) is also top opponent Шихта (118 matches) — typical of a clan core rotating sides.
+
+Combat Effectiveness metric considered, declined: vague spec, mostly redundant with existing `sort=combat` and `sort=kpm` on the leaderboard.
+
 ### 2026-05-12 — Roadmap COMPLETE: P0+P1+P2+P3+P4 all deployed
 
 Full sequence of commits since the post-Phase-5 Roadmap was written:
