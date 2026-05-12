@@ -89,20 +89,33 @@ export default function FilterBar({
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Сторона</label>
+          <label className="block text-xs text-zinc-400 mb-1">Сторона / фракція</label>
           <select
             value={side}
             onChange={(e) => onChange({ side: e.target.value as Side })}
-            className={`px-3 py-2 rounded text-sm min-w-[130px] border ${
-              side === 'Allies' ? 'bg-blue-900/60 text-blue-100 border-blue-500/50' :
-              side === 'Axis'   ? 'bg-red-900/60 text-red-100 border-red-500/50' :
+            className={`px-3 py-2 rounded text-sm min-w-[160px] border ${
+              side === 'Allies' || side === 'US' || side === 'GB' || side === 'USSR'
+                ? 'bg-blue-900/60 text-blue-100 border-blue-500/50' :
+              side === 'Axis' || side === 'Wehrmacht' || side === 'DAK'
+                ? 'bg-red-900/60 text-red-100 border-red-500/50' :
               'bg-zinc-800 text-zinc-100 border-transparent'
             }`}
-            title="Дані доступні лише для матчів з лог-покриттям. Старі матчі без логів виключаються при фільтрі."
+            title="Фракція = сторона + театр (за map_name). Матчі без лог-покриття виключаються."
           >
             <option value="">Будь-яка</option>
-            <option value="Allies">🟦 Allies</option>
-            <option value="Axis">🟥 Axis</option>
+            <optgroup label="Сторона">
+              <option value="Allies">🟦 Allies (усі)</option>
+              <option value="Axis">🟥 Axis (усі)</option>
+            </optgroup>
+            <optgroup label="Фракція (Allies)">
+              <option value="US">🇺🇸 US</option>
+              <option value="GB">🇬🇧 GB / Commonwealth</option>
+              <option value="USSR">☭ USSR</option>
+            </optgroup>
+            <optgroup label="Фракція (Axis)">
+              <option value="Wehrmacht">🦅 Wehrmacht</option>
+              <option value="DAK">🐪 DAK (Африка)</option>
+            </optgroup>
           </select>
         </div>
 

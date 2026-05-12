@@ -128,9 +128,9 @@ def get_top_players(
             {"detail": f"game_mode must be one of: {sorted(queries.GAME_MODES.keys())} or empty"},
             status_code=400,
         )
-    if side is not None and side not in queries.SIDES:
+    if side is not None and side not in queries.SIDES_OR_FACTIONS:
         return JSONResponse(
-            {"detail": f"side must be one of: {sorted(queries.SIDES)} or empty"},
+            {"detail": f"side must be one of: {sorted(queries.SIDES_OR_FACTIONS)} or empty"},
             status_code=400,
         )
 
@@ -188,9 +188,9 @@ def get_best_single_game(
             {"detail": f"metric must be one of: {sorted(queries.SINGLE_GAME_METRICS.keys())}"},
             status_code=400,
         )
-    if side is not None and side not in queries.SIDES:
+    if side is not None and side not in queries.SIDES_OR_FACTIONS:
         return JSONResponse(
-            {"detail": f"side must be one of: {sorted(queries.SIDES)} or empty"},
+            {"detail": f"side must be one of: {sorted(queries.SIDES_OR_FACTIONS)} or empty"},
             status_code=400,
         )
     rows = queries.best_single_game(db, metric=metric, limit=limit, side=side)

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from weapon_classes import classify_weapon, all_class_names
 from achievements import compute_achievements, ACHIEVEMENTS
+from theater_classifier import FACTIONS, maps_for_faction
 
 
 # Whitelist mapping: API sort param → SQL expression.
@@ -40,8 +41,10 @@ GAME_MODES = {
     "skirmish": "%skirmish%",
 }
 
-# Recognised values for the `side` filter (data lives in player_match_side MV).
+# Recognised values for the `side` filter — binary sides from player_match_side
+# MV plus 5 factions derived from (side, theater) via theater_classifier.
 SIDES = {"Allies", "Axis"}
+SIDES_OR_FACTIONS = SIDES | FACTIONS
 
 
 def _build_filters(
@@ -53,12 +56,16 @@ def _build_filters(
     weapon_class: Optional[str] = None,
     weapon_names_for_class: Optional[List[str]] = None,
     side: Optional[str] = None,
+    db: Optional[Session] = None,
 ) -> tuple[list[str], list[str], dict]:
     """Build (extra_joins, where_parts, params) from optional filters.
 
     Returned extra_joins are appended to the FROM clause; where_parts go into
     WHERE. Side filter joins player_match_side (matches without log coverage
-    are silently excluded — we can't infer their side).
+    are silently excluded — we can't infer their side). When `side` is a
+    faction (US/GB/USSR/Wehrmacht/DAK), the underlying side is derived from
+    theater_classifier.FACTION_FILTERS and an extra `m.map_name = ANY(:...)`
+    pin is added.
     """
     parts: list[str] = []
     joins: list[str] = []
@@ -95,6 +102,20 @@ def _build_filters(
         )
         parts.append("pms.side = :side")
         params["side"] = side
+    elif side in FACTIONS and db is not None:
+        # Faction → underlying side + map theater restriction.
+        side_value, faction_maps = maps_for_faction(side, db)
+        if side_value and faction_maps:
+            joins.append(
+                "JOIN player_match_side pms "
+                "ON pms.player_id = s.id AND pms.match_id = ps.map_id"
+            )
+            parts.append("pms.side = :side AND m.map_name = ANY(:faction_maps)")
+            params["side"] = side_value
+            params["faction_maps"] = faction_maps
+        else:
+            # Faction is recognised but no maps in DB match — return zero rows.
+            parts.append("FALSE")
 
     return joins, parts, params
 
@@ -132,7 +153,7 @@ def top_players(
 
     class_weapons = _expand_weapon_class(db, weapon_class)
     extra_joins, where_parts, params = _build_filters(
-        period, weapon, map_name, search, game_mode, weapon_class, class_weapons, side,
+        period, weapon, map_name, search, game_mode, weapon_class, class_weapons, side, db,
     )
     where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
     extra_join_clause = "\n        ".join(extra_joins)
@@ -189,7 +210,7 @@ def top_players_count(
 ) -> int:
     class_weapons = _expand_weapon_class(db, weapon_class)
     extra_joins, where_parts, params = _build_filters(
-        period, weapon, map_name, search, game_mode, weapon_class, class_weapons, side,
+        period, weapon, map_name, search, game_mode, weapon_class, class_weapons, side, db,
     )
     where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
     extra_join_clause = "\n            ".join(extra_joins)
@@ -499,6 +520,18 @@ def best_single_game(
         )
         side_where = "AND pms.side = :side"
         params["side"] = side
+    elif side in FACTIONS:
+        side_value, faction_maps = maps_for_faction(side, db)
+        if side_value and faction_maps:
+            side_join = (
+                "JOIN player_match_side pms "
+                "ON pms.player_id = s.id AND pms.match_id = ps.map_id"
+            )
+            side_where = "AND pms.side = :side AND m.map_name = ANY(:faction_maps)"
+            params["side"] = side_value
+            params["faction_maps"] = faction_maps
+        else:
+            side_where = "AND FALSE"
 
     sql = text(f"""
         SELECT

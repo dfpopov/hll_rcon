@@ -181,17 +181,30 @@ export default function RecordsAllTimePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-zinc-400 mb-1">Сторона</label>
+            <label className="block text-xs text-zinc-400 mb-1">Сторона / фракція</label>
             <select value={side} onChange={(e) => setSide(e.target.value as Side)}
-              className={`px-3 py-2 rounded text-sm min-w-[130px] border ${
-                side === 'Allies' ? 'bg-blue-900/60 border-blue-500/50' :
-                side === 'Axis'   ? 'bg-red-900/60 border-red-500/50' :
+              className={`px-3 py-2 rounded text-sm min-w-[160px] border ${
+                side === 'Allies' || side === 'US' || side === 'GB' || side === 'USSR'
+                  ? 'bg-blue-900/60 border-blue-500/50' :
+                side === 'Axis' || side === 'Wehrmacht' || side === 'DAK'
+                  ? 'bg-red-900/60 border-red-500/50' :
                 'bg-zinc-800 border-transparent'
               }`}
-              title="Старі матчі без лог-покриття при фільтрі виключаються">
+              title="Фракція = сторона + театр">
               <option value="">Будь-яка</option>
-              <option value="Allies">🟦 Allies</option>
-              <option value="Axis">🟥 Axis</option>
+              <optgroup label="Сторона">
+                <option value="Allies">🟦 Allies (усі)</option>
+                <option value="Axis">🟥 Axis (усі)</option>
+              </optgroup>
+              <optgroup label="Фракція (Allies)">
+                <option value="US">🇺🇸 US</option>
+                <option value="GB">🇬🇧 GB / Commonwealth</option>
+                <option value="USSR">☭ USSR</option>
+              </optgroup>
+              <optgroup label="Фракція (Axis)">
+                <option value="Wehrmacht">🦅 Wehrmacht</option>
+                <option value="DAK">🐪 DAK (Африка)</option>
+              </optgroup>
             </select>
           </div>
           <div>

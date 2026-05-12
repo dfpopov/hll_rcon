@@ -33,7 +33,7 @@ export interface PlayerRow {
   country?: string | null
 }
 
-export type Side = '' | 'Allies' | 'Axis'
+export type Side = '' | 'Allies' | 'Axis' | 'US' | 'GB' | 'USSR' | 'Wehrmacht' | 'DAK'
 
 export interface TopPlayersResponse {
   count: number
