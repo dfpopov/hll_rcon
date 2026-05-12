@@ -825,8 +825,8 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
     ]
     role_order = [
         ("infantry", TRANSL["infantry"][lang].capitalize()),
-        ("armor", TRANSL["armor"][lang].capitalize()),
-        ("recon", TRANSL["recon"][lang].capitalize()),
+        # armor + recon removed per user request to fit Discord embed (4096 char limit)
+        # — restore by uncommenting if Discord description has room.
     ]
 
     blocks = []
@@ -869,9 +869,13 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                 sq_d = sum(p.get("deaths", 0) for p in players)
                 sq_kd = f"{sq_k / sq_d:.1f}" if sq_d > 0 else "∞"
 
+                n = len(players)
+                avg_k = sq_k / n if n > 0 else 0
+                avg_d = sq_d / n if n > 0 else 0
                 side_lines.append(
                     f"{role_cont} {squad_branch} Загін {sq_name.capitalize()}"
-                    f" ({len(players)} гр., K:{sq_k} D:{sq_d} K/D:{sq_kd})"
+                    f" [{n} в загоні] — всього K:{sq_k} D:{sq_d} K/D:{sq_kd}"
+                    f" (сер. K:{avg_k:.1f} D:{avg_d:.1f})"
                 )
 
                 players_sorted = sorted(players, key=lambda p: p.get("kills", 0), reverse=True)
@@ -1153,9 +1157,26 @@ def stats_on_match_end(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
                 logger.error("Ingame message_all_players couldn't be sent : %s", error)
 
         # Discord
+        # DEBUG: trace why matchend Discord may not be reaching the channel
+        logger.info("matchend Discord: server_number=%s, discord_config_len=%d, discord_config=%r",
+                    server_number, len(valid_config.discord_config), valid_config.discord_config)
         # Sending to Discord is disabled for this server
-        if not valid_config.discord_config[server_number - 1][1]:
+        try:
+            disc_entry = valid_config.discord_config[server_number - 1]
+        except (IndexError, TypeError) as e:
+            logger.error("matchend Discord: discord_config index %d failed: %s — skipping", server_number - 1, e)
             return
+        # entry can be tuple/list of (url, enabled)
+        try:
+            disc_url = disc_entry[0]
+            disc_enabled = disc_entry[1]
+        except Exception as e:
+            logger.error("matchend Discord: cannot unpack entry %r: %s — skipping", disc_entry, e)
+            return
+        if not disc_enabled:
+            logger.info("matchend Discord: send DISABLED for server %s, skipping", server_number)
+            return
+        logger.info("matchend Discord: SENDING embed to webhook %s...", str(disc_url)[:60])
 
         # Get the webhook url from config
         discord_webhook = valid_config.discord_config[server_number - 1][0]
