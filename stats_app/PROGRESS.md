@@ -3,7 +3,13 @@
 Live tracker of implementation status. Updates inline as work proceeds.
 Architectural decisions live in `PLAN.md`.
 
-## Current phase: **MVP ✅ DEPLOYED** — http://95.111.230.75:7012/
+## Current phase: **Phase 3 ✅ DEPLOYED** — http://95.111.230.75:7012/
+
+Pages live:
+- `/` — leaderboard with 7 filters (search, period, mode, map, weapon class,
+  specific weapon, min matches) + sortable columns + pagination
+- `/records` — hllrecords-style grid of mini-leaderboards (10 all-time + 8 single-game)
+- `/player/{steam_id}` — per-player profile with PVP heatmap (most killed, killed by, weapons)
 
 ## Task status
 
