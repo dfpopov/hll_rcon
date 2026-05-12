@@ -5,19 +5,52 @@ with sort/order/pagination + period/weapon/map/min_matches filters, and
 dropdown-feeder endpoints /api/maps and /api/weapons.
 Player detail page arrives in Phase 3 (Task #9).
 """
+import logging
 import os
+import threading
+import time
 from typing import Optional
 from fastapi import FastAPI, Depends, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from db import get_db
+from db import get_db, SessionLocal
 import queries
+
+logger = logging.getLogger(__name__)
+
+# How often to REFRESH the player_match_side materialized view so the side
+# filter picks up newly-played matches. 1h is plenty — match cadence is
+# tens of matches per day at most, and CONCURRENTLY doesn't block reads.
+MV_REFRESH_INTERVAL_SECONDS = int(os.getenv("MV_REFRESH_INTERVAL_SECONDS", "3600"))
+
+
+def _refresh_player_match_side_loop():
+    """Background thread: hourly REFRESH MATERIALIZED VIEW CONCURRENTLY.
+    Errors are logged and swallowed — next tick retries.
+    """
+    while True:
+        time.sleep(MV_REFRESH_INTERVAL_SECONDS)
+        db = None
+        try:
+            db = SessionLocal()
+            db.execute(text("REFRESH MATERIALIZED VIEW CONCURRENTLY player_match_side"))
+            db.commit()
+            logger.info("player_match_side: refreshed")
+        except Exception as e:
+            logger.warning("player_match_side refresh failed: %s", e)
+        finally:
+            if db is not None:
+                try:
+                    db.close()
+                except Exception:
+                    pass
 
 # Rate limiter — in-memory, single-container scope.
 limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
@@ -29,6 +62,14 @@ app = FastAPI(
 )
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.on_event("startup")
+def _start_background_jobs():
+    """Start the MV refresh thread. daemon=True so it dies with the process."""
+    t = threading.Thread(target=_refresh_player_match_side_loop, daemon=True)
+    t.start()
+    logger.info("started player_match_side refresh thread (interval=%ds)", MV_REFRESH_INTERVAL_SECONDS)
 
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",

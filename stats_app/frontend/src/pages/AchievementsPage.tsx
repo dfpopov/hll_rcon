@@ -53,11 +53,12 @@ export default function AchievementsPage() {
               to={`/achievements/${a.id}`}
               className={`block border rounded-lg p-4 hover:scale-[1.02] transition-transform ${TIER_STYLES[a.tier]}`}
             >
-              <div className="flex items-baseline gap-2 mb-2">
+              <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-2xl">{a.icon}</span>
                 <h3 className="font-semibold flex-1">{a.title}</h3>
                 <span className="text-xs opacity-70 uppercase">{a.tier}</span>
               </div>
+              <p className="text-xs opacity-80 mb-2 leading-snug">{a.description}</p>
               <div className="flex items-baseline justify-between text-sm">
                 <span className="opacity-80">
                   {a.earned_count.toLocaleString('uk-UA')} гравців отримали

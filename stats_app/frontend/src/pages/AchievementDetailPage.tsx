@@ -38,13 +38,17 @@ export default function AchievementDetailPage() {
       <Link to="/achievements" className="text-zinc-400 hover:text-amber-400 text-sm">← Усі досягнення</Link>
 
       <header className="mt-3 mb-6">
-        <div className="flex items-baseline gap-3 mb-1">
+        <div className="flex items-baseline gap-3 mb-2">
           {stat && <span className="text-4xl">{stat.icon}</span>}
           <h1 className="text-3xl font-bold">{stat?.title ?? id}</h1>
+          {stat && <span className="text-xs uppercase text-zinc-500 tracking-widest">{stat.tier}</span>}
         </div>
+        {stat?.description && (
+          <p className="text-zinc-200 text-base mb-2 italic">📜 {stat.description}</p>
+        )}
         {stat && (
           <p className="text-zinc-400 text-sm">
-            <span className="capitalize">{stat.tier}</span> • {stat.earned_count.toLocaleString('uk-UA')} з{' '}
+            {stat.earned_count.toLocaleString('uk-UA')} з{' '}
             {stat.total_players.toLocaleString('uk-UA')} гравців ({stat.percentage}%) отримали це досягнення
           </p>
         )}

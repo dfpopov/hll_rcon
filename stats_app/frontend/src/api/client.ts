@@ -165,6 +165,7 @@ export interface Achievement {
   title: string
   icon: string
   tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
+  description: string
 }
 
 export interface WeaponKills { weapon: string; kills: number }
@@ -205,6 +206,7 @@ export interface AchievementStat {
   title: string
   icon: string
   tier: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
+  description: string
   earned_count: number
   percentage: number
   total_players: number

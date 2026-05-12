@@ -274,13 +274,14 @@ def compute_achievement_stats(db: Session) -> List[dict]:
             counts[ach["id"]] = counts.get(ach["id"], 0) + 1
 
     result = []
-    for aid, title, icon, tier, _predicate in ACHIEVEMENTS:
+    for aid, title, icon, tier, description, _predicate in ACHIEVEMENTS:
         c = counts.get(aid, 0)
         result.append({
             "id": aid,
             "title": title,
             "icon": icon,
             "tier": tier,
+            "description": description,
             "earned_count": c,
             "percentage": round(c / total * 100, 2) if total > 0 else 0.0,
             "total_players": total,
@@ -327,7 +328,7 @@ def players_with_achievement(
     }
     sort_key = SORT_HINT.get(achievement_id, "kills")
 
-    pred = next((a[4] for a in ACHIEVEMENTS if a[0] == achievement_id), None)
+    pred = next((a[5] for a in ACHIEVEMENTS if a[0] == achievement_id), None)
     if pred is None:
         return {"count": 0, "total": 0, "results": []}
 
