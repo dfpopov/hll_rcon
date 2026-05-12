@@ -9,6 +9,7 @@ import CountryFlag from '../components/CountryFlag'
 import PlayerRadar from '../components/PlayerRadar'
 import ProgressionSparkline from '../components/ProgressionSparkline'
 import MiniCompareButton from '../components/MiniCompareButton'
+import { formatMapName } from '../components/mapNames'
 import { NemesisStamp, LovedHatedMap, PlaystyleCard, matchTitle } from '../components/PlayerMemes'
 import TimeOfDayHeatmap from '../components/TimeOfDayHeatmap'
 
@@ -647,7 +648,7 @@ export default function PlayerDetailPage() {
               <tbody>
                 {data.top_maps.map((m) => (
                   <tr key={m.map_name} className="border-t border-zinc-800">
-                    <td className="p-2">{m.map_name}</td>
+                    <td className="p-2" title={m.map_name}>{formatMapName(m.map_name)}</td>
                     <td className="p-2 text-right tabular-nums">{m.matches}</td>
                     <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
                     <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
@@ -709,9 +710,9 @@ export default function PlayerDetailPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-amber-400 hover:text-amber-300 hover:underline"
-                      title="Відкрити деталі матчу в CRCON ↗"
+                      title={`${m.map_name} • Відкрити деталі матчу в CRCON ↗`}
                     >
-                      {m.map_name}
+                      {formatMapName(m.map_name)}
                     </a>
                     {(() => {
                       const t = matchTitle({
@@ -720,9 +721,13 @@ export default function PlayerDetailPage() {
                         time_seconds: m.time_seconds,
                       })
                       return t ? (
-                        <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-900/40 border border-amber-700/40 text-amber-200">
-                          {t}
-                        </span>
+                        <Link
+                          to="/match-titles"
+                          className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-900/40 border border-amber-700/40 text-amber-200 hover:bg-amber-800/50"
+                          title={t.description}
+                        >
+                          {t.emoji} {t.title}
+                        </Link>
                       ) : null
                     })()}
                   </td>

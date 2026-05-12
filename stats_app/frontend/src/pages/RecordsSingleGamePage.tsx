@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchBestSingleGame, fetchBestSingleGameByClass, SingleGameRow, SingleGameMetric } from '../api/client'
 import MiniCompareButton from '../components/MiniCompareButton'
+import { formatMapName } from '../components/mapNames'
 
 const CARDS: { metric: SingleGameMetric; title: string; valueFmt?: (n: number) => string }[] = [
   { metric: 'kills',            title: 'Найбільше вбивств за гру' },
@@ -66,8 +67,9 @@ function SingleGameCard({ title, rows, fmt }: {
               </div>
               <a href={`${CRCON_PUBLIC_BASE}/games/${r.match_id}`}
                 target="_blank" rel="noopener noreferrer"
-                className="text-xs text-zinc-500 hover:text-amber-400 block truncate">
-                {r.map_name}
+                className="text-xs text-zinc-500 hover:text-amber-400 block truncate"
+                title={r.map_name}>
+                {formatMapName(r.map_name)}
               </a>
               {r.top_weapon && (
                 <span className="text-[10px] text-zinc-600 truncate block" title={`Most used: ${r.top_weapon}`}>

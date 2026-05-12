@@ -7,6 +7,7 @@
  *     combat/offense/defense/support distribution + K/D and streak.
  */
 import { PlayerDetail, PlayerTopMap, Playstyle } from '../api/client'
+import { formatMapName } from './mapNames'
 
 // ── Nemesis ────────────────────────────────────────────────────────────────
 
@@ -39,7 +40,7 @@ function MapCard({ map, tone, label, emoji }: { map: PlayerTopMap; tone: 'good' 
   return (
     <div className={`bg-zinc-900/60 border rounded-lg p-4 ${color.split(' ')[1]}`}>
       <div className={`text-xs uppercase tracking-widest ${color.split(' ')[0]}`}>{emoji} {label}</div>
-      <div className="text-lg font-bold mt-1 break-all">{map.map_name}</div>
+      <div className="text-lg font-bold mt-1 break-all" title={map.map_name}>{formatMapName(map.map_name)}</div>
       <div className="text-sm text-zinc-400 mt-1">
         K/D <span className={`font-bold tabular-nums ${color.split(' ')[0]}`}>{map.kd ?? '—'}</span>
         {' • '}{map.matches} матчів • {map.kills?.toLocaleString('uk-UA') ?? 0} вбивств
@@ -70,42 +71,101 @@ export function LovedHatedMap({ topMaps }: { topMaps: PlayerTopMap[] }) {
 
 // ── Match titles ──────────────────────────────────────────────────────────
 
+export interface MatchTitle {
+  id: string
+  emoji: string
+  title: string
+  description: string
+}
+
+/** Full catalogue of match titles. Order matters in matchTitle below —
+ *  most specific / most disastrous first. This list is also used by the
+ *  /match-titles reference page. */
+export const MATCH_TITLES: (MatchTitle & {
+  predicate: (m: MatchTitleInput) => boolean
+})[] = [
+  // ── Disaster cases ─────────────────────────────────────────────────
+  { id: 'spectator', emoji: '🛌', title: 'Глядач',
+    description: '0 kills 0 deaths при перебуванні в матчі 5+ хв',
+    predicate: (m) => m.kills === 0 && m.deaths === 0 && (m.time_seconds ?? 0) >= 300 },
+  { id: 'safari', emoji: '☠', title: 'Сафарі для ворога',
+    description: '50+ смертей при менше ніж 10 вбивствах',
+    predicate: (m) => m.deaths >= 50 && m.kills < 10 },
+  { id: 'sacrificial_m', emoji: '💀', title: 'Жертовний',
+    description: '20+ смертей без жодного вбивства',
+    predicate: (m) => m.kills === 0 && m.deaths >= 20 },
+  { id: 'dark_hour', emoji: '🪦', title: 'Чорна година',
+    description: '5 або менше вбивств при 30+ смертях',
+    predicate: (m) => m.kills <= 5 && m.deaths >= 30 },
+  { id: 'bloodbath', emoji: '🩸', title: 'Бійня для тебе',
+    description: '40+ смертей у матчі',
+    predicate: (m) => m.deaths >= 40 },
+
+  // ── God-tier ratios (priority over high-volume) ────────────────────
+  { id: 'sniper_ghost', emoji: '🐍', title: 'Снайпер духу',
+    description: 'K/D 10+ при 10+ вбивствах — нереально точно',
+    predicate: (m) => (m.kd ?? 0) >= 10 && m.kills >= 10 },
+  { id: 'perfect', emoji: '🥇', title: 'Ідеальний',
+    description: '20+ вбивств і жодної смерті — повне домінування',
+    predicate: (m) => m.kills >= 20 && m.deaths === 0 },
+  { id: 'eagle_eye', emoji: '🦅', title: 'Орлине око',
+    description: 'K/D 7+ при 15+ вбивствах',
+    predicate: (m) => (m.kd ?? 0) >= 7 && m.kills >= 15 },
+
+  // ── High volume ────────────────────────────────────────────────────
+  { id: 'terror', emoji: '👹', title: 'Терор',
+    description: '100+ вбивств за один матч',
+    predicate: (m) => m.kills >= 100 },
+  { id: 'massacre', emoji: '🔥', title: 'Різанина',
+    description: '80+ вбивств за один матч',
+    predicate: (m) => m.kills >= 80 },
+  { id: 'god_of_war', emoji: '⚡', title: 'Бог війни',
+    description: '50+ вбивств при K/D 3+',
+    predicate: (m) => m.kills >= 50 && (m.kd ?? 0) >= 3 },
+  { id: 'untouchable', emoji: '🎯', title: 'Невловимий',
+    description: '30+ вбивств при K/D 5+',
+    predicate: (m) => m.kills >= 30 && (m.kd ?? 0) >= 5 },
+  { id: 'cold_blooded', emoji: '👑', title: 'Холоднокровний',
+    description: 'K/D 5+ при 20+ вбивствах',
+    predicate: (m) => (m.kd ?? 0) >= 5 && m.kills >= 20 },
+  { id: 'duelist', emoji: '🥊', title: 'Дуелянт',
+    description: 'Близька гра — 15+ вбивств, 15+ смертей, різниця ≤ 2',
+    predicate: (m) => m.kills >= 15 && m.deaths >= 15 && Math.abs(m.kills - m.deaths) <= 2 },
+
+  // ── Support / defense heroes ───────────────────────────────────────
+  { id: 'invisible_helper', emoji: '📦', title: 'Невидимий помічник',
+    description: 'Support 8000+ при менш ніж 5 вбивствах — пасивний герой',
+    predicate: (m) => m.support > 8000 && m.kills < 5 },
+  { id: 'quiet_victory', emoji: '📦', title: 'Тиха перемога',
+    description: 'Support 5000+ при менш ніж 10 вбивствах',
+    predicate: (m) => m.support > 5000 && m.kills < 10 },
+  { id: 'wall_m', emoji: '🏯', title: 'Стіна',
+    description: 'Combat 3000+ при не більш ніж 3 смертях — точка тримається',
+    predicate: (m) => m.combat > 3000 && m.deaths <= 3 },
+
+  // ── Edge case memes ────────────────────────────────────────────────
+  { id: 'mirror', emoji: '⚖', title: 'Дзеркало',
+    description: 'K точно дорівнює D при 30+ вбивствах',
+    predicate: (m) => m.kills === m.deaths && m.kills >= 30 },
+  { id: 'zen', emoji: '🎲', title: 'Дзен',
+    description: 'K точно дорівнює D при 10-29 вбивствах',
+    predicate: (m) => m.kills === m.deaths && m.kills >= 10 && m.kills < 30 },
+]
+
+export interface MatchTitleInput {
+  kills: number; deaths: number; kd: number | null
+  combat: number; support: number; map_name: string
+  time_seconds?: number
+}
+
 /** Auto-generated meme-y title for an outstanding match. Returns null when
- *  the match is unremarkable and no title should be shown. */
-export function matchTitle(m: {
-  kills: number; deaths: number; kd: number | null;
-  combat: number; support: number; map_name: string;
-  time_seconds?: number;
-}): string | null {
-  const kd = m.kd ?? 0
-
-  // Disaster cases first — more interesting than "good match"
-  if (m.kills === 0 && m.deaths === 0 && (m.time_seconds ?? 0) >= 300) return '🛌 Глядач'
-  if (m.deaths >= 50 && m.kills < 10) return '☠ Сафарі для ворога'
-  if (m.kills === 0 && m.deaths >= 20) return '💀 Жертовний'
-  if (m.kills <= 5 && m.deaths >= 30) return '🪦 Чорна година'
-  if (m.deaths >= 40) return '🩸 Бійня для тебе'
-
-  // God-tier ratios (must come before generic high-volume so they win priority)
-  if (kd >= 10 && m.kills >= 10) return '🐍 Снайпер духу'
-  if (m.kills >= 20 && m.deaths === 0) return '🥇 Ідеальний'
-
-  // High volume
-  if (m.kills >= 100) return '👹 Терор'
-  if (m.kills >= 80) return '🔥 Різанина'
-  if (m.kills >= 50 && kd >= 3) return '⚡ Бог війни'
-  if (m.kills >= 30 && kd >= 5) return '🎯 Невловимий'
-  if (kd >= 5 && m.kills >= 20) return '👑 Холоднокровний'
-
-  // Support / defense heroes
-  if (m.support > 8000 && m.kills < 5) return '📦 Невидимий помічник'
-  if (m.support > 5000 && m.kills < 10) return '📦 Тиха перемога'
-  if (m.combat > 3000 && m.deaths <= 3) return '🏯 Стіна'
-
-  // Edge case memes
-  if (m.kills === m.deaths && m.kills >= 30) return '⚖ Дзеркало'
-  if (m.kills === m.deaths && m.kills >= 10 && m.kills < 30) return '🎲 Дзен'
-
+ *  the match is unremarkable. */
+export function matchTitle(m: MatchTitleInput): MatchTitle | null {
+  for (const t of MATCH_TITLES) {
+    try {
+      if (t.predicate(m)) return { id: t.id, emoji: t.emoji, title: t.title, description: t.description }
+    } catch { /* skip on bad input */ }
+  }
   return null
 }
 

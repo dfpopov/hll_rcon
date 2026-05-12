@@ -4,6 +4,7 @@
  */
 import { Line, LineChart, ResponsiveContainer, Tooltip, ReferenceLine } from 'recharts'
 import { RecentMatch } from '../api/client'
+import { formatMapName } from './mapNames'
 
 export default function ProgressionSparkline({ matches }: { matches: RecentMatch[] }) {
   if (!matches || matches.length < 2) {
@@ -31,7 +32,7 @@ export default function ProgressionSparkline({ matches }: { matches: RecentMatch
           labelFormatter={(_label, payload) => {
             const d = (payload as any)?.[0]?.payload
             if (!d) return ''
-            return `${d.map} • ${d.date ? new Date(d.date).toLocaleDateString('uk-UA') : ''}`
+            return `${formatMapName(d.map)} • ${d.date ? new Date(d.date).toLocaleDateString('uk-UA') : ''}`
           }}
         />
         <Line

@@ -11,6 +11,7 @@ import HallOfShamePage from './pages/HallOfShamePage'
 import WorldMapPage from './pages/WorldMapPage'
 import PlaystylesPage from './pages/PlaystylesPage'
 import PlaystyleDetailPage from './pages/PlaystyleDetailPage'
+import MatchTitlesPage from './pages/MatchTitlesPage'
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/server/countries" element={<WorldMapPage />} />
         <Route path="/playstyles" element={<PlaystylesPage />} />
         <Route path="/playstyles/:id" element={<PlaystyleDetailPage />} />
+        <Route path="/match-titles" element={<MatchTitlesPage />} />
       </Routes>
     </Layout>
   )

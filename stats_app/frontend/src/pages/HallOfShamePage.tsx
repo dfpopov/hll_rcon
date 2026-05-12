@@ -5,6 +5,7 @@ import {
   PlayerRow, SingleGameRow, SortKey, SingleGameMetric,
 } from '../api/client'
 import MiniCompareButton from '../components/MiniCompareButton'
+import { formatMapName } from '../components/mapNames'
 
 interface ShameCardDef {
   key: string
@@ -101,8 +102,8 @@ function SingleGameLine({ rank, row }: { rank: number; row: SingleGameRow }) {
           {row.name}
         </Link>
         <a href={`${CRCON_PUBLIC_BASE}/games/${row.match_id}`} target="_blank" rel="noopener noreferrer"
-          className="text-xs text-zinc-500 hover:text-amber-400">
-          {row.map_name}
+          className="text-xs text-zinc-500 hover:text-amber-400" title={row.map_name}>
+          {formatMapName(row.map_name)}
         </a>
       </div>
       <MiniCompareButton steam_id={row.steam_id} name={row.name} />

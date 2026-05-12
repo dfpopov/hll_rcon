@@ -36,10 +36,7 @@ def _compute_ctx(p: Dict[str, Any]) -> Dict[str, float]:
     }
 
 
-# Minimum matches gate for archetypes that depend on geometric ratios.
-# Without it, brand-new players with tiny totals (defense=10, offense=2) all
-# fall into "Wall" because the % comparison is true on noise.
-_MIN_MATCHES = 50
+_MIN_MATCHES = 20
 
 
 # (id, title, emoji, color, description, predicate)
@@ -85,7 +82,7 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     },
     {
         "id": "survivor_master", "title": "Майстер жити", "emoji": "🛡", "color": "text-cyan-300",
-        "description": "Найдовше життя — 20+ хвилин без смерті (з 50+ матчів)",
+        "description": "Найдовше життя — 20+ хвилин без смерті",
         "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 1200
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
@@ -125,26 +122,26 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     # ── Combat-heavy archetypes ────────────────────────────────────────
     {
         "id": "trench_defender", "title": "Захисник окопу", "emoji": "🏰", "color": "text-emerald-300",
-        "description": "Combat 50%+ з ухилом у захист (50+ матчів)",
+        "description": "Combat 50%+ з ухилом у захист (20+ матчів)",
         "predicate": lambda p, c: (c["combat_pct"] >= 50 and c["defense_pct"] > c["offense_pct"]
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "combat_reaper", "title": "Бойовий жнець", "emoji": "⚔️", "color": "text-red-300",
-        "description": "Combat 50%+ з ухилом в атаку (50+ матчів)",
+        "description": "Combat 50%+ з ухилом в атаку (20+ матчів)",
         "predicate": lambda p, c: c["combat_pct"] >= 50 and (p.get("matches_played") or 0) >= _MIN_MATCHES,
     },
 
     # ── Generic geometric splits (now gated so they don't catch newbies) ──
     {
         "id": "wall", "title": "Стіна", "emoji": "🛡", "color": "text-blue-300",
-        "description": "Defense значно більше за offense — тримає точку (50+ матчів)",
+        "description": "Defense значно більше за offense — тримає точку (20+ матчів)",
         "predicate": lambda p, c: (c["defense_pct"] > c["offense_pct"] + 15
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "assault", "title": "Штурмовик", "emoji": "🗡", "color": "text-orange-300",
-        "description": "Offense значно більше за defense — перший на точці (50+ матчів)",
+        "description": "Offense значно більше за defense — перший на точці (20+ матчів)",
         "predicate": lambda p, c: (c["offense_pct"] > c["defense_pct"] + 15
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
