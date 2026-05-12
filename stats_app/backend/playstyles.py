@@ -36,13 +36,20 @@ def _compute_ctx(p: Dict[str, Any]) -> Dict[str, float]:
     }
 
 
+# Minimum matches gate for archetypes that depend on geometric ratios.
+# Without it, brand-new players with tiny totals (defense=10, offense=2) all
+# fall into "Wall" because the % comparison is true on noise.
+_MIN_MATCHES = 50
+
+
 # (id, title, emoji, color, description, predicate)
 # Predicate signature: (profile, ctx) → bool. Order = priority.
 PLAYSTYLES: List[Dict[str, Any]] = [
+    # ── Very specific signatures first ─────────────────────────────────
     {
-        "id": "logistician", "title": "Логіст", "emoji": "📦", "color": "text-cyan-300",
-        "description": "Support 50%+ від суми всіх score-категорій",
-        "predicate": lambda p, c: c["support_pct"] >= 50,
+        "id": "logistician", "title": "Підтримка", "emoji": "📦", "color": "text-cyan-300",
+        "description": "Support 50%+ score — будівник, медик, постачальник або їх комбінація",
+        "predicate": lambda p, c: c["support_pct"] >= 50 and (p.get("matches_played") or 0) >= _MIN_MATCHES,
     },
     {
         "id": "kamikadze", "title": "Камікадзе", "emoji": "💣", "color": "text-red-400",
@@ -73,12 +80,14 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     {
         "id": "kpm_killer", "title": "Молотобоєць", "emoji": "🔥", "color": "text-orange-300",
         "description": "KPM 1.5+ при combat 40%+ — нон-стоп вбивства",
-        "predicate": lambda p, c: c["kpm_derived"] >= 1.5 and c["combat_pct"] >= 40,
+        "predicate": lambda p, c: (c["kpm_derived"] >= 1.5 and c["combat_pct"] >= 40
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "survivor_master", "title": "Майстер жити", "emoji": "🛡", "color": "text-cyan-300",
-        "description": "Найдовше життя — 20+ хвилин без смерті",
-        "predicate": lambda p, c: (p.get("longest_life_secs") or 0) >= 1200,
+        "description": "Найдовше життя — 20+ хвилин без смерті (з 50+ матчів)",
+        "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 1200
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "zerg", "title": "Зерг", "emoji": "🐝", "color": "text-amber-400",
@@ -90,53 +99,66 @@ PLAYSTYLES: List[Dict[str, Any]] = [
         "description": "10+ хв життя без активності, K/D <1.5",
         "predicate": lambda p, c: ((p.get("longest_life_secs") or 0) >= 600
                                     and (p.get("kd_ratio") or 0) < 1.5
-                                    and (p.get("matches_played") or 0) >= 50),
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "lone_wolf", "title": "Соло-вовк", "emoji": "🐺", "color": "text-zinc-300",
         "description": "Support менше 10% при 200+ матчів — все сам",
         "predicate": lambda p, c: (p.get("matches_played") or 0) >= 200 and c["support_pct"] < 10,
     },
-    {
-        "id": "trench_defender", "title": "Захисник окопу", "emoji": "🏰", "color": "text-emerald-300",
-        "description": "Combat 50%+ з ухилом у захист",
-        "predicate": lambda p, c: c["combat_pct"] >= 50 and c["defense_pct"] > c["offense_pct"],
-    },
-    {
-        "id": "combat_reaper", "title": "Бойовий жнець", "emoji": "⚔️", "color": "text-red-300",
-        "description": "Combat 50%+ з ухилом в атаку",
-        "predicate": lambda p, c: c["combat_pct"] >= 50,
-    },
-    {
-        "id": "wall", "title": "Стіна", "emoji": "🛡", "color": "text-blue-300",
-        "description": "Defense значно більше за offense — тримає точку",
-        "predicate": lambda p, c: c["defense_pct"] > c["offense_pct"] + 15,
-    },
-    {
-        "id": "assault", "title": "Штурмовик", "emoji": "🗡", "color": "text-orange-300",
-        "description": "Offense значно більше за defense — перший на точці",
-        "predicate": lambda p, c: c["offense_pct"] > c["defense_pct"] + 15,
-    },
-    {
-        "id": "sharp_versatile", "title": "Влучний універсал", "emoji": "🦅", "color": "text-amber-300",
-        "description": "K/D 2.0+ зі збалансованими score-категоріями",
-        "predicate": lambda p, c: (p.get("kd_ratio") or 0) >= 2.0,
-    },
+
+    # ── K/D-extreme catchers BEFORE generic geometric splits ──────────
+    # Otherwise low-K/D players hit Стіна/Штурмовик based on score ratios
+    # and the K/D-based archetypes never fire.
     {
         "id": "runner", "title": "Тікач", "emoji": "🏃", "color": "text-zinc-400",
-        "description": "Deaths удвічі більше за kills",
+        "description": "Deaths удвічі більше за kills — постійний клієнт респауну",
         "predicate": lambda p, c: ((p.get("deaths") or 0) > (p.get("kills") or 0) * 2
-                                    and (p.get("matches_played") or 0) >= 50),
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "sacrificial", "title": "Жертовний", "emoji": "💀", "color": "text-rose-300",
         "description": "K/D менше 0.8 — кидається в саме пекло",
-        "predicate": lambda p, c: (p.get("kd_ratio") or 0) < 0.8 and (p.get("matches_played") or 0) >= 50,
+        "predicate": lambda p, c: (p.get("kd_ratio") or 0) < 0.8 and (p.get("matches_played") or 0) >= _MIN_MATCHES,
     },
-    # Default catcher — must be last
+
+    # ── Combat-heavy archetypes ────────────────────────────────────────
+    {
+        "id": "trench_defender", "title": "Захисник окопу", "emoji": "🏰", "color": "text-emerald-300",
+        "description": "Combat 50%+ з ухилом у захист (50+ матчів)",
+        "predicate": lambda p, c: (c["combat_pct"] >= 50 and c["defense_pct"] > c["offense_pct"]
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
+        "id": "combat_reaper", "title": "Бойовий жнець", "emoji": "⚔️", "color": "text-red-300",
+        "description": "Combat 50%+ з ухилом в атаку (50+ матчів)",
+        "predicate": lambda p, c: c["combat_pct"] >= 50 and (p.get("matches_played") or 0) >= _MIN_MATCHES,
+    },
+
+    # ── Generic geometric splits (now gated so they don't catch newbies) ──
+    {
+        "id": "wall", "title": "Стіна", "emoji": "🛡", "color": "text-blue-300",
+        "description": "Defense значно більше за offense — тримає точку (50+ матчів)",
+        "predicate": lambda p, c: (c["defense_pct"] > c["offense_pct"] + 15
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
+        "id": "assault", "title": "Штурмовик", "emoji": "🗡", "color": "text-orange-300",
+        "description": "Offense значно більше за defense — перший на точці (50+ матчів)",
+        "predicate": lambda p, c: (c["offense_pct"] > c["defense_pct"] + 15
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
+        "id": "sharp_versatile", "title": "Влучний універсал", "emoji": "🦅", "color": "text-amber-300",
+        "description": "K/D 2.0+ зі збалансованими score-категоріями",
+        "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+
+    # ── Default catcher ────────────────────────────────────────────────
     {
         "id": "versatile", "title": "Універсал", "emoji": "🛡", "color": "text-zinc-300",
-        "description": "Збалансований стиль — трохи всього",
+        "description": "Збалансований стиль або замало даних",
         "predicate": lambda p, c: True,
     },
 ]
