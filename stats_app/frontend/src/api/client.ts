@@ -236,6 +236,20 @@ export async function fetchAchievementPlayers(
   return data
 }
 
+// --- Phase 4b: head-to-head for Comparison view ---
+
+export interface HeadToHead {
+  p1_killed_p2: number
+  p2_killed_p1: number
+  p1_top_weapon: string | null
+  p2_top_weapon: string | null
+}
+
+export async function fetchHeadToHead(sid1: string, sid2: string): Promise<HeadToHead> {
+  const { data } = await api.get<HeadToHead>('/head-to-head', { params: { p1: sid1, p2: sid2 } })
+  return data
+}
+
 export async function findPlayerByName(name: string): Promise<string | null> {
   try {
     const { data } = await api.get<{ steam_id: string; name: string }>(

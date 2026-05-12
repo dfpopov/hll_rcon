@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { fetchPlayerDetail, findPlayerByName, PlayerDetail } from '../api/client'
+import { fetchPlayerDetail, fetchHeadToHead, findPlayerByName, HeadToHead, PlayerDetail } from '../api/client'
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import CountryFlag from '../components/CountryFlag'
+import AchievementBadge from '../components/AchievementBadge'
 
 function fmt(v: number | null | undefined): string {
   if (v == null) return '—'
@@ -56,6 +57,7 @@ export default function ComparePage() {
   const navigate = useNavigate()
   const [d1, setD1] = useState<PlayerDetail | null>(null)
   const [d2, setD2] = useState<PlayerDetail | null>(null)
+  const [h2h, setH2h] = useState<HeadToHead | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -68,8 +70,12 @@ export default function ComparePage() {
     if (!id1 || !id2) return
     setLoading(true)
     setError(null)
-    Promise.all([fetchPlayerDetail(id1), fetchPlayerDetail(id2)])
-      .then(([a, b]) => { setD1(a); setD2(b) })
+    Promise.all([
+      fetchPlayerDetail(id1),
+      fetchPlayerDetail(id2),
+      fetchHeadToHead(id1, id2).catch(() => null),  // tolerant — h2h is bonus
+    ])
+      .then(([a, b, hh]) => { setD1(a); setD2(b); setH2h(hh) })
       .catch((e) => setError(e.message ?? 'error'))
       .finally(() => setLoading(false))
   }, [id1, id2])
@@ -136,25 +142,112 @@ export default function ComparePage() {
         <PlayerHeader p={p2} />
       </div>
 
-      <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
+      {/* Head-to-head card — direct PvP kills derived from log_lines */}
+      {h2h && (h2h.p1_killed_p2 > 0 || h2h.p2_killed_p1 > 0) ? (
+        <div className="bg-gradient-to-r from-zinc-900 via-zinc-800/80 to-zinc-900 border border-amber-700/40 rounded-lg p-4 mb-6">
+          <h2 className="text-amber-400 text-xs uppercase tracking-widest mb-3 text-center">
+            ⚔ Особистий рахунок
+          </h2>
+          <div className="grid grid-cols-3 items-center gap-2 text-center">
+            <div>
+              <div className="text-3xl font-bold text-green-400 tabular-nums">{h2h.p1_killed_p2}</div>
+              <div className="text-xs text-zinc-400 mt-1">
+                <span className="font-medium">{p1.name}</span> вбив <span className="font-medium">{p2.name}</span>
+              </div>
+              {h2h.p1_top_weapon && (
+                <div className="text-xs text-zinc-500 mt-1">улюблена зброя: <span className="text-zinc-300">{h2h.p1_top_weapon}</span></div>
+              )}
+            </div>
+            <div className="text-2xl text-zinc-600">vs</div>
+            <div>
+              <div className="text-3xl font-bold text-red-400 tabular-nums">{h2h.p2_killed_p1}</div>
+              <div className="text-xs text-zinc-400 mt-1">
+                <span className="font-medium">{p2.name}</span> вбив <span className="font-medium">{p1.name}</span>
+              </div>
+              {h2h.p2_top_weapon && (
+                <div className="text-xs text-zinc-500 mt-1">улюблена зброя: <span className="text-zinc-300">{h2h.p2_top_weapon}</span></div>
+              )}
+            </div>
+          </div>
+          {h2h.p1_killed_p2 !== h2h.p2_killed_p1 && (
+            <div className="text-center text-xs text-zinc-500 mt-3">
+              {h2h.p1_killed_p2 > h2h.p2_killed_p1
+                ? `${p1.name} домінує (+${h2h.p1_killed_p2 - h2h.p2_killed_p1})`
+                : `${p2.name} домінує (+${h2h.p2_killed_p1 - h2h.p1_killed_p2})`}
+            </div>
+          )}
+        </div>
+      ) : h2h && (
+        <div className="bg-zinc-900/40 border border-zinc-800 rounded-lg p-3 mb-6 text-center text-zinc-500 text-sm">
+          🤝 Не зустрічались на полі бою (за наявністю логів)
+        </div>
+      )}
+
+      {/* Aggregate stats — colour shows who wins each row */}
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden mb-6">
         <table className="w-full text-sm">
           <tbody>
-            <StatRow label="Level"          valA={p1.level}             valB={p2.level} />
-            <StatRow label="Kills"          valA={p1.kills}             valB={p2.kills} />
-            <StatRow label="Deaths"         valA={p1.deaths}            valB={p2.deaths} higherBetter={false} />
-            <StatRow label="K/D"            valA={p1.kd_ratio ?? 0}     valB={p2.kd_ratio ?? 0} />
-            <StatRow label="KPM"            valA={p1.kpm ?? 0}          valB={p2.kpm ?? 0} />
-            <StatRow label="Матчів"         valA={p1.matches_played}    valB={p2.matches_played} />
-            <StatRow label="Годин"          valA={Math.floor(p1.total_seconds / 3600)} valB={Math.floor(p2.total_seconds / 3600)} />
-            <StatRow label="Combat"         valA={p1.combat}            valB={p2.combat} />
-            <StatRow label="Offense"        valA={p1.offense}           valB={p2.offense} />
-            <StatRow label="Defense"        valA={p1.defense}           valB={p2.defense} />
-            <StatRow label="Support"        valA={p1.support}           valB={p2.support} />
-            <StatRow label="Team kills"     valA={p1.teamkills}         valB={p2.teamkills} higherBetter={false} />
-            <StatRow label="Best streak"    valA={p1.best_kills_streak} valB={p2.best_kills_streak} />
-            <StatRow label="Достижень"      valA={d1.achievements.length} valB={d2.achievements.length} />
+            <StatRow label="Level"           valA={p1.level}             valB={p2.level} />
+            <StatRow label="Kills"           valA={p1.kills}             valB={p2.kills} />
+            <StatRow label="Deaths"          valA={p1.deaths}            valB={p2.deaths} higherBetter={false} />
+            <StatRow label="K/D"             valA={p1.kd_ratio ?? 0}     valB={p2.kd_ratio ?? 0} />
+            <StatRow label="KPM"             valA={p1.kpm ?? 0}          valB={p2.kpm ?? 0} />
+            <StatRow label="Матчів"          valA={p1.matches_played}    valB={p2.matches_played} />
+            <StatRow label="Годин"           valA={Math.floor(p1.total_seconds / 3600)} valB={Math.floor(p2.total_seconds / 3600)} />
+            <StatRow label="Combat"          valA={p1.combat}            valB={p2.combat} />
+            <StatRow label="Offense"         valA={p1.offense}           valB={p2.offense} />
+            <StatRow label="Defense"         valA={p1.defense}           valB={p2.defense} />
+            <StatRow label="Support"         valA={p1.support}           valB={p2.support} />
+            <StatRow label="Best streak"     valA={p1.best_kills_streak} valB={p2.best_kills_streak} />
+            <StatRow label="Найдовше життя (с)" valA={p1.longest_life_secs} valB={p2.longest_life_secs} />
+            <StatRow label="Team kills"      valA={p1.teamkills}         valB={p2.teamkills} higherBetter={false} />
+            <StatRow label="Смертей від ТК"  valA={p1.deaths_by_tk}      valB={p2.deaths_by_tk} higherBetter={false} />
           </tbody>
         </table>
+      </div>
+
+      {/* Top weapons — top 3 each side */}
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 mb-6">
+        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">🔫 Топ-3 зброя</h2>
+        <div className="grid grid-cols-2 gap-6">
+          <ol className="space-y-1 text-sm">
+            {d1.top_weapons.slice(0, 3).map((w, i) => (
+              <li key={w.weapon} className="flex items-baseline gap-2">
+                <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                <span className="flex-1 truncate" title={w.weapon}>{w.weapon}</span>
+                <span className="text-zinc-200 tabular-nums font-medium">{w.kills.toLocaleString('uk-UA')}</span>
+              </li>
+            ))}
+            {d1.top_weapons.length === 0 && <li className="text-zinc-600 text-xs italic">немає даних</li>}
+          </ol>
+          <ol className="space-y-1 text-sm">
+            {d2.top_weapons.slice(0, 3).map((w, i) => (
+              <li key={w.weapon} className="flex items-baseline gap-2">
+                <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                <span className="flex-1 truncate" title={w.weapon}>{w.weapon}</span>
+                <span className="text-zinc-200 tabular-nums font-medium">{w.kills.toLocaleString('uk-UA')}</span>
+              </li>
+            ))}
+            {d2.top_weapons.length === 0 && <li className="text-zinc-600 text-xs italic">немає даних</li>}
+          </ol>
+        </div>
+      </div>
+
+      {/* Achievements — actual badges, not just counts */}
+      <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">
+          🏅 Досягнення ({d1.achievements.length} vs {d2.achievements.length})
+        </h2>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="flex flex-wrap gap-1.5">
+            {d1.achievements.map((a) => <AchievementBadge key={a.id} a={a} />)}
+            {d1.achievements.length === 0 && <div className="text-zinc-600 text-xs italic">немає досягнень</div>}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {d2.achievements.map((a) => <AchievementBadge key={a.id} a={a} />)}
+            {d2.achievements.length === 0 && <div className="text-zinc-600 text-xs italic">немає досягнень</div>}
+          </div>
+        </div>
       </div>
     </div>
   )

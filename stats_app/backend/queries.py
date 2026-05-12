@@ -352,6 +352,67 @@ def _safe_predicate(pred, profile) -> bool:
         return False
 
 
+def head_to_head(db: Session, sid1: str, sid2: str) -> dict:
+    """Direct PvP record between two players, derived from log_lines KILL events.
+
+    Returns counts of kills in each direction plus the top weapon used.
+    Useful for the Comparison page — "X killed Y 47 times with M1 Garand".
+    Falls back to zeros when neither player has any KILL log lines against
+    the other (e.g. they never met, or matches predate log capture).
+    """
+    sql_counts = text("""
+        WITH ids AS (
+          SELECT
+            (SELECT id FROM steam_id_64 WHERE steam_id_64 = :sid1) AS p1,
+            (SELECT id FROM steam_id_64 WHERE steam_id_64 = :sid2) AS p2
+        )
+        SELECT
+          COUNT(*) FILTER (
+            WHERE ll.player1_steamid = ids.p1 AND ll.player2_steamid = ids.p2
+          ) AS p1_killed_p2,
+          COUNT(*) FILTER (
+            WHERE ll.player1_steamid = ids.p2 AND ll.player2_steamid = ids.p1
+          ) AS p2_killed_p1
+        FROM log_lines ll, ids
+        WHERE ll.type = 'KILL'
+          AND (
+            (ll.player1_steamid = ids.p1 AND ll.player2_steamid = ids.p2) OR
+            (ll.player1_steamid = ids.p2 AND ll.player2_steamid = ids.p1)
+          )
+    """)
+    row = db.execute(sql_counts, {"sid1": sid1, "sid2": sid2}).fetchone()
+    p1_killed_p2 = int(row.p1_killed_p2 or 0) if row else 0
+    p2_killed_p1 = int(row.p2_killed_p1 or 0) if row else 0
+
+    def _top_weapon(killer: str, victim: str) -> Optional[str]:
+        sql = text("""
+            WITH ids AS (
+              SELECT
+                (SELECT id FROM steam_id_64 WHERE steam_id_64 = :killer) AS k,
+                (SELECT id FROM steam_id_64 WHERE steam_id_64 = :victim) AS v
+            )
+            SELECT ll.weapon AS w
+            FROM log_lines ll, ids
+            WHERE ll.type = 'KILL'
+              AND ll.player1_steamid = ids.k
+              AND ll.player2_steamid = ids.v
+              AND ll.weapon IS NOT NULL
+              AND ll.weapon NOT IN ('Unknown', '')
+            GROUP BY ll.weapon
+            ORDER BY COUNT(*) DESC
+            LIMIT 1
+        """)
+        r = db.execute(sql, {"killer": killer, "victim": victim}).fetchone()
+        return r.w if r else None
+
+    return {
+        "p1_killed_p2": p1_killed_p2,
+        "p2_killed_p1": p2_killed_p1,
+        "p1_top_weapon": _top_weapon(sid1, sid2) if p1_killed_p2 else None,
+        "p2_top_weapon": _top_weapon(sid2, sid1) if p2_killed_p1 else None,
+    }
+
+
 def find_player_by_name(db: Session, name: str) -> Optional[str]:
     """Lookup steam_id by exact (then ILIKE) match on player name.
     Used to make PVP victim/killer names clickable. Returns None if not found.

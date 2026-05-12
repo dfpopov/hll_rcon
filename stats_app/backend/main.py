@@ -170,6 +170,21 @@ def get_player_detail(
     return result
 
 
+@app.get("/api/head-to-head")
+@limiter.limit("60/minute")
+def get_head_to_head(
+    request: Request,
+    p1: str = Query(min_length=1),
+    p2: str = Query(min_length=1),
+    db: Session = Depends(get_db),
+):
+    """Direct PvP record between two players — kill counts in each direction
+    plus the top weapon used. Both p1/p2 are steam_id_64 strings."""
+    if p1 == p2:
+        return JSONResponse({"detail": "p1 and p2 must differ"}, status_code=400)
+    return queries.head_to_head(db, p1, p2)
+
+
 @app.get("/api/player-by-name")
 @limiter.limit("60/minute")
 def get_player_by_name(
