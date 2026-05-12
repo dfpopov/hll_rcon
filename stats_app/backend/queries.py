@@ -687,6 +687,63 @@ def melee_meta(db: Session, steam_id: str) -> dict:
     }
 
 
+def hardcounters(db: Session, steam_id: str, min_deaths: int = 5, limit: int = 5) -> list[dict]:
+    """Players who have a positive K/D against this player.
+
+    For each player B who killed A at least `min_deaths` times in
+    log_lines, computes A's reverse kill count against B. Returns those
+    where B_killed_A > A_killed_B, sorted by net advantage descending.
+
+    Useful as a meme-y counter to the leaderboard ("ось 5 гравців, які
+    тебе ганяють"). Only works on players with substantial PVP history.
+    """
+    sql = text("""
+        WITH me AS (
+          SELECT id FROM steam_id_64 WHERE steam_id_64 = :sid
+        ),
+        they_killed_me AS (
+          SELECT ll.player1_steamid AS killer_id, COUNT(*) AS times
+          FROM log_lines ll, me
+          WHERE ll.type = 'KILL'
+            AND ll.player2_steamid = me.id
+            AND ll.player1_steamid IS NOT NULL
+            AND ll.player1_steamid <> me.id
+          GROUP BY ll.player1_steamid
+          HAVING COUNT(*) >= :min_deaths
+        ),
+        i_killed_them AS (
+          SELECT ll.player2_steamid AS killer_id, COUNT(*) AS times
+          FROM log_lines ll, me
+          WHERE ll.type = 'KILL'
+            AND ll.player1_steamid = me.id
+            AND ll.player2_steamid IN (SELECT killer_id FROM they_killed_me)
+          GROUP BY ll.player2_steamid
+        )
+        SELECT
+          s.steam_id_64 AS steam_id,
+          (SELECT MAX(ps.name) FROM player_stats ps WHERE ps.playersteamid_id = s.id) AS name,
+          t.times AS killed_me,
+          COALESCE(i.times, 0) AS i_killed_them,
+          t.times - COALESCE(i.times, 0) AS advantage
+        FROM they_killed_me t
+        JOIN steam_id_64 s ON s.id = t.killer_id
+        LEFT JOIN i_killed_them i ON i.killer_id = t.killer_id
+        WHERE t.times > COALESCE(i.times, 0)
+        ORDER BY advantage DESC, t.times DESC
+        LIMIT :limit
+    """)
+    return [
+        {
+            "steam_id": r.steam_id,
+            "name": r.name,
+            "killed_me": int(r.killed_me or 0),
+            "i_killed_them": int(r.i_killed_them or 0),
+            "advantage": int(r.advantage or 0),
+        }
+        for r in db.execute(sql, {"sid": steam_id, "min_deaths": min_deaths, "limit": limit})
+    ]
+
+
 def best_single_game_by_class(
     db: Session,
     weapon_class: str,
@@ -1074,6 +1131,9 @@ def player_detail(db: Session, steam_id: str):
     # 15) Melee micro-stats — last melee death event + current streak.
     melee = melee_meta(db, steam_id)
 
+    # 16) Hardcounters — players with positive K/D against this player.
+    hc = hardcounters(db, steam_id, min_deaths=5, limit=5)
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -1091,4 +1151,5 @@ def player_detail(db: Session, steam_id: str):
         "hour_distribution": hour_distribution,
         "played_with_against": pwa,
         "melee_meta": melee,
+        "hardcounters": hc,
     }

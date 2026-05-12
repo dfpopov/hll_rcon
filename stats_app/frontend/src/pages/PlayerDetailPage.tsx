@@ -511,6 +511,32 @@ export default function PlayerDetailPage() {
         </section>
       </div>
 
+      {/* Hardcounters — players with positive K/D against this player.
+          Snarky banner: "ці гравці регулярно тебе перегравають". */}
+      {data.hardcounters && data.hardcounters.length > 0 && (
+        <section className="mb-6 bg-gradient-to-r from-zinc-900 via-rose-950/30 to-zinc-900 border border-rose-900/40 rounded-lg p-4">
+          <h2 className="text-rose-300 uppercase text-xs tracking-widest mb-3">
+            🥊 Hardcounters — мають позитивний K/D проти тебе
+          </h2>
+          <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-sm">
+            {data.hardcounters.map((h, i) => (
+              <li key={h.steam_id} className="flex items-center gap-2 bg-zinc-900/60 rounded p-2 border border-zinc-800">
+                <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
+                <Link to={`/player/${h.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors font-medium" title={h.name}>
+                  {h.name}
+                </Link>
+                <span className="text-xs text-zinc-400 tabular-nums whitespace-nowrap" title={`${h.killed_me} вбив / ${h.i_killed_them} помстився`}>
+                  <span className="text-red-400">{h.killed_me}</span>
+                  <span className="text-zinc-600">/</span>
+                  <span className="text-green-400">{h.i_killed_them}</span>
+                </span>
+                <span className="text-xs text-rose-400 font-bold tabular-nums" title="перевага">+{h.advantage}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
       {/* Most played with / against — co-presence in logged matches */}
       {(data.played_with_against?.teammates?.length || data.played_with_against?.opponents?.length) && (
         <section className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -247,11 +247,20 @@ export interface PlayerDetail {
   hour_distribution: number[]  // length 24, index = hour 0..23
   played_with_against: PlayedWithAgainst
   melee_meta: MeleeMeta
+  hardcounters: Hardcounter[]
 }
 
 export interface PlayedWithAgainst {
   teammates: { steam_id: string; name: string; matches: number }[]
   opponents: { steam_id: string; name: string; matches: number }[]
+}
+
+export interface Hardcounter {
+  steam_id: string
+  name: string
+  killed_me: number
+  i_killed_them: number
+  advantage: number
 }
 
 export interface MeleeMeta {
