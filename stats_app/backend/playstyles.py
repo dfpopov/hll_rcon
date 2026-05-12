@@ -94,13 +94,45 @@ PLAYSTYLES: List[Dict[str, Any]] = [
         "predicate": lambda p, c: (p.get("matches_played") or 0) >= 200 and c["support_pct"] < 10,
     },
 
+    # ── Weapon-class specialists (need top_kill_class enrichment) ──────
+    {
+        "id": "knife_master", "title": "Майстер ножа", "emoji": "🔪", "color": "text-rose-300",
+        "description": "Топ зброя — ближній бій (Melee), 20+ melee-вбивств",
+        "predicate": lambda p, c: (p.get("top_kill_class") == "Melee"
+                                    and (p.get("top_kill_class_kills") or 0) >= 20),
+    },
+    {
+        "id": "artilleryman", "title": "Артилерист", "emoji": "💥", "color": "text-yellow-300",
+        "description": "Топ зброя — артилерія, 20%+ усіх вбивств",
+        "predicate": lambda p, c: (p.get("top_kill_class") == "Artillery"
+                                    and (p.get("top_kill_class_pct") or 0) >= 20),
+    },
+    {
+        "id": "pure_sniper", "title": "Чистий снайпер", "emoji": "🎯", "color": "text-sky-300",
+        "description": "Топ зброя — снайперська гвинтівка, 25%+ усіх вбивств",
+        "predicate": lambda p, c: (p.get("top_kill_class") == "Sniper Rifle"
+                                    and (p.get("top_kill_class_pct") or 0) >= 25),
+    },
+    {
+        "id": "tanker", "title": "Танкіст", "emoji": "🚜", "color": "text-orange-300",
+        "description": "Топ зброя — танкова гармата або AT, 20%+ усіх вбивств",
+        "predicate": lambda p, c: (p.get("top_kill_class") in ("Tank Gun", "Anti-Tank")
+                                    and (p.get("top_kill_class_pct") or 0) >= 20),
+    },
+    {
+        "id": "night_owl", "title": "Нічна сова", "emoji": "🌚", "color": "text-indigo-300",
+        "description": "Пік активності о 0:00-5:59 — нічні гравці",
+        "predicate": lambda p, c: ((p.get("peak_hour") if p.get("peak_hour") is not None else -1) in (0, 1, 2, 3, 4, 5)
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+
     # ── Curiosity archetypes — must come BEFORE the generic K/D / ratio
     # catchers so their specific combos win priority. Otherwise a level-200
     # K/D 0.7 player would hit Жертовний instead of more interesting Кістка.
     {
         "id": "kpm_wizard", "title": "Чарівник KPM", "emoji": "🧙", "color": "text-violet-300",
-        "description": "KPM 2.0+ при combat <30% — вбиває не combat-зброєю (тенки, артилерія, гранати)",
-        "predicate": lambda p, c: (c["kpm_derived"] >= 2.0 and c["combat_pct"] < 30
+        "description": "KPM 1.0+ при combat <30% — вбиває не combat-зброєю (тенки, артилерія, гранати)",
+        "predicate": lambda p, c: (c["kpm_derived"] >= 1.0 and c["combat_pct"] < 30
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {

@@ -270,6 +270,71 @@ def get_unique_weapons(db: Session) -> List[str]:
     return [row[0] for row in db.execute(sql)]
 
 
+def _all_player_profiles_enriched(db: Session) -> List[dict]:
+    """_all_player_profiles + top_kill_class and peak_hour for each player.
+
+    Used by playstyle classification. Two extra batch queries:
+      1. per-player per-weapon kill totals → bucketed by class in Python
+      2. per-player per-hour match counts → pick peak hour
+
+    Adds these fields to each profile dict:
+      top_kill_class: str | None      — class name with most kills
+      top_kill_class_pct: float       — % of player's kills in that class
+      peak_hour: int | None           — 0-23, hour with most matches played
+    """
+    profiles = _all_player_profiles(db)
+
+    # 1) Per-player weapon → class kills (heavy: jsonb_each over ~85k rows)
+    sql_weapons = text("""
+        SELECT s.steam_id_64 AS sid, key AS weapon, SUM(value::int) AS kills
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id,
+             jsonb_each_text(ps.weapons)
+        WHERE ps.weapons IS NOT NULL AND value::int > 0
+        GROUP BY s.steam_id_64, key
+    """)
+    per_class: dict[str, dict[str, int]] = {}
+    for r in db.execute(sql_weapons):
+        cls = classify_weapon(r.weapon) or "Other"
+        per_class.setdefault(r.sid, {})
+        per_class[r.sid][cls] = per_class[r.sid].get(cls, 0) + int(r.kills or 0)
+
+    # 2) Per-player peak hour from map_history.start
+    sql_hour = text("""
+        SELECT s.steam_id_64 AS sid, EXTRACT(HOUR FROM m.start)::int AS h, COUNT(*) AS n
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id
+        WHERE m.start IS NOT NULL
+        GROUP BY s.steam_id_64, h
+    """)
+    per_hour: dict[str, dict[int, int]] = {}
+    for r in db.execute(sql_hour):
+        per_hour.setdefault(r.sid, {})
+        per_hour[r.sid][int(r.h)] = int(r.n or 0)
+
+    # 3) Attach
+    for p in profiles:
+        sid = p["steam_id"]
+        classes = per_class.get(sid, {})
+        if classes:
+            top_cls, top_cnt = max(classes.items(), key=lambda x: x[1])
+            p["top_kill_class"] = top_cls
+            p["top_kill_class_kills"] = top_cnt
+            p["top_kill_class_pct"] = top_cnt / max(1, p.get("kills") or 1) * 100
+        else:
+            p["top_kill_class"] = None
+            p["top_kill_class_kills"] = 0
+            p["top_kill_class_pct"] = 0
+        hours = per_hour.get(sid, {})
+        if hours:
+            peak_h, _ = max(hours.items(), key=lambda x: x[1])
+            p["peak_hour"] = peak_h
+        else:
+            p["peak_hour"] = None
+    return profiles
+
+
 def _all_player_profiles(db: Session) -> List[dict]:
     """Fetch one aggregated profile per player. Used for achievement stats.
     Result is cached at the function level via lru_cache wrapper above the
@@ -709,22 +774,15 @@ def melee_meta(db: Session, steam_id: str) -> dict:
 
 def playstyle_stats(db: Session) -> list[dict]:
     """Server-wide playstyle distribution. TTL-cached at 1h via playstyles.py
-    module-level cache."""
-    return get_cached_stats_or_compute(lambda: _all_player_profiles(db))
+    module-level cache. Uses enriched profiles (top_kill_class + peak_hour)
+    to power weapon-class and time-of-day archetypes."""
+    return get_cached_stats_or_compute(lambda: _all_player_profiles_enriched(db))
 
 
 def playstyle_players(db: Session, playstyle_id: str, limit: int = 50, offset: int = 0) -> dict:
-    """Players matching one playstyle, paginated. Reads from the same cache
-    as playstyle_stats — re-classifies only if cache is cold."""
-    # Re-use cached buckets if fresh; otherwise compute and update cache.
-    cached = _aggregate_cache.get("buckets")
-    import time as _time
-    if cached is None or _time.time() - _aggregate_cache.get("computed_at", 0) >= 3600:
-        # Force a refresh so subsequent paginated calls hit cache.
-        get_cached_stats_or_compute(lambda: _all_player_profiles(db))
-    # players_with_playstyle re-iterates _all_player_profiles since the cache
-    # only holds samples, not the full bucket. Cost ~1-2s on prod for 28k.
-    profiles = _all_player_profiles(db)
+    """Players matching one playstyle, paginated. Re-classifies on each call
+    since we need full bucket, not just samples from cache."""
+    profiles = _all_player_profiles_enriched(db)
     return players_with_playstyle(profiles, playstyle_id, limit=limit, offset=offset)
 
 
@@ -1242,8 +1300,17 @@ def player_detail(db: Session, steam_id: str):
     ach_progress = compute_achievement_progress(profile, limit=5)
 
     # 18) Playstyle — primary archetype + all other matching styles.
-    # See playstyles.classify_one for the priority rules.
-    _ps_result = classify_playstyle_one(profile)
+    # See playstyles.classify_one for the priority rules. Profile must be
+    # enriched with top_kill_class + peak_hour for the weapon/time archetypes.
+    _enriched = {**profile}
+    if kills_by_class:
+        _top_cls = max(kills_by_class.items(), key=lambda x: x[1])
+        _enriched["top_kill_class"] = _top_cls[0]
+        _enriched["top_kill_class_kills"] = _top_cls[1]
+        _enriched["top_kill_class_pct"] = _top_cls[1] / max(1, profile.get("kills") or 1) * 100
+    if hour_distribution and any(hour_distribution):
+        _enriched["peak_hour"] = max(range(24), key=lambda h: hour_distribution[h])
+    _ps_result = classify_playstyle_one(_enriched)
     playstyle = _ps_result.get("primary")
     playstyle_also = _ps_result.get("also", [])
 
