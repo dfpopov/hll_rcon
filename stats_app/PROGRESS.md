@@ -21,6 +21,27 @@ Architectural decisions live in `PLAN.md`.
 
 ## Findings (chronological)
 
+### 2026-05-12 — Phase 2 progress: sort + pagination + rate limit
+
+- Renamed `/api/top-kills` → `/api/top-players`. Single endpoint now serves
+  sortable leaderboard for **all** columns (kills/deaths/teamkills/kd_ratio/
+  kpm/playtime/matches/level), making top-playtime a special case of
+  top-players?sort=playtime — no separate endpoint needed.
+- **Whitelisted SQL ORDER BY**: SORT_COLUMNS dict in queries.py maps API
+  param to SQL expression. Prevents SQL injection through the sort param.
+- **Pagination**: limit (1-100, default 50) + offset (>=0). Response also
+  includes `total` from `COUNT(DISTINCT playersteamid_id)` so frontend
+  can render "page X of Y" controls.
+- **Rate limiting**: slowapi middleware, 60 req/min/IP default, in-memory.
+  `/api/health` excluded. If load grows, migrate to Redis-based.
+- **Level prominence**: gradient badges colored by tier (zinc→emerald→amber
+  →orange→red as level climbs, max class for L250+). Sits before player name.
+- **Active-sort highlight**: column header turns amber when sort matches,
+  row cell of that column also amber+bold. Easy to see what's being ranked.
+- **Sample numbers** (limit=3, sort=playtime):
+  Use http://95.111.230.75:7012/api/top-players?sort=playtime to see who
+  has spent the most time in matches.
+
 ### 2026-05-12 — MVP deployed (port 7012)
 
 - Successfully built and ran `stats_app` container (~67s docker build).

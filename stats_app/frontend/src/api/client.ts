@@ -7,7 +7,19 @@ export const api = axios.create({
   timeout: 15000,
 })
 
-export interface TopKillsRow {
+export type SortKey =
+  | 'kills'
+  | 'deaths'
+  | 'teamkills'
+  | 'kd_ratio'
+  | 'kpm'
+  | 'playtime'
+  | 'matches'
+  | 'level'
+
+export type SortOrder = 'asc' | 'desc'
+
+export interface PlayerRow {
   steam_id: string
   name: string
   level: number
@@ -20,12 +32,29 @@ export interface TopKillsRow {
   total_seconds: number
 }
 
-export interface TopKillsResponse {
+export interface TopPlayersResponse {
   count: number
-  results: TopKillsRow[]
+  total: number
+  limit: number
+  offset: number
+  sort: SortKey
+  order: SortOrder
+  results: PlayerRow[]
 }
 
-export async function fetchTopKills(limit = 50): Promise<TopKillsResponse> {
-  const { data } = await api.get<TopKillsResponse>('/top-kills', { params: { limit } })
+export async function fetchTopPlayers(opts: {
+  sort?: SortKey
+  order?: SortOrder
+  limit?: number
+  offset?: number
+} = {}): Promise<TopPlayersResponse> {
+  const { data } = await api.get<TopPlayersResponse>('/top-players', {
+    params: {
+      sort: opts.sort ?? 'kills',
+      order: opts.order ?? 'desc',
+      limit: opts.limit ?? 50,
+      offset: opts.offset ?? 0,
+    },
+  })
   return data
 }
