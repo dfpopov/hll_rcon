@@ -36,7 +36,10 @@ def _compute_ctx(p: Dict[str, Any]) -> Dict[str, float]:
     }
 
 
-_MIN_MATCHES = 20
+_MIN_MATCHES = 10
+# Players below this are excluded from aggregate playstyle stats — single-match
+# accounts are noise that overwhelm the Універсал bucket otherwise.
+_AGGREGATE_MIN_MATCHES = 10
 
 
 # (id, title, emoji, color, description, predicate)
@@ -122,26 +125,26 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     # ── Combat-heavy archetypes ────────────────────────────────────────
     {
         "id": "trench_defender", "title": "Захисник окопу", "emoji": "🏰", "color": "text-emerald-300",
-        "description": "Combat 50%+ з ухилом у захист (20+ матчів)",
+        "description": "Combat 50%+ з ухилом у захист (10+ матчів)",
         "predicate": lambda p, c: (c["combat_pct"] >= 50 and c["defense_pct"] > c["offense_pct"]
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "combat_reaper", "title": "Бойовий жнець", "emoji": "⚔️", "color": "text-red-300",
-        "description": "Combat 50%+ з ухилом в атаку (20+ матчів)",
+        "description": "Combat 50%+ з ухилом в атаку (10+ матчів)",
         "predicate": lambda p, c: c["combat_pct"] >= 50 and (p.get("matches_played") or 0) >= _MIN_MATCHES,
     },
 
     # ── Generic geometric splits (now gated so they don't catch newbies) ──
     {
         "id": "wall", "title": "Стіна", "emoji": "🛡", "color": "text-blue-300",
-        "description": "Defense значно більше за offense — тримає точку (20+ матчів)",
+        "description": "Defense значно більше за offense — тримає точку (10+ матчів)",
         "predicate": lambda p, c: (c["defense_pct"] > c["offense_pct"] + 15
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
     {
         "id": "assault", "title": "Штурмовик", "emoji": "🗡", "color": "text-orange-300",
-        "description": "Offense значно більше за defense — перший на точці (20+ матчів)",
+        "description": "Offense значно більше за defense — перший на точці (10+ матчів)",
         "predicate": lambda p, c: (c["offense_pct"] > c["defense_pct"] + 15
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
@@ -187,10 +190,14 @@ _aggregate_cache: Dict[str, Any] = {"computed_at": 0.0, "buckets": None}
 
 def compute_playstyle_stats(profiles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Bucket all profiles by their playstyle, return ordered metadata
-    list with player_count + sample top-5 by kills per bucket.
+    list with player_count + sample top-5 by kills per bucket. Profiles
+    below _AGGREGATE_MIN_MATCHES are skipped — single-match noise should
+    not overwhelm the catch-all bucket.
     """
     buckets: Dict[str, List[Dict[str, Any]]] = {ps["id"]: [] for ps in PLAYSTYLES}
     for p in profiles:
+        if (p.get("matches_played") or 0) < _AGGREGATE_MIN_MATCHES:
+            continue
         ctx = _compute_ctx(p)
         for ps in PLAYSTYLES:
             try:
@@ -251,6 +258,8 @@ def players_with_playstyle(
     if target_ps is None:
         return {"count": 0, "total": 0, "limit": limit, "offset": offset, "results": []}
     for p in profiles:
+        if (p.get("matches_played") or 0) < _AGGREGATE_MIN_MATCHES:
+            continue
         ctx = _compute_ctx(p)
         for ps in PLAYSTYLES:
             try:
