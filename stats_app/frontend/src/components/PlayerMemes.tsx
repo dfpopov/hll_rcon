@@ -171,20 +171,36 @@ export function matchTitle(m: MatchTitleInput): MatchTitle | null {
 
 import { Link } from 'react-router-dom'
 
-/** Renders the API-supplied playstyle. Whole card links to /playstyles/{id}
- *  so the user can see all players with the same archetype. */
-export function PlaystyleCard({ playstyle }: { playstyle: Playstyle }) {
+/** Renders the API-supplied primary playstyle + a chip row of other
+ *  matching archetypes (also). Primary card links to /playstyles/{id};
+ *  each chip links to its own /playstyles/{id} page too. */
+export function PlaystyleCard({ playstyle, also = [] }: { playstyle: Playstyle; also?: Playstyle[] }) {
   return (
-    <section className="mb-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 hover:border-zinc-700 transition-colors">
-      <Link to={`/playstyles/${playstyle.id}`} className="flex items-center gap-4">
+    <section className="mb-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+      <Link to={`/playstyles/${playstyle.id}`}
+        className="flex items-center gap-4 hover:bg-zinc-900 -m-1 p-1 rounded transition-colors">
         <div className="text-5xl">{playstyle.emoji}</div>
         <div className="flex-1">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest">Стиль гри</div>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">Стиль гри · основний</div>
           <div className={`text-xl font-bold ${playstyle.color}`}>{playstyle.title}</div>
           <p className="text-sm text-zinc-400 mt-1">{playstyle.description}</p>
-          <div className="text-xs text-zinc-600 mt-2">→ переглянути всіх з цим стилем</div>
         </div>
       </Link>
+      {also.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-zinc-800">
+          <div className="text-[10px] uppercase text-zinc-600 tracking-widest mb-2">Також підходить</div>
+          <div className="flex flex-wrap gap-1.5">
+            {also.map((ps) => (
+              <Link key={ps.id} to={`/playstyles/${ps.id}`}
+                className={`text-xs px-2 py-1 rounded bg-zinc-800/60 border border-zinc-800
+                            hover:bg-zinc-800 hover:border-zinc-700 ${ps.color}`}
+                title={ps.description}>
+                {ps.emoji} {ps.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }

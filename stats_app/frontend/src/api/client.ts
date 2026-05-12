@@ -276,6 +276,7 @@ export interface PlayerDetail {
   hardcounters: Hardcounter[]
   achievement_progress: AchievementProgress[]
   playstyle: Playstyle
+  playstyle_also: Playstyle[]
 }
 
 export interface Playstyle {

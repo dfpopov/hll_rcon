@@ -298,7 +298,7 @@ export default function PlayerDetailPage() {
       )}
 
       {/* Playstyle classifier — personality tag derived from score distribution */}
-      <PlaystyleCard playstyle={data.playstyle} />
+      <PlaystyleCard playstyle={data.playstyle} also={data.playstyle_also} />
 
       <SectionDivider label="📊 Цифри" />
 

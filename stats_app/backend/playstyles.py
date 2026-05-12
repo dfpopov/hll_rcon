@@ -142,6 +142,53 @@ PLAYSTYLES: List[Dict[str, Any]] = [
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
 
+    # ── Curiosity archetypes — small but interesting buckets ───────────
+    {
+        "id": "bone", "title": "Кістка", "emoji": "🦴", "color": "text-zinc-400",
+        "description": "Високий рівень (200+), низький K/D (<1.0) — гриндив рівень, не стрільбу",
+        "predicate": lambda p, c: ((p.get("level") or 0) >= 200
+                                    and (p.get("kd_ratio") or 0) < 1.0
+                                    and (p.get("matches_played") or 0) >= 100),
+    },
+    {
+        "id": "diamond_in_rough", "title": "Алмаз у грязі", "emoji": "💎", "color": "text-cyan-200",
+        "description": "K/D 2.0+ при рівні <50 — талант без часу",
+        "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
+                                    and (p.get("level") or 0) < 50
+                                    and (p.get("matches_played") or 0) >= 20),
+    },
+    {
+        "id": "lottery", "title": "Лотерея", "emoji": "🎰", "color": "text-amber-200",
+        "description": "Серія 50+ в одному матчі, але K/D <1.5 — один великий день",
+        "predicate": lambda p, c: ((p.get("best_kills_streak") or 0) >= 50
+                                    and (p.get("kd_ratio") or 0) < 1.5),
+    },
+    {
+        "id": "master", "title": "Майстер", "emoji": "🥋", "color": "text-amber-400",
+        "description": "Рівень 250+, K/D 1.8+, 500+ матчів — справжній гуру",
+        "predicate": lambda p, c: ((p.get("level") or 0) >= 250
+                                    and (p.get("kd_ratio") or 0) >= 1.8
+                                    and (p.get("matches_played") or 0) >= 500),
+    },
+    {
+        "id": "speedster", "title": "Швидкохід", "emoji": "🚀", "color": "text-orange-200",
+        "description": "KPM 1.0+ при <50 годин на сервері — ефективний з першої секунди",
+        "predicate": lambda p, c: (c["kpm_derived"] >= 1.0
+                                    and (p.get("total_seconds") or 0) < 50 * 3600
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
+        "id": "slowmo", "title": "Повільник", "emoji": "🦥", "color": "text-zinc-400",
+        "description": "KPM <0.3 при 100+ матчів — нікуди не поспішає",
+        "predicate": lambda p, c: (c["kpm_derived"] < 0.3
+                                    and (p.get("matches_played") or 0) >= 100),
+    },
+    {
+        "id": "tk_martyr", "title": "Мученик ТК", "emoji": "🛐", "color": "text-rose-200",
+        "description": "50+ смертей від ТК своїх — магніт для союзницьких куль",
+        "predicate": lambda p, c: (p.get("deaths_by_tk") or 0) >= 50,
+    },
+
     # ── Fill-in archetypes for the "normal" middle ─────────────────────
     {
         "id": "active_player", "title": "Активний", "emoji": "✅", "color": "text-emerald-300",
@@ -194,21 +241,50 @@ PLAYSTYLES: List[Dict[str, Any]] = [
 ]
 
 
+def _ps_meta(ps: Dict[str, Any]) -> Dict[str, Any]:
+    """Strip the predicate, keep only the displayable fields."""
+    return {
+        "id": ps["id"], "title": ps["title"], "emoji": ps["emoji"],
+        "color": ps["color"], "description": ps["description"],
+    }
+
+
 def classify_one(profile: Dict[str, Any]) -> Dict[str, Any]:
-    """Return the first matching playstyle metadata for a single profile."""
+    """Return primary playstyle + all other matching archetypes.
+
+    Output shape:
+      {"primary": {...}, "also": [{...}, ...]}
+
+    The first matching archetype is the primary (preserving the original
+    priority order). The `also` list contains every OTHER archetype whose
+    predicate also matches, excluding the always-true `versatile` default
+    (which would clutter the list).
+    """
     ctx = _compute_ctx(profile)
+    matched: list = []
     for ps in PLAYSTYLES:
+        if ps["id"] == "versatile":
+            continue  # always-true; skip from secondary list
         try:
             if ps["predicate"](profile, ctx):
-                return {
-                    "id": ps["id"], "title": ps["title"], "emoji": ps["emoji"],
-                    "color": ps["color"], "description": ps["description"],
-                }
+                matched.append(ps)
         except (TypeError, ValueError, ZeroDivisionError):
             continue
-    # Fallback (shouldn't be reachable because versatile is always True)
-    return {"id": "versatile", "title": "Універсал", "emoji": "🛡",
-            "color": "text-zinc-300", "description": ""}
+
+    if not matched:
+        # Fall through to default
+        versatile = next((ps for ps in PLAYSTYLES if ps["id"] == "versatile"), None)
+        return {
+            "primary": _ps_meta(versatile) if versatile else
+                {"id": "versatile", "title": "Універсал", "emoji": "🛡",
+                 "color": "text-zinc-300", "description": ""},
+            "also": [],
+        }
+
+    return {
+        "primary": _ps_meta(matched[0]),
+        "also":    [_ps_meta(ps) for ps in matched[1:]],
+    }
 
 
 # In-process TTL cache for the aggregate distribution. Iterating 28k+

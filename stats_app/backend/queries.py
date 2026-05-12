@@ -1241,8 +1241,11 @@ def player_detail(db: Session, steam_id: str):
     # 17) Achievement progress — top-5 closest-to-earning badges.
     ach_progress = compute_achievement_progress(profile, limit=5)
 
-    # 18) Playstyle — single archetype matched by the shared classifier.
-    playstyle = classify_playstyle_one(profile)
+    # 18) Playstyle — primary archetype + all other matching styles.
+    # See playstyles.classify_one for the priority rules.
+    _ps_result = classify_playstyle_one(profile)
+    playstyle = _ps_result.get("primary")
+    playstyle_also = _ps_result.get("also", [])
 
     return {
         "profile": profile,
@@ -1264,4 +1267,5 @@ def player_detail(db: Session, steam_id: str):
         "hardcounters": hc,
         "achievement_progress": ach_progress,
         "playstyle": playstyle,
+        "playstyle_also": playstyle_also,
     }
