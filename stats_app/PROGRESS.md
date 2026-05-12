@@ -50,6 +50,27 @@ Pages live:
 
 ## Findings (chronological)
 
+### 2026-05-13 — More achievements + match titles + alt-name search + autocomplete (D1+D2)
+
+| Commit | Phase | Scope |
+|---|---|---|
+| `cd39cfcf` | D1 | 6 new achievements (pool 28 → 34), 7 new match titles |
+| `abaaa89e` | D2 | Search across alt names via EXISTS subquery; /api/players/autocomplete + dropdown in FilterBar |
+
+New achievements: disciplined (TK rate < 10%), spotless (no TK deaths),
+fortress (500K+ defense), tireless (1000+ h), lone_survivor (30+ min
+longest life), old_guard (2000+ matches).
+
+New match titles: Глядач (no engage), Бійня для тебе (40+ deaths),
+Снайпер духу (K/D 10+), Ідеальний (20+ kills, 0 deaths), Терор (100+
+kills), Невидимий помічник (8000+ support, < 5 kills), Стіна (3000+
+combat, ≤ 3 deaths), Дзен (K=D with 10-29 kills).
+
+Search now matches any historical name. q=ПАКЕТ (uppercase Russian)
+finds Пакет с пакетами through his alt name "ПАКЕТ С ПАКЕТАМИ".
+Autocomplete dropdown: 200ms debounce, 8 suggestions with avatar,
+click goes straight to profile.
+
 ### 2026-05-13 — Layout refresh + Hardcounters + Achievement progress + World Map (C1-C4)
 
 User-driven follow-up sprint. Layout was getting cluttered after the
