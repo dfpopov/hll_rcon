@@ -63,6 +63,8 @@ def get_top_players(
     period: Optional[str] = Query(default=None, description="7d | 30d | 90d | empty=all"),
     weapon: Optional[str] = Query(default=None, description="filter players who used this weapon at least once"),
     map_name: Optional[str] = Query(default=None, description="filter to specific map"),
+    search: Optional[str] = Query(default=None, min_length=2, max_length=64,
+                                   description="case-insensitive substring match on player name"),
     db: Session = Depends(get_db),
 ):
     """Aggregated all-time per-player stats with sort, pagination, filters."""
@@ -80,11 +82,13 @@ def get_top_players(
     rows = queries.top_players(
         db,
         sort=sort, order=order, limit=limit, offset=offset,
-        min_matches=min_matches, period=period, weapon=weapon, map_name=map_name,
+        min_matches=min_matches, period=period, weapon=weapon,
+        map_name=map_name, search=search,
     )
     total = queries.top_players_count(
         db,
-        min_matches=min_matches, period=period, weapon=weapon, map_name=map_name,
+        min_matches=min_matches, period=period, weapon=weapon,
+        map_name=map_name, search=search,
     )
     return {
         "count": len(rows),
@@ -97,6 +101,7 @@ def get_top_players(
         "period": period,
         "weapon": weapon,
         "map_name": map_name,
+        "search": search,
         "results": rows,
     }
 

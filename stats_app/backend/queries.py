@@ -33,6 +33,7 @@ def _build_filters(
     period: Optional[str],
     weapon: Optional[str],
     map_name: Optional[str],
+    search: Optional[str] = None,
 ) -> tuple[list[str], dict]:
     """Build WHERE clause parts and bound params from optional filters."""
     parts: list[str] = []
@@ -50,6 +51,11 @@ def _build_filters(
         parts.append("m.map_name = :map_name")
         params["map_name"] = map_name
 
+    if search:
+        # ILIKE = case-insensitive LIKE. Adds % wildcards for "contains" match.
+        parts.append("ps.name ILIKE :search")
+        params["search"] = f"%{search}%"
+
     return parts, params
 
 
@@ -63,12 +69,13 @@ def top_players(
     period: Optional[str] = None,
     weapon: Optional[str] = None,
     map_name: Optional[str] = None,
+    search: Optional[str] = None,
 ):
     """Aggregated all-time per-player stats with sortable ORDER BY + filters."""
     sort_expr = SORT_COLUMNS.get(sort, SORT_COLUMNS["kills"])
     order_dir = "ASC" if order.lower() == "asc" else "DESC"
 
-    where_parts, params = _build_filters(period, weapon, map_name)
+    where_parts, params = _build_filters(period, weapon, map_name, search)
     where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
 
     params.update({"limit": limit, "offset": offset, "min_matches": min_matches})
@@ -108,9 +115,10 @@ def top_players_count(
     period: Optional[str] = None,
     weapon: Optional[str] = None,
     map_name: Optional[str] = None,
+    search: Optional[str] = None,
 ) -> int:
     """Count players matching filters (for pagination total)."""
-    where_parts, params = _build_filters(period, weapon, map_name)
+    where_parts, params = _build_filters(period, weapon, map_name, search)
     where_clause = ("WHERE " + " AND ".join(where_parts)) if where_parts else ""
     params["min_matches"] = min_matches
 

@@ -52,6 +52,7 @@ export default function HomePage() {
   const [period, setPeriod] = useState<Period>('')
   const [weapon, setWeapon] = useState<string>('')
   const [mapName, setMapName] = useState<string>('')
+  const [search, setSearch] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,6 +63,7 @@ export default function HomePage() {
       sort, order, limit: PAGE_SIZE, offset: page * PAGE_SIZE,
       min_matches: minMatches, period: period || undefined,
       weapon: weapon || undefined, map_name: mapName || undefined,
+      search: search || undefined,
     })
       .then((data) => {
         setRows(data.results)
@@ -69,7 +71,7 @@ export default function HomePage() {
       })
       .catch((err) => setError(err?.response?.data?.detail ?? err.message ?? 'unknown error'))
       .finally(() => setLoading(false))
-  }, [sort, order, page, minMatches, period, weapon, mapName])
+  }, [sort, order, page, minMatches, period, weapon, mapName, search])
 
   const handleSort = (key: SortKey) => {
     if (key === sort) setOrder(order === 'desc' ? 'asc' : 'desc')
@@ -78,8 +80,9 @@ export default function HomePage() {
   }
 
   const handleFilterChange = (next: {
-    period?: Period; minMatches?: number; weapon?: string; mapName?: string
+    search?: string; period?: Period; minMatches?: number; weapon?: string; mapName?: string
   }) => {
+    if (next.search !== undefined) setSearch(next.search)
     if (next.period !== undefined) setPeriod(next.period)
     if (next.minMatches !== undefined) setMinMatches(next.minMatches)
     if (next.weapon !== undefined) setWeapon(next.weapon)
@@ -92,6 +95,7 @@ export default function HomePage() {
     setPeriod('')
     setWeapon('')
     setMapName('')
+    setSearch('')
     setPage(0)
   }
 
@@ -109,6 +113,7 @@ export default function HomePage() {
       </header>
 
       <FilterBar
+        search={search}
         period={period}
         minMatches={minMatches}
         weapon={weapon}

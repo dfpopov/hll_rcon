@@ -36,6 +36,7 @@ export interface TopPlayersResponse {
   period: Period | null
   weapon: string | null
   map_name: string | null
+  search: string | null
   results: PlayerRow[]
 }
 
@@ -48,6 +49,7 @@ export interface TopPlayersFilters {
   period?: Period
   weapon?: string
   map_name?: string
+  search?: string
 }
 
 export async function fetchTopPlayers(opts: TopPlayersFilters = {}): Promise<TopPlayersResponse> {
@@ -61,6 +63,7 @@ export async function fetchTopPlayers(opts: TopPlayersFilters = {}): Promise<Top
   if (opts.period) params.period = opts.period
   if (opts.weapon) params.weapon = opts.weapon
   if (opts.map_name) params.map_name = opts.map_name
+  if (opts.search && opts.search.trim().length >= 2) params.search = opts.search.trim()
   const { data } = await api.get<TopPlayersResponse>('/top-players', { params })
   return data
 }
