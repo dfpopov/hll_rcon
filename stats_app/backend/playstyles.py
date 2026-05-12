@@ -94,6 +94,55 @@ PLAYSTYLES: List[Dict[str, Any]] = [
         "predicate": lambda p, c: (p.get("matches_played") or 0) >= 200 and c["support_pct"] < 10,
     },
 
+    # ── Curiosity archetypes — must come BEFORE the generic K/D / ratio
+    # catchers so their specific combos win priority. Otherwise a level-200
+    # K/D 0.7 player would hit Жертовний instead of more interesting Кістка.
+    {
+        "id": "bone", "title": "Кістка", "emoji": "🦴", "color": "text-zinc-400",
+        "description": "Високий рівень (200+), низький K/D (<1.0) — гриндив рівень, не стрільбу",
+        "predicate": lambda p, c: ((p.get("level") or 0) >= 200
+                                    and (p.get("kd_ratio") or 0) < 1.0
+                                    and (p.get("matches_played") or 0) >= 100),
+    },
+    {
+        "id": "diamond_in_rough", "title": "Алмаз у грязі", "emoji": "💎", "color": "text-cyan-200",
+        "description": "K/D 2.0+ при рівні <50 — талант без часу",
+        "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
+                                    and (p.get("level") or 0) < 50
+                                    and (p.get("matches_played") or 0) >= 20),
+    },
+    {
+        "id": "lottery", "title": "Лотерея", "emoji": "🎰", "color": "text-amber-200",
+        "description": "Серія 50+ в одному матчі, але K/D <1.5 — один великий день",
+        "predicate": lambda p, c: ((p.get("best_kills_streak") or 0) >= 50
+                                    and (p.get("kd_ratio") or 0) < 1.5),
+    },
+    {
+        "id": "master", "title": "Майстер", "emoji": "🥋", "color": "text-amber-400",
+        "description": "Рівень 250+, K/D 1.8+, 500+ матчів — справжній гуру",
+        "predicate": lambda p, c: ((p.get("level") or 0) >= 250
+                                    and (p.get("kd_ratio") or 0) >= 1.8
+                                    and (p.get("matches_played") or 0) >= 500),
+    },
+    {
+        "id": "speedster", "title": "Швидкохід", "emoji": "🚀", "color": "text-orange-200",
+        "description": "KPM 1.0+ при <50 годин на сервері — ефективний з першої секунди",
+        "predicate": lambda p, c: (c["kpm_derived"] >= 1.0
+                                    and (p.get("total_seconds") or 0) < 50 * 3600
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
+        "id": "slowmo", "title": "Повільник", "emoji": "🦥", "color": "text-zinc-400",
+        "description": "KPM <0.3 при 100+ матчів — нікуди не поспішає",
+        "predicate": lambda p, c: (c["kpm_derived"] < 0.3
+                                    and (p.get("matches_played") or 0) >= 100),
+    },
+    {
+        "id": "tk_martyr", "title": "Мученик ТК", "emoji": "🛐", "color": "text-rose-200",
+        "description": "50+ смертей від ТК своїх — магніт для союзницьких куль",
+        "predicate": lambda p, c: (p.get("deaths_by_tk") or 0) >= 50,
+    },
+
     # ── K/D-extreme catchers BEFORE generic geometric splits ──────────
     # Otherwise low-K/D players hit Стіна/Штурмовик based on score ratios
     # and the K/D-based archetypes never fire.
@@ -140,53 +189,6 @@ PLAYSTYLES: List[Dict[str, Any]] = [
         "description": "K/D 2.0+ зі збалансованими score-категоріями",
         "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
-    },
-
-    # ── Curiosity archetypes — small but interesting buckets ───────────
-    {
-        "id": "bone", "title": "Кістка", "emoji": "🦴", "color": "text-zinc-400",
-        "description": "Високий рівень (200+), низький K/D (<1.0) — гриндив рівень, не стрільбу",
-        "predicate": lambda p, c: ((p.get("level") or 0) >= 200
-                                    and (p.get("kd_ratio") or 0) < 1.0
-                                    and (p.get("matches_played") or 0) >= 100),
-    },
-    {
-        "id": "diamond_in_rough", "title": "Алмаз у грязі", "emoji": "💎", "color": "text-cyan-200",
-        "description": "K/D 2.0+ при рівні <50 — талант без часу",
-        "predicate": lambda p, c: ((p.get("kd_ratio") or 0) >= 2.0
-                                    and (p.get("level") or 0) < 50
-                                    and (p.get("matches_played") or 0) >= 20),
-    },
-    {
-        "id": "lottery", "title": "Лотерея", "emoji": "🎰", "color": "text-amber-200",
-        "description": "Серія 50+ в одному матчі, але K/D <1.5 — один великий день",
-        "predicate": lambda p, c: ((p.get("best_kills_streak") or 0) >= 50
-                                    and (p.get("kd_ratio") or 0) < 1.5),
-    },
-    {
-        "id": "master", "title": "Майстер", "emoji": "🥋", "color": "text-amber-400",
-        "description": "Рівень 250+, K/D 1.8+, 500+ матчів — справжній гуру",
-        "predicate": lambda p, c: ((p.get("level") or 0) >= 250
-                                    and (p.get("kd_ratio") or 0) >= 1.8
-                                    and (p.get("matches_played") or 0) >= 500),
-    },
-    {
-        "id": "speedster", "title": "Швидкохід", "emoji": "🚀", "color": "text-orange-200",
-        "description": "KPM 1.0+ при <50 годин на сервері — ефективний з першої секунди",
-        "predicate": lambda p, c: (c["kpm_derived"] >= 1.0
-                                    and (p.get("total_seconds") or 0) < 50 * 3600
-                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
-    },
-    {
-        "id": "slowmo", "title": "Повільник", "emoji": "🦥", "color": "text-zinc-400",
-        "description": "KPM <0.3 при 100+ матчів — нікуди не поспішає",
-        "predicate": lambda p, c: (c["kpm_derived"] < 0.3
-                                    and (p.get("matches_played") or 0) >= 100),
-    },
-    {
-        "id": "tk_martyr", "title": "Мученик ТК", "emoji": "🛐", "color": "text-rose-200",
-        "description": "50+ смертей від ТК своїх — магніт для союзницьких куль",
-        "predicate": lambda p, c: (p.get("deaths_by_tk") or 0) >= 50,
     },
 
     # ── Fill-in archetypes for the "normal" middle ─────────────────────
