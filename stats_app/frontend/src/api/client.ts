@@ -288,7 +288,11 @@ export interface Playstyle {
 }
 
 export interface PlaystyleStat extends Playstyle {
+  /** Number of players whose PRIMARY style is this archetype. */
   player_count: number
+  /** Total matchers (primary + "also"). May exceed total dataset since
+   *  players can match multiple archetypes. */
+  total_count: number
   sample_players: {
     steam_id: string
     name: string
@@ -301,10 +305,12 @@ export interface PlaystyleStat extends Playstyle {
 export interface PlaystylePlayersResponse {
   count: number
   total: number
+  /** Of the total, how many have this as their primary style. */
+  primary_count: number
   limit: number
   offset: number
   playstyle: Playstyle
-  results: PlayerRow[]
+  results: (PlayerRow & { is_primary?: boolean })[]
 }
 
 export async function fetchPlaystyles(): Promise<PlaystyleStat[]> {

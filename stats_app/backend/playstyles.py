@@ -98,9 +98,15 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     # catchers so their specific combos win priority. Otherwise a level-200
     # K/D 0.7 player would hit Жертовний instead of more interesting Кістка.
     {
+        "id": "kpm_wizard", "title": "Чарівник KPM", "emoji": "🧙", "color": "text-violet-300",
+        "description": "KPM 2.0+ при combat <30% — вбиває не combat-зброєю (тенки, артилерія, гранати)",
+        "predicate": lambda p, c: (c["kpm_derived"] >= 2.0 and c["combat_pct"] < 30
+                                    and (p.get("matches_played") or 0) >= _MIN_MATCHES),
+    },
+    {
         "id": "bone", "title": "Кістка", "emoji": "🦴", "color": "text-zinc-400",
-        "description": "Високий рівень (200+), низький K/D (<1.0) — гриндив рівень, не стрільбу",
-        "predicate": lambda p, c: ((p.get("level") or 0) >= 200
+        "description": "Високий рівень (150+), низький K/D (<1.0) — гриндив рівень, не стрільбу",
+        "predicate": lambda p, c: ((p.get("level") or 0) >= 150
                                     and (p.get("kd_ratio") or 0) < 1.0
                                     and (p.get("matches_played") or 0) >= 100),
     },
@@ -113,16 +119,16 @@ PLAYSTYLES: List[Dict[str, Any]] = [
     },
     {
         "id": "lottery", "title": "Лотерея", "emoji": "🎰", "color": "text-amber-200",
-        "description": "Серія 50+ в одному матчі, але K/D <1.5 — один великий день",
-        "predicate": lambda p, c: ((p.get("best_kills_streak") or 0) >= 50
+        "description": "Серія 40+ в одному матчі, але K/D <1.5 — один великий день",
+        "predicate": lambda p, c: ((p.get("best_kills_streak") or 0) >= 40
                                     and (p.get("kd_ratio") or 0) < 1.5),
     },
     {
         "id": "master", "title": "Майстер", "emoji": "🥋", "color": "text-amber-400",
-        "description": "Рівень 250+, K/D 1.8+, 500+ матчів — справжній гуру",
-        "predicate": lambda p, c: ((p.get("level") or 0) >= 250
+        "description": "Рівень 200+, K/D 1.8+, 300+ матчів — справжній гуру",
+        "predicate": lambda p, c: ((p.get("level") or 0) >= 200
                                     and (p.get("kd_ratio") or 0) >= 1.8
-                                    and (p.get("matches_played") or 0) >= 500),
+                                    and (p.get("matches_played") or 0) >= 300),
     },
     {
         "id": "speedster", "title": "Швидкохід", "emoji": "🚀", "color": "text-orange-200",
@@ -297,26 +303,30 @@ _aggregate_cache: Dict[str, Any] = {"computed_at": 0.0, "buckets": None}
 
 
 def compute_playstyle_stats(profiles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Bucket all profiles by their playstyle, return ordered metadata
-    list with player_count + sample top-5 by kills per bucket. Profiles
-    below _AGGREGATE_MIN_MATCHES are skipped — single-match noise should
-    not overwhelm the catch-all bucket.
+    """Per-archetype counts. player_count = primary matches; total_count =
+    primary + also (any match). Sample top-5 by kills uses primary bucket.
+
+    Profiles below _AGGREGATE_MIN_MATCHES skipped — single-match noise.
     """
-    buckets: Dict[str, List[Dict[str, Any]]] = {ps["id"]: [] for ps in PLAYSTYLES}
+    primary_buckets: Dict[str, List[Dict[str, Any]]] = {ps["id"]: [] for ps in PLAYSTYLES}
+    total_counts: Dict[str, int] = {ps["id"]: 0 for ps in PLAYSTYLES}
     for p in profiles:
         if (p.get("matches_played") or 0) < _AGGREGATE_MIN_MATCHES:
             continue
         ctx = _compute_ctx(p)
+        primary_assigned = False
         for ps in PLAYSTYLES:
             try:
                 if ps["predicate"](p, ctx):
-                    buckets[ps["id"]].append(p)
-                    break
+                    total_counts[ps["id"]] += 1
+                    if not primary_assigned:
+                        primary_buckets[ps["id"]].append(p)
+                        primary_assigned = True
             except (TypeError, ValueError, ZeroDivisionError):
                 continue
     result = []
     for ps in PLAYSTYLES:
-        bucket = buckets[ps["id"]]
+        bucket = primary_buckets[ps["id"]]
         samples = sorted(bucket, key=lambda x: (x.get("kills") or 0), reverse=True)[:5]
         result.append({
             "id": ps["id"],
@@ -325,6 +335,7 @@ def compute_playstyle_stats(profiles: List[Dict[str, Any]]) -> List[Dict[str, An
             "color": ps["color"],
             "description": ps["description"],
             "player_count": len(bucket),
+            "total_count": total_counts[ps["id"]],
             "sample_players": [
                 {
                     "steam_id": x["steam_id"],
@@ -357,9 +368,13 @@ def players_with_playstyle(
     limit: int = 50,
     offset: int = 0,
 ) -> Dict[str, Any]:
-    """List all players matching a specific playstyle. Sorted by kills desc.
-    Same iteration shape as compute_playstyle_stats — share underlying buckets
-    in callers if you want one pass.
+    """List all players whose playstyle matches the given id — either as
+    PRIMARY (first match) or ALSO (later matches). Marks each result with
+    `is_primary` so the UI can distinguish.
+
+    Earlier this function only counted primary, which contradicted the
+    "Також підходить" chips on player profiles: a player would see Майстер
+    жити as an also-style but the detail page would show 0 players.
     """
     bucket: List[Dict[str, Any]] = []
     target_ps: Optional[Dict[str, Any]] = next((ps for ps in PLAYSTYLES if ps["id"] == playstyle_id), None)
@@ -369,19 +384,26 @@ def players_with_playstyle(
         if (p.get("matches_played") or 0) < _AGGREGATE_MIN_MATCHES:
             continue
         ctx = _compute_ctx(p)
-        for ps in PLAYSTYLES:
+        first_match_idx: Optional[int] = None
+        for idx, ps in enumerate(PLAYSTYLES):
             try:
                 if ps["predicate"](p, ctx):
+                    if first_match_idx is None:
+                        first_match_idx = idx
                     if ps["id"] == playstyle_id:
-                        bucket.append(p)
-                    break
+                        # Hit — mark whether this was the first match (primary).
+                        enriched = {**p, "is_primary": first_match_idx == idx}
+                        bucket.append(enriched)
+                        break
             except (TypeError, ValueError, ZeroDivisionError):
                 continue
-    bucket.sort(key=lambda x: (x.get("kills") or 0), reverse=True)
+    # Sort primary-first, then by kills.
+    bucket.sort(key=lambda x: (not x.get("is_primary"), -(x.get("kills") or 0)))
     paged = bucket[offset:offset + limit]
     return {
         "count": len(paged),
         "total": len(bucket),
+        "primary_count": sum(1 for x in bucket if x.get("is_primary")),
         "limit": limit,
         "offset": offset,
         "playstyle": {

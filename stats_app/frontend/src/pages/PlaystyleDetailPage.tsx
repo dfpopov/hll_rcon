@@ -43,6 +43,9 @@ export default function PlaystyleDetailPage() {
             <p className="text-zinc-200 text-base italic mb-2">📜 {data.playstyle.description}</p>
             <p className="text-zinc-400 text-sm">
               {data.total.toLocaleString('uk-UA')} гравців з цим стилем
+              {data.primary_count !== data.total && (
+                <> · з них {data.primary_count.toLocaleString('uk-UA')} як основний, {(data.total - data.primary_count).toLocaleString('uk-UA')} як вторинний</>
+              )}
             </p>
           </>
         )}
@@ -77,6 +80,10 @@ export default function PlaystyleDetailPage() {
                           className="font-medium hover:text-amber-400 transition-colors">
                           {r.name}
                         </Link>
+                        {r.is_primary === false && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700"
+                            title="Для цього гравця стиль — другорядний">також</span>
+                        )}
                         <MiniCompareButton steam_id={r.steam_id} name={r.name} />
                       </div>
                     </td>
