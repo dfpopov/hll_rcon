@@ -8,6 +8,7 @@ import AchievementBadge from '../components/AchievementBadge'
 import CountryFlag from '../components/CountryFlag'
 import PlayerRadar from '../components/PlayerRadar'
 import ProgressionSparkline from '../components/ProgressionSparkline'
+import MiniCompareButton from '../components/MiniCompareButton'
 import { NemesisStamp, LovedHatedMap, PlaystyleCard, matchTitle } from '../components/PlayerMemes'
 import TimeOfDayHeatmap from '../components/TimeOfDayHeatmap'
 
@@ -572,6 +573,7 @@ export default function PlayerDetailPage() {
                 <Link to={`/player/${h.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors font-medium" title={h.name}>
                   {h.name}
                 </Link>
+                <MiniCompareButton steam_id={h.steam_id} name={h.name} />
                 <span className="text-xs text-zinc-400 tabular-nums whitespace-nowrap" title={`${h.killed_me} вбив / ${h.i_killed_them} помстився`}>
                   <span className="text-red-400">{h.killed_me}</span>
                   <span className="text-zinc-600">/</span>
@@ -594,6 +596,7 @@ export default function PlayerDetailPage() {
                 <li key={t.steam_id} className="flex items-baseline gap-2">
                   <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
                   <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-emerald-300 transition-colors" title={t.name}>{t.name}</Link>
+                  <MiniCompareButton steam_id={t.steam_id} name={t.name} />
                   <span className="text-zinc-300 tabular-nums">{t.matches}</span>
                 </li>
               ))}
@@ -609,6 +612,7 @@ export default function PlayerDetailPage() {
                 <li key={t.steam_id} className="flex items-baseline gap-2">
                   <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
                   <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={t.name}>{t.name}</Link>
+                  <MiniCompareButton steam_id={t.steam_id} name={t.name} />
                   <span className="text-zinc-300 tabular-nums">{t.matches}</span>
                 </li>
               ))}

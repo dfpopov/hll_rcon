@@ -4,6 +4,7 @@ import { fetchAchievementPlayers, fetchAchievementStats, AchievementHoldersRespo
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import CountryFlag from '../components/CountryFlag'
+import MiniCompareButton from '../components/MiniCompareButton'
 
 const PAGE_SIZE = 50
 
@@ -83,6 +84,7 @@ export default function AchievementDetailPage() {
                           className="font-medium hover:text-amber-400 transition-colors">
                           {r.name}
                         </Link>
+                        <MiniCompareButton steam_id={r.steam_id} name={r.name} />
                       </div>
                     </td>
                     <td className="p-3 text-right text-green-400">{r.kills}</td>

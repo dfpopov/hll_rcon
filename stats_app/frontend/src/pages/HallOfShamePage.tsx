@@ -4,6 +4,7 @@ import {
   fetchTopPlayers, fetchBestSingleGame,
   PlayerRow, SingleGameRow, SortKey, SingleGameMetric,
 } from '../api/client'
+import MiniCompareButton from '../components/MiniCompareButton'
 
 interface ShameCardDef {
   key: string
@@ -85,6 +86,7 @@ function PlayerLine({ rank, name, steam_id, value }: { rank: number; name: strin
       <Link to={`/player/${steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={name}>
         {name}
       </Link>
+      <MiniCompareButton steam_id={steam_id} name={name} />
       <span className="font-bold text-rose-300 tabular-nums">{value}</span>
     </li>
   )
@@ -103,6 +105,7 @@ function SingleGameLine({ rank, row }: { rank: number; row: SingleGameRow }) {
           {row.map_name}
         </a>
       </div>
+      <MiniCompareButton steam_id={row.steam_id} name={row.name} />
       <span className="font-bold text-rose-300 tabular-nums">{row.value.toLocaleString('uk-UA')}</span>
     </li>
   )

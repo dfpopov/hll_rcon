@@ -34,6 +34,7 @@ function formatPlaytime(seconds: number): string {
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import CountryFlag from '../components/CountryFlag'
+import MiniCompareButton from '../components/MiniCompareButton'
 
 const PAGE_SIZE = 50
 const DEFAULT_MIN_MATCHES = 50
@@ -179,6 +180,7 @@ export default function HomePage() {
                     >
                       {r.name}
                     </Link>
+                    <MiniCompareButton steam_id={r.steam_id} name={r.name} />
                   </div>
                 </td>
                 {COLUMNS.map((c) => (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchBestSingleGame, fetchBestSingleGameByClass, SingleGameRow, SingleGameMetric } from '../api/client'
+import MiniCompareButton from '../components/MiniCompareButton'
 
 const CARDS: { metric: SingleGameMetric; title: string; valueFmt?: (n: number) => string }[] = [
   { metric: 'kills',            title: 'Найбільше вбивств за гру' },
@@ -57,9 +58,12 @@ function SingleGameCard({ title, rows, fmt }: {
           <li key={`${r.steam_id}-${i}`} className="flex items-baseline gap-2">
             <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
             <div className="flex-1 min-w-0">
-              <Link to={`/player/${r.steam_id}`} className="hover:text-emerald-400 transition-colors block truncate">
-                {r.name}
-              </Link>
+              <div className="flex items-center gap-1">
+                <Link to={`/player/${r.steam_id}`} className="hover:text-emerald-400 transition-colors truncate flex-1">
+                  {r.name}
+                </Link>
+                <MiniCompareButton steam_id={r.steam_id} name={r.name} />
+              </div>
               <a href={`${CRCON_PUBLIC_BASE}/games/${r.match_id}`}
                 target="_blank" rel="noopener noreferrer"
                 className="text-xs text-zinc-500 hover:text-amber-400 block truncate">

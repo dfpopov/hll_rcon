@@ -4,6 +4,7 @@ import {
   fetchTopPlayers, fetchWeaponClasses,
   PlayerRow, SortKey, Period, GameMode, Side, WeaponClass,
 } from '../api/client'
+import MiniCompareButton from '../components/MiniCompareButton'
 
 const AGGREGATE_CARDS: { key: SortKey; title: string; valueFmt: (r: PlayerRow) => string | number }[] = [
   { key: 'kills',     title: 'Найбільше вбивств',       valueFmt: (r) => r.kills },
@@ -53,6 +54,7 @@ function Card({ title, rows, fmt, accent = 'amber' }: {
             >
               {r.name}
             </Link>
+            <MiniCompareButton steam_id={r.steam_id} name={r.name} />
             <span className="font-bold text-zinc-200 tabular-nums">{fmt(r)}</span>
           </li>
         ))}
