@@ -229,8 +229,12 @@ export default function PlayerDetailPage() {
         </div>
         {p.profile_url && (
           <a href={p.profile_url} target="_blank" rel="noopener noreferrer"
-             className="text-xs text-amber-400 hover:text-amber-300 px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700">
-            Steam ↗
+             className="text-xs text-zinc-100 hover:text-white px-3 py-1.5 rounded bg-[#1b2838] hover:bg-[#2a475e] inline-flex items-center gap-1.5 border border-[#2a475e]"
+             title="Відкрити Steam-профіль гравця">
+            <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+              <path d="M16 0C7.523 0 .58 6.55.022 14.876l8.605 3.559a4.4 4.4 0 0 1 2.481-.766c.082 0 .164.002.245.006l3.831-5.547v-.077c0-3.34 2.722-6.058 6.058-6.058a6.07 6.07 0 0 1 6.063 6.063 6.07 6.07 0 0 1-6.063 6.058h-.14l-5.464 3.901a4.43 4.43 0 0 1-2.643 4.045 4.43 4.43 0 0 1-5.93-2.265L3.91 21.31C5.755 27.494 10.367 32 16 32c8.836 0 16-7.164 16-16S24.836 0 16 0zm-5.96 24.297l-1.98-.818a3.34 3.34 0 0 0 1.748 1.795 3.34 3.34 0 0 0 4.486-1.683 3.34 3.34 0 0 0 .013-2.55 3.34 3.34 0 0 0-1.74-1.804 3.36 3.36 0 0 0-2.523-.062l2.045.85a2.45 2.45 0 0 1 1.319 3.207 2.45 2.45 0 0 1-3.21 1.319zM25.4 12.05a4.04 4.04 0 0 0-4.038-4.038 4.04 4.04 0 0 0-4.041 4.038 4.04 4.04 0 0 0 4.041 4.041 4.04 4.04 0 0 0 4.038-4.041zm-7.066-.005a3.04 3.04 0 0 1 3.034-3.029 3.04 3.04 0 0 1 3.029 3.029c0 1.67-1.36 3.034-3.029 3.034a3.04 3.04 0 0 1-3.034-3.034z"/>
+            </svg>
+            Steam
           </a>
         )}
         <AddToCompareButton steam_id={p.steam_id} name={p.name} />

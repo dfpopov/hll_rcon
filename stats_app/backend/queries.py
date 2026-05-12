@@ -270,6 +270,25 @@ def get_unique_weapons(db: Session) -> List[str]:
     return [row[0] for row in db.execute(sql)]
 
 
+import time as _time
+_ENRICHED_CACHE: dict = {"computed_at": 0.0, "data": None}
+_ENRICHED_TTL = 3600
+
+
+def _all_player_profiles_enriched_cached(db: Session) -> List[dict]:
+    """TTL-cached variant. Enrichment runs two heavy jsonb_each queries
+    (~5s cold); calling it on every /api/playstyles/X/players page click
+    causes nginx 502s under load. 1h TTL aligns with the playstyle stats
+    cache."""
+    now = _time.time()
+    if _ENRICHED_CACHE["data"] is not None and now - _ENRICHED_CACHE["computed_at"] < _ENRICHED_TTL:
+        return _ENRICHED_CACHE["data"]
+    fresh = _all_player_profiles_enriched(db)
+    _ENRICHED_CACHE["data"] = fresh
+    _ENRICHED_CACHE["computed_at"] = now
+    return fresh
+
+
 def _all_player_profiles_enriched(db: Session) -> List[dict]:
     """_all_player_profiles + top_kill_class and peak_hour for each player.
 
@@ -773,16 +792,16 @@ def melee_meta(db: Session, steam_id: str) -> dict:
 
 
 def playstyle_stats(db: Session) -> list[dict]:
-    """Server-wide playstyle distribution. TTL-cached at 1h via playstyles.py
-    module-level cache. Uses enriched profiles (top_kill_class + peak_hour)
-    to power weapon-class and time-of-day archetypes."""
-    return get_cached_stats_or_compute(lambda: _all_player_profiles_enriched(db))
+    """Server-wide playstyle distribution. Buckets cached 1h via playstyles.py;
+    enriched profiles cached 1h here. Cold compute ~5s, hot <100ms."""
+    return get_cached_stats_or_compute(lambda: _all_player_profiles_enriched_cached(db))
 
 
 def playstyle_players(db: Session, playstyle_id: str, limit: int = 50, offset: int = 0) -> dict:
     """Players matching one playstyle, paginated. Re-classifies on each call
-    since we need full bucket, not just samples from cache."""
-    profiles = _all_player_profiles_enriched(db)
+    (need full bucket, not just samples), but uses cached enriched profiles
+    so the heavy SQL only runs once per TTL."""
+    profiles = _all_player_profiles_enriched_cached(db)
     return players_with_playstyle(profiles, playstyle_id, limit=limit, offset=offset)
 
 
