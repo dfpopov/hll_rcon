@@ -197,6 +197,14 @@ def get_best_single_game(
     return {"metric": metric, "count": len(rows), "side": side, "results": rows}
 
 
+@app.get("/api/countries")
+@limiter.limit("60/minute")
+def get_countries(request: Request, db: Session = Depends(get_db)):
+    """Player count per ISO 3166-1 alpha-2 country, sorted by count desc.
+    Powers the /server/countries world map page."""
+    return {"countries": queries.country_distribution(db)}
+
+
 @app.get("/api/best-single-game-by-class")
 @limiter.limit("60/minute")
 def get_best_single_game_by_class(

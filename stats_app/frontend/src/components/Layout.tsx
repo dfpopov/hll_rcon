@@ -20,6 +20,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/achievements" className={navClass}>Досягнення</NavLink>
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
           <NavLink to="/hall-of-shame" className={navClass}>💀 Hall of Shame</NavLink>
+          <NavLink to="/server/countries" className={navClass}>🌍 Карта</NavLink>
         </div>
       </nav>
       <main className="flex-1 pb-24">{children}</main>

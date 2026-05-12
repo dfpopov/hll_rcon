@@ -143,6 +143,17 @@ export async function fetchBestSingleGameByClass(weapon_class: string, limit = 1
   return data
 }
 
+export interface CountryEntry {
+  country: string
+  players: number
+  pct: number
+}
+
+export async function fetchCountries(): Promise<CountryEntry[]> {
+  const { data } = await api.get<{ countries: CountryEntry[] }>('/countries')
+  return data.countries
+}
+
 // --- Phase 3: player detail ---
 
 export interface PlayerProfile {

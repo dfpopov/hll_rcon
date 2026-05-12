@@ -687,6 +687,34 @@ def melee_meta(db: Session, steam_id: str) -> dict:
     }
 
 
+def country_distribution(db: Session) -> list[dict]:
+    """Player count per country (ISO 3166-1 alpha-2) from steam_info.
+
+    Aggregated over the whole population so this can power a server-wide
+    world map. Returns sorted descending by player count, with percentage
+    against the total known-country population.
+    """
+    sql = text("""
+        SELECT
+          si.country AS country,
+          COUNT(DISTINCT si.playersteamid_id) AS players
+        FROM steam_info si
+        WHERE si.country IS NOT NULL AND si.country <> ''
+        GROUP BY si.country
+        ORDER BY players DESC
+    """)
+    rows = list(db.execute(sql))
+    total = sum(int(r.players or 0) for r in rows)
+    return [
+        {
+            "country": r.country,
+            "players": int(r.players or 0),
+            "pct": round(int(r.players or 0) / total * 100, 2) if total > 0 else 0.0,
+        }
+        for r in rows
+    ]
+
+
 def hardcounters(db: Session, steam_id: str, min_deaths: int = 5, limit: int = 5) -> list[dict]:
     """Players who have a positive K/D against this player.
 
