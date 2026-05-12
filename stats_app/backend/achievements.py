@@ -53,7 +53,46 @@ ACHIEVEMENTS = [
     # Negative / fun
     ("tk_offender",  "TK провокатор",      "⚠️",  "common",    "Зробити 100+ team kills (своїх)",     lambda p: p.get("teamkills", 0) >= 100),
     ("clumsy",       "Незграба",           "😅", "uncommon",  "Загинути 100+ разів від ТК своїх",    lambda p: p.get("deaths_by_tk", 0) >= 100),
+
+    # Hidden achievements / easter eggs. Pure aggregate from profile — no
+    # per-match data needed. These reward unusual statistical signatures
+    # rather than raw volume.
+    ("balanced",     "Дзен-балансист",     "☯",   "rare",      "Combat / offense / defense / support — усі в межах 15% одне від одного",
+        lambda p: _scores_balanced(p, tol=15.0) and (p.get("matches_played") or 0) >= 50),
+    ("exact_one",    "Рівновага",          "⚖",   "rare",      "K/D рівно 1.00 (тонкий баланс перемог і смертей)",
+        lambda p: (p.get("kd_ratio") or 0) > 0 and round(p.get("kd_ratio") or 0, 2) == 1.00 and (p.get("matches_played") or 0) >= 50),
+    ("iron_apron",   "Залізний фартух",    "🛡",  "epic",      "Defense складає 50%+ від суми всіх score-категорій",
+        lambda p: _defense_dominant(p)),
+    ("supply_main",  "Логіст-маньяк",      "📦", "epic",      "Support складає 60%+ від суми всіх score-категорій",
+        lambda p: _support_dominant(p)),
 ]
+
+
+def _scores_balanced(p: Dict[str, Any], tol: float = 15.0) -> bool:
+    """True when combat/offense/defense/support are within ±tol% of each other.
+    Tolerance is relative to the average score (handles wildly different total magnitudes)."""
+    vals = [p.get("combat") or 0, p.get("offense") or 0, p.get("defense") or 0, p.get("support") or 0]
+    total = sum(vals)
+    if total == 0:
+        return False
+    avg = total / 4
+    if avg == 0:
+        return False
+    return all(abs(v - avg) / avg * 100 <= tol for v in vals)
+
+
+def _defense_dominant(p: Dict[str, Any]) -> bool:
+    total = (p.get("combat") or 0) + (p.get("offense") or 0) + (p.get("defense") or 0) + (p.get("support") or 0)
+    if total == 0:
+        return False
+    return (p.get("defense") or 0) / total >= 0.50
+
+
+def _support_dominant(p: Dict[str, Any]) -> bool:
+    total = (p.get("combat") or 0) + (p.get("offense") or 0) + (p.get("defense") or 0) + (p.get("support") or 0)
+    if total == 0:
+        return False
+    return (p.get("support") or 0) / total >= 0.60
 
 
 def compute_achievements(profile: Dict[str, Any]) -> List[Dict[str, str]]:

@@ -239,6 +239,7 @@ export interface PlayerDetail {
   deaths_by_class: Record<string, number>
   top_servers: TopServer[]
   win_rate: WinRate
+  hour_distribution: number[]  // length 24, index = hour 0..23
 }
 
 export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {

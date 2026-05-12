@@ -8,7 +8,8 @@ import AchievementBadge from '../components/AchievementBadge'
 import CountryFlag from '../components/CountryFlag'
 import PlayerRadar from '../components/PlayerRadar'
 import ProgressionSparkline from '../components/ProgressionSparkline'
-import { NemesisStamp, LovedHatedMap, PlaystyleCard } from '../components/PlayerMemes'
+import { NemesisStamp, LovedHatedMap, PlaystyleCard, matchTitle } from '../components/PlayerMemes'
+import TimeOfDayHeatmap from '../components/TimeOfDayHeatmap'
 
 // CRCON public stats site URL — match details available on port 7010
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
@@ -522,6 +523,14 @@ export default function PlayerDetailPage() {
         </section>
       </div>
 
+      {/* Time-of-day heatmap */}
+      <section className="mt-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
+        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">
+          🕐 Коли грає (за годинами)
+        </h2>
+        <TimeOfDayHeatmap hours={data.hour_distribution ?? []} />
+      </section>
+
       {/* Recent matches */}
       <section className="mt-6">
         <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">
@@ -556,6 +565,17 @@ export default function PlayerDetailPage() {
                     >
                       {m.map_name}
                     </a>
+                    {(() => {
+                      const t = matchTitle({
+                        kills: m.kills, deaths: m.deaths, kd: m.kd,
+                        combat: m.combat, support: m.support, map_name: m.map_name,
+                      })
+                      return t ? (
+                        <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-900/40 border border-amber-700/40 text-amber-200">
+                          {t}
+                        </span>
+                      ) : null
+                    })()}
                   </td>
                   <td className="p-3 text-right text-green-400">{m.kills}</td>
                   <td className="p-3 text-right text-red-400">{m.deaths}</td>

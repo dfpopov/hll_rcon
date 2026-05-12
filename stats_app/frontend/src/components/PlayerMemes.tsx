@@ -142,6 +142,31 @@ export function classifyPlaystyle(p: PlayerProfile): Playstyle {
   }
 }
 
+// ── Match titles ──────────────────────────────────────────────────────────
+
+/** Auto-generated meme-y title for an outstanding match. Returns null when
+ *  the match is unremarkable and no title should be shown. */
+export function matchTitle(m: { kills: number; deaths: number; kd: number | null; combat: number; support: number; map_name: string }): string | null {
+  // Disaster cases first — more interesting than "good match"
+  if (m.deaths >= 50 && m.kills < 10) return '☠ Сафарі для ворога'
+  if (m.kills === 0 && m.deaths >= 20) return '💀 Жертовний'
+  if (m.kills <= 5 && m.deaths >= 30) return '🪦 Чорна година'
+
+  // High volume
+  if (m.kills >= 80) return '🔥 Різанина'
+  if (m.kills >= 50 && (m.kd ?? 0) >= 3) return '⚡ Бог війни'
+  if (m.kills >= 30 && (m.kd ?? 0) >= 5) return '🎯 Невловимий'
+  if ((m.kd ?? 0) >= 5 && m.kills >= 20) return '👑 Холоднокровний'
+
+  // Support hero
+  if (m.support > 5000 && m.kills < 10) return '📦 Тиха перемога'
+
+  // Edge case meme
+  if (m.kills === m.deaths && m.kills >= 30) return '⚖ Дзеркало'
+
+  return null
+}
+
 export function PlaystyleCard({ p }: { p: PlayerProfile }) {
   const style = classifyPlaystyle(p)
   return (

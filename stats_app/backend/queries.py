@@ -849,6 +849,22 @@ def player_detail(db: Session, steam_id: str):
         for r in db.execute(sql_servers, {"sid": steam_id})
     ]
 
+    # 13) Hour-of-day distribution — when does this player actually play?
+    # Used by the time-of-day heatmap on PlayerDetail.
+    sql_hours = text("""
+        SELECT EXTRACT(HOUR FROM m.start)::int AS h, COUNT(*) AS n
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id
+        WHERE s.steam_id_64 = :sid AND m.start IS NOT NULL
+        GROUP BY h
+        ORDER BY h
+    """)
+    hour_distribution = [0] * 24
+    for r in db.execute(sql_hours, {"sid": steam_id}):
+        if r.h is not None and 0 <= r.h < 24:
+            hour_distribution[r.h] = int(r.n or 0)
+
     return {
         "profile": profile,
         "achievements": achievements_list,
@@ -864,4 +880,5 @@ def player_detail(db: Session, steam_id: str):
         "deaths_by_class": deaths_by_class,
         "top_servers": top_servers,
         "win_rate": win_rate,
+        "hour_distribution": hour_distribution,
     }
