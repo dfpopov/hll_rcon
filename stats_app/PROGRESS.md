@@ -3,13 +3,36 @@
 Live tracker of implementation status. Updates inline as work proceeds.
 Architectural decisions live in `PLAN.md`.
 
-## Current phase: **Phase 3 ✅ DEPLOYED** — http://95.111.230.75:7012/
+## Current phase: **Phase 5 ✅ DEPLOYED** — http://95.111.230.75:7012/
 
 Pages live:
-- `/` — leaderboard with 7 filters (search, period, mode, map, weapon class,
-  specific weapon, min matches) + sortable columns + pagination
-- `/records` — hllrecords-style grid of mini-leaderboards (10 all-time + 8 single-game)
-- `/player/{steam_id}` — per-player profile with PVP heatmap (most killed, killed by, weapons)
+- `/` — leaderboard with 8 filters (search, period, mode, map, weapon class,
+  specific weapon, min matches, **side**) + sortable columns + pagination
+- `/records/all-time` and `/records/single-game` — split records grid with
+  expand cards, weapon class leaderboards, side filter, search
+- `/achievements` — rarity-sorted grid; `/achievements/{id}` — paginated holders
+- `/compare/{id1}/{id2}` — side-by-side stat table + **head-to-head card** +
+  top-3 weapons + achievement badges
+- `/player/{steam_id}` — profile with PVP, achievements, recent matches (filtered
+  to skip K=0 ∧ D≤1 noise), country flag, ⚖ Порівняти button
+
+## Task status
+
+| ID | Task | Status | Notes |
+|---|---|---|---|
+| 7  | Backend FastAPI skeleton + /api/top-kills | ✅ done | |
+| 8  | /api/top filters (period/weapon/map/side) | ✅ done | side filter Phase 1 deployed via player_match_side MV |
+| 9  | Backend /api/player/{steam_id} with PVP | ✅ done | |
+| 10 | /api/maps + /api/weapons + /api/weapon-classes | ✅ done | |
+| 11 | Frontend Vite skeleton | ✅ done | |
+| 12 | HomePage + FilterBar | ✅ done | search + side + period + mode + map + class + weapon + min_matches |
+| 13 | PlayerDetailPage with PVP | ✅ done | |
+| 14 | Docker compose deploy 7012 | ✅ done | |
+| 15 | Side per (player, match) — investigation | ✅ resolved | regex on log_lines.raw KILL events, dominant side per match (player_match_side MV) |
+| 16 | Achievements engine + badge | ✅ done | 24 achievements, 6 tiers; AchievementBadge with tooltip + link to detail page |
+| 17 | Comparison view | ✅ done | 1v1 layout, side-by-side stat table, head-to-head, weapons, badges |
+| 18 | Records page split (all-time + single-game) | ✅ done | both pages with filters + expand |
+| 19 | Country flag rendering | ✅ done | switched to flagcdn.com PNG (Windows didn't render emoji) |
 
 ## Task status
 
@@ -26,6 +49,50 @@ Pages live:
 | 15 | Investigation: how to derive "side" per player per match | ⏸ pending | Phase 4 blocker |
 
 ## Findings (chronological)
+
+### 2026-05-12 — Phase 5: side filter + Compare enrichment + Records bug fix
+
+- **Materialized view `player_match_side`**: derives each player's dominant
+  side per match from `log_lines.raw` KILL events via regex
+  `'KILL: [^(]+\(([^/]+)/'`. 55968 rows on prod, 11s creation, ~30-60s
+  CONCURRENT refresh expected. Side filter query (top-50 Axis) — 287ms via
+  index seq scans + bitmap join.
+- **Caveat**: log_lines coverage is patchy — matches predating log capture
+  have no MV rows. When side filter is active those matches silently drop
+  from the result. UI shows tooltip explaining this.
+- **Recent matches filter**: hide matches where `kills=0 ∧ deaths≤1`
+  (spectator/disconnect noise).
+- **Head-to-head**: index-driven query on `log_lines (player1_steamid,
+  player2_steamid)`. 92ms for top-2 prolific players (420 mutual kills).
+  Real numbers: Пакет с пакетами vs BaNnY → 112 vs 308 kills, top weapons
+  GEWEHR 43 vs FG42 x4. "BaNnY домінує (+196)".
+- **Compare enrichment**: added head-to-head card, top-3 weapons row,
+  full achievement badges (not just count), longest_life_secs row, TK
+  death row.
+- **Country flag bug fix**: switched from Unicode Regional Indicator Symbol
+  Letters to flagcdn.com PNG `https://flagcdn.com/24x18/{iso}.png` because
+  Windows browsers ship no flag emoji font.
+- **Commits**: `a8df0610` Phase A, `9688f0ab` Phase B, `<next>` country flag.
+
+### 2026-05-12 — Phase 4: match links + flags + clickable PVP + Records split + Achievements + Comparison
+
+- `best_single_game` SELECT was missing `m.id` → `RecordsSingleGamePage`
+  had `(r as any).match_id ?? ''` producing broken `/games/` URLs.
+  Fixed: added `m.id AS match_id` + `match_id: number` in `SingleGameRow`.
+- New endpoints: `/api/player-by-name`, `/api/achievements`,
+  `/api/achievements/{id}/players`.
+- New pages: AchievementsPage (rarity-sorted grid), AchievementDetailPage
+  (paginated holders), ComparePage (1v1).
+- AchievementBadge now clickable, with description tooltip from
+  ACH_DESCRIPTIONS map mirroring `achievements.py` predicates.
+- `<CountryFlag>` component added to HomePage + PlayerDetailPage header.
+- Recent matches map_name now links to CRCON public stats
+  `http://95.111.230.75:7010/games/{match_id}`.
+- PVP victim/killer names clickable → resolve via `findPlayerByName` →
+  navigate to `/player/{steam_id}`. Silent no-op when not found.
+- Records split into `/records/all-time` + `/records/single-game`.
+  `/records` 302 redirects to all-time.
+- **Commits**: `8aeb6d5d`, `a90ef261`.
 
 ### 2026-05-12 — Phase 2 progress: sort + pagination + rate limit
 

@@ -118,3 +118,90 @@ record which faction the player was on per match. Possible sources: parse from
 Updates flow into `PROGRESS.md`. Architectural changes (e.g., switching from
 React to Vue, adding caching layer) update THIS file with a dated revision
 note at the bottom.
+
+---
+
+## Roadmap (post-Phase-5)
+
+Ordered by priority. Each item is sized at least 1 commit. PROGRESS.md
+tracks status; this section is the queue.
+
+### P0 — small fixes / clarifications (ship first)
+
+1. **Country flag rendering on Windows** — switch `<CountryFlag>` from
+   Unicode RIS letters to `flagcdn.com` PNG. Ships with this commit.
+2. **Achievement requirements visibility** — current tooltip on the badge
+   isn't enough. Make description prominent in three places:
+   - `/achievements` card: subtitle line under the title
+   - `/achievements/{id}` header: large description paragraph
+   - `<AchievementBadge>` tooltip: ensure all 24 ach IDs have descriptions
+     (some may be missing).
+3. **MV refresh cron** — hourly `REFRESH MATERIALIZED VIEW CONCURRENTLY
+   player_match_side` so new matches enter the side filter without manual
+   migration re-run. Implementation: add a service to `compose.yaml` that
+   runs `crond` with a single entry, or a host-side `crontab -e`. Prefer
+   container so it ships with the repo.
+
+### P1 — feature: multi-player comparison
+
+4. **"Додати до порівняння" + localStorage** — up to 4 players in a
+   compare set. On `PlayerDetailPage`, add a button next to the existing
+   ⚖ Порівняти. Persist as `localStorage.compareList = [{steam_id, name,
+   added_at}]`. Floating compare-bar at bottom of screen shows current
+   chips + "Порівняти (N)" CTA → `/compare?ids=sid1,sid2,sid3,sid4`.
+   - 1v1: existing rich layout (head-to-head + weapons + achievements + stat table)
+   - 1v3 or 1v4: simpler compact table — show only the headline columns
+     (level/kills/K-D/KPM/matches/hours/win-rate) + achievements badges
+     (small), drop head-to-head (would be N*N pairs, too noisy).
+
+### P2 — PlayerDetailPage upgrades (HLL Records-inspired)
+
+Screenshots from `hllrecords.com/hilf` showed several useful sections. Map
+them to our data:
+
+5. **Faction preference badge** — % time on Allies vs Axis from `player_match_side` MV. Show on profile header next to country.
+6. **First seen date** — `MIN(m.start)` per player. Trivial.
+7. **Game mode preference** — % warfare / offensive / skirmish from `map_name` pattern. Trivial.
+8. **Most played maps** (top 10 with match counts) — `COUNT(*) GROUP BY map_name LIMIT 10`. Trivial.
+9. **100+ kill matches counter** — `COUNT(*) WHERE kills >= 100`. Trivial.
+10. **Kill type breakdown** (Infantry / MG / Sniper / Armor / Artillery /
+    Explosive / Unknown) — classify each weapon in `weapons` jsonb, aggregate.
+    Visualized as a horizontal stacked bar + tooltip with absolute counts.
+    Re-uses existing `weapon_classes.py` classifier.
+11. **Melee section** — sum kills/deaths where weapon ∈ `{FELDSPATEN,
+    KNIFE, M3 KNIFE, BAYONET}` (and similar melee tags). Need a small
+    melee weapon list.
+12. **Win rate** — needs join `map_history.result` jsonb + side from MV.
+    "60% as Allies, 45% as Axis." Medium effort, needs query.
+13. **Most played servers** — `player_sessions` has `server_name`. JOIN
+    not currently used. Adds a small server list to the profile.
+14. **Alt names** — collect `MAX(persona_name)` + `DISTINCT ps.name` for
+    the same `playersteamid_id`. Show as chips.
+15. **Radar chart** (KPM / KDR / Combat / Support / Offense / Defense
+    normalized vs server median) — needs Recharts/Chart.js. Medium.
+16. **Progression chart** (rolling 20-match avg of selected metric) —
+    same chart lib. Show tabs: Win rate / KPM / KD / Combat / Support / etc.
+
+### P3 — side filter Phase 2
+
+17. **Faction split** (US / GB / USSR / Wehrmacht / DAK) — add `theater`
+    lookup table by `map_name`: Western (US/Wehrmacht), Eastern
+    (USSR/Wehrmacht), Africa (GB/DAK). UI: extend side select from 2 to
+    5+ options. Same MV under the hood, just an additional map join.
+
+### P4 — fun / meme stats (earlier brainstorm)
+
+18. **Nemesis stamp** — big highlight card on profile showing top-1
+    `killed_by` entry as the player's eternal rival.
+19. **Loved/Hated map** — best & worst K/D map.
+20. **Playstyle classifier** — derive Camper / Rambo / Medic Saint / Tank
+    Crusher etc. from combat/offense/defense/support ratios.
+21. **Hall of Shame** — anti-records page: most TKs, most deaths_by_tk,
+    worst K/D single game.
+22. **Time-of-day heatmap** — GitHub-style activity calendar from
+    `m.start` per match the player played.
+23. **Match titles** — auto-generated headline for outstanding matches
+    ("Сталінградська різанина" on 80+ kills, "Розстріл своїми" on 50+
+    deaths_by_tk).
+24. **Hidden achievements** — easter eggs with absurd triggers ("Дзеркало"
+    = exact K=D ≥ 50 in one match, etc.).
