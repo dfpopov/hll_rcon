@@ -1073,9 +1073,10 @@ def player_detail(db: Session, steam_id: str):
     """)
     killed_by = [dict(row._mapping) for row in db.execute(sql_killers, {"sid": steam_id})]
 
-    # 5) Recent matches (last 10) — includes match_id for linking to /games/{id}.
+    # 5) Recent matches (last 30) — includes match_id for linking to /games/{id}.
     # Hide barely-played matches (kills=0 AND deaths<=1) — they're usually
-    # spectator/disconnect noise, not real games.
+    # spectator/disconnect noise, not real games. 30 instead of 10 so the
+    # "З титулами" tab on PlayerDetail has a real pool to filter.
     # time_pct = how much of the match this player was actually present:
     # ps.time_seconds / match_duration_seconds. Capped at 100 for cases
     # where the player's time slightly exceeds the recorded match window
@@ -1110,7 +1111,7 @@ def player_detail(db: Session, steam_id: str):
         WHERE s.steam_id_64 = :sid
           AND NOT (COALESCE(ps.kills, 0) = 0 AND COALESCE(ps.deaths, 0) <= 1)
         ORDER BY m.start DESC NULLS LAST
-        LIMIT 10
+        LIMIT 30
     """)
     recent_matches = []
     for row in db.execute(sql_recent, {"sid": steam_id}):

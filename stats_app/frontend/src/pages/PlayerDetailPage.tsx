@@ -157,6 +157,7 @@ export default function PlayerDetailPage() {
   const [data, setData] = useState<PlayerDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [recentFilter, setRecentFilter] = useState<'all' | 'titled'>('all')
 
   useEffect(() => {
     if (!steamId) return
@@ -683,27 +684,51 @@ export default function PlayerDetailPage() {
         <TimeOfDayHeatmap hours={data.hour_distribution ?? []} />
       </section>
 
-      {/* Recent matches */}
-      <section className="mt-6">
-        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">
-          Останні матчі
-        </h2>
-        <div className="overflow-x-auto bg-zinc-900/40 border border-zinc-800 rounded-lg">
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-800 text-zinc-300 text-xs uppercase">
-              <tr>
-                <th className="p-3 text-left">Дата</th>
-                <th className="p-3 text-left">Карта</th>
-                <th className="p-3 text-right" title="% часу матчу, який гравець був присутній">Час %</th>
-                <th className="p-3 text-right">K</th>
-                <th className="p-3 text-right">D</th>
-                <th className="p-3 text-right">K/D</th>
-                <th className="p-3 text-right">Combat</th>
-                <th className="p-3 text-right">Support</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.recent_matches.map((m, i) => (
+      {/* Recent matches — tab between all / titled-only */}
+      {(() => {
+        const titledMatches = data.recent_matches.filter((m) => matchTitle({
+          kills: m.kills, deaths: m.deaths, kd: m.kd,
+          combat: m.combat, support: m.support, map_name: m.map_name,
+          time_seconds: m.time_seconds,
+        }) !== null)
+        const visibleMatches = recentFilter === 'titled'
+          ? titledMatches
+          : data.recent_matches.slice(0, 10)
+        const tabCls = (active: boolean) =>
+          `px-3 py-1.5 text-xs uppercase tracking-widest rounded-t border-b-2 transition-colors ${
+            active ? 'text-amber-400 border-amber-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'
+          }`
+        return (
+          <section className="mt-6">
+            <div className="flex items-center gap-1 mb-3 border-b border-zinc-800">
+              <button onClick={() => setRecentFilter('all')} className={tabCls(recentFilter === 'all')}>
+                Останні матчі ({Math.min(10, data.recent_matches.length)})
+              </button>
+              <button onClick={() => setRecentFilter('titled')} className={tabCls(recentFilter === 'titled')}>
+                🏷 З титулами ({titledMatches.length})
+              </button>
+            </div>
+            <div className="overflow-x-auto bg-zinc-900/40 border border-zinc-800 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-zinc-800 text-zinc-300 text-xs uppercase">
+                  <tr>
+                    <th className="p-3 text-left">Дата</th>
+                    <th className="p-3 text-left">Карта</th>
+                    <th className="p-3 text-right" title="% часу матчу, який гравець був присутній">Час %</th>
+                    <th className="p-3 text-right">K</th>
+                    <th className="p-3 text-right">D</th>
+                    <th className="p-3 text-right">K/D</th>
+                    <th className="p-3 text-right">Combat</th>
+                    <th className="p-3 text-right">Support</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleMatches.length === 0 && (
+                    <tr><td colSpan={8} className="p-4 text-center text-zinc-600 italic">
+                      {recentFilter === 'titled' ? 'Жоден з останніх 30 матчів не отримав титулу' : 'Немає матчів'}
+                    </td></tr>
+                  )}
+                  {visibleMatches.map((m, i) => (
                 <tr key={i} className="border-t border-zinc-800 hover:bg-zinc-800/40">
                   <td className="p-3 text-zinc-400 text-xs whitespace-nowrap">
                     {m.match_date ? new Date(m.match_date).toLocaleDateString('uk-UA') : '—'}
@@ -750,13 +775,12 @@ export default function PlayerDetailPage() {
                   <td className="p-3 text-right">{m.support}</td>
                 </tr>
               ))}
-              {data.recent_matches.length === 0 && (
-                <tr><td colSpan={7} className="p-6 text-center text-zinc-500">немає матчів</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )
+      })()}
     </div>
   )
 }
