@@ -573,6 +573,54 @@ def best_single_game(
     return rows
 
 
+def best_single_game_by_class(
+    db: Session,
+    weapon_class: str,
+    limit: int = 10,
+) -> list[dict]:
+    """Top single-game records filtered to one weapon class.
+
+    For each (player, match) pair sums kills only from weapons that belong
+    to the requested class. Returns the top-N matches by that class-kill
+    sum, with the top weapon name within the class identified separately.
+    """
+    class_weapons = _expand_weapon_class(db, weapon_class)
+    if not class_weapons:
+        return []
+    sql = text("""
+        SELECT
+            s.steam_id_64 AS steam_id,
+            MAX(ps.name) AS name,
+            MAX(ps.level) AS level,
+            SUM(kv.val::int) AS value,
+            m.id AS match_id,
+            m.map_name AS map_name,
+            m.start AS match_date,
+            (
+              SELECT key FROM jsonb_each_text(ps.weapons) AS kv2(key, val)
+              WHERE kv2.key = ANY(:class_weapons) AND kv2.val::int > 0
+              ORDER BY kv2.val::int DESC LIMIT 1
+            ) AS top_weapon
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id,
+             jsonb_each_text(ps.weapons) AS kv(key, val)
+        WHERE ps.weapons IS NOT NULL
+          AND kv.key = ANY(:class_weapons)
+          AND kv.val::int > 0
+        GROUP BY ps.id, s.steam_id_64, m.id, m.map_name, m.start
+        ORDER BY value DESC NULLS LAST
+        LIMIT :limit
+    """)
+    rows = []
+    for row in db.execute(sql, {"class_weapons": class_weapons, "limit": limit}):
+        d = dict(row._mapping)
+        if d.get("match_date"):
+            d["match_date"] = d["match_date"].isoformat()
+        rows.append(d)
+    return rows
+
+
 def player_detail(db: Session, steam_id: str):
     """Aggregated all-time stats for a single player.
 
@@ -676,8 +724,8 @@ def player_detail(db: Session, steam_id: str):
                    AND EXTRACT(EPOCH FROM (m.end - m.start)) > 0
               THEN LEAST(
                 ROUND(
-                  CAST(ps.time_seconds AS NUMERIC) /
-                  EXTRACT(EPOCH FROM (m.end - m.start)) * 100,
+                  (CAST(ps.time_seconds AS NUMERIC) /
+                   CAST(EXTRACT(EPOCH FROM (m.end - m.start)) AS NUMERIC)) * 100,
                   1
                 ),
                 100.0

@@ -136,6 +136,13 @@ export async function fetchBestSingleGame(metric: SingleGameMetric, limit = 10, 
   return data
 }
 
+export async function fetchBestSingleGameByClass(weapon_class: string, limit = 10) {
+  const { data } = await api.get<{ weapon_class: string; count: number; results: SingleGameRow[] }>(
+    '/best-single-game-by-class', { params: { weapon_class, limit } }
+  )
+  return data
+}
+
 // --- Phase 3: player detail ---
 
 export interface PlayerProfile {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchBestSingleGame, SingleGameRow, SingleGameMetric } from '../api/client'
+import { fetchBestSingleGame, fetchBestSingleGameByClass, SingleGameRow, SingleGameMetric } from '../api/client'
 
 const CARDS: { metric: SingleGameMetric; title: string; valueFmt?: (n: number) => string }[] = [
   { metric: 'kills',            title: 'Найбільше вбивств за гру' },
@@ -13,6 +13,21 @@ const CARDS: { metric: SingleGameMetric; title: string; valueFmt?: (n: number) =
   { metric: 'kills_per_minute', title: 'K/хв за гру', valueFmt: (n) => n.toFixed(2) },
   { metric: 'teamkills',        title: 'Найгірший TK за гру' },
   { metric: 'deaths',           title: 'Найгірша гра (deaths)' },
+]
+
+// Per-weapon-class single-game cards. Mirrors HLL Records "MOST KILLS IN ONE
+// GAME (FLARE GUN/MELEE/MINES/...)" — the narrow classes are the meme-worthy
+// ones; generic Rifle/SMG are excluded since they overlap with overall kills.
+const CLASS_CARDS: { weapon_class: string; title: string }[] = [
+  { weapon_class: 'Sniper Rifle', title: 'Sniper за гру' },
+  { weapon_class: 'Machine Gun',  title: 'MG за гру' },
+  { weapon_class: 'Anti-Tank',    title: 'AT за гру' },
+  { weapon_class: 'Tank Gun',     title: 'Танковий бій за гру' },
+  { weapon_class: 'Artillery',    title: 'Артилерія за гру' },
+  { weapon_class: 'Mine',         title: 'Міни за гру' },
+  { weapon_class: 'Explosive',    title: 'Вибухівка за гру' },
+  { weapon_class: 'Flame',        title: 'Вогнемет за гру' },
+  { weapon_class: 'Melee',        title: 'Ближній бій за гру' },
 ]
 
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
@@ -69,18 +84,26 @@ function SingleGameCard({ title, rows, fmt }: {
 
 export default function RecordsSingleGamePage() {
   const [data, setData] = useState<Record<string, SingleGameRow[]>>({})
+  const [classData, setClassData] = useState<Record<string, SingleGameRow[]>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    Promise.all(
-      CARDS.map((c) =>
-        fetchBestSingleGame(c.metric, 20)
-          .then((r) => [c.metric, r.results] as const)
-          .catch(() => [c.metric, []] as const)
-      )
+    const metricPromises = CARDS.map((c) =>
+      fetchBestSingleGame(c.metric, 20)
+        .then((r) => [c.metric, r.results] as const)
+        .catch(() => [c.metric, []] as const)
     )
-      .then((all) => setData(Object.fromEntries(all)))
+    const classPromises = CLASS_CARDS.map((c) =>
+      fetchBestSingleGameByClass(c.weapon_class, 10)
+        .then((r) => [c.weapon_class, r.results] as const)
+        .catch(() => [c.weapon_class, []] as const)
+    )
+    Promise.all([Promise.all(metricPromises), Promise.all(classPromises)])
+      .then(([metrics, classes]) => {
+        setData(Object.fromEntries(metrics))
+        setClassData(Object.fromEntries(classes))
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -96,11 +119,24 @@ export default function RecordsSingleGamePage() {
       {loading && <div className="text-zinc-400 py-8 text-center">Завантаження…</div>}
 
       {!loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {CARDS.map((c) => (
-            <SingleGameCard key={c.metric} title={c.title} rows={data[c.metric] ?? []} fmt={c.valueFmt} />
-          ))}
-        </div>
+        <>
+          <section className="mb-6">
+            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">Загальні метрики</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {CARDS.map((c) => (
+                <SingleGameCard key={c.metric} title={c.title} rows={data[c.metric] ?? []} fmt={c.valueFmt} />
+              ))}
+            </div>
+          </section>
+          <section>
+            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🔫 За класом зброї</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {CLASS_CARDS.map((c) => (
+                <SingleGameCard key={c.weapon_class} title={c.title} rows={classData[c.weapon_class] ?? []} />
+              ))}
+            </div>
+          </section>
+        </>
       )}
     </div>
   )

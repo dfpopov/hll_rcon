@@ -197,6 +197,25 @@ def get_best_single_game(
     return {"metric": metric, "count": len(rows), "side": side, "results": rows}
 
 
+@app.get("/api/best-single-game-by-class")
+@limiter.limit("60/minute")
+def get_best_single_game_by_class(
+    request: Request,
+    weapon_class: str = Query(min_length=1),
+    limit: int = Query(default=10, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """Top single-game records summed over weapons in one class.
+    e.g. weapon_class=Sniper Rifle, Flame, Melee, Mine, Artillery."""
+    if weapon_class not in queries.all_class_names():
+        return JSONResponse(
+            {"detail": f"weapon_class must be one of: {queries.all_class_names()}"},
+            status_code=400,
+        )
+    rows = queries.best_single_game_by_class(db, weapon_class=weapon_class, limit=limit)
+    return {"weapon_class": weapon_class, "count": len(rows), "results": rows}
+
+
 @app.get("/api/player/{steam_id}")
 @limiter.limit("60/minute")
 def get_player_detail(
