@@ -50,6 +50,27 @@ Pages live:
 
 ## Findings (chronological)
 
+### 2026-05-12 — Roadmap P0/P1: country flag + ach descriptions + MV cron + multi-compare
+
+- **P0 #1 country flag** (commit `23ea6a81`): switched from Unicode RIS letters
+  to flagcdn.com PNG `24x18` + `48x36` srcSet. Windows browsers now render.
+- **P0 #2 achievement descriptions** (commit `f609c110`): added 6th tuple
+  element to `ACHIEVEMENTS` in achievements.py; `description` field flows
+  through `/api/achievements` → `AchievementStat` → AchievementsPage card
+  subtitle + AchievementDetailPage prominent header line. Removed local
+  `ACH_DESCRIPTIONS` map in AchievementBadge.tsx — single source of truth.
+- **P0 #3 MV refresh thread** (commit `f609c110`): background daemon thread
+  in main.py calls `REFRESH MATERIALIZED VIEW CONCURRENTLY player_match_side`
+  every `MV_REFRESH_INTERVAL_SECONDS` (default 3600). Errors logged, swallowed.
+  No new infra/deps.
+- **P1 multi-player compare** (commit `<next>`): localStorage compare list
+  via `useCompareList` hook (max 4 players). Floating `<CompareBar>` always
+  visible when list ≥ 1. ComparePage route changed from `/compare/:id1/:id2`
+  to `/compare/:ids` (comma-separated). Renders rich 1v1 layout for N=2,
+  compact table for N=3..4 (no head-to-head — would be too noisy with N*N
+  pairs). `<AddToCompareButton>` on PlayerDetailPage replaces prompt-based
+  ⚖ button with toggle.
+
 ### 2026-05-12 — Phase 5: side filter + Compare enrichment + Records bug fix
 
 - **Materialized view `player_match_side`**: derives each player's dominant

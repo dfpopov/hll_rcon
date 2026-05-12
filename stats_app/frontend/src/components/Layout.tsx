@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
+import CompareBar from './CompareBar'
 
 function navClass({ isActive }: { isActive: boolean }) {
   return `text-sm hover:text-amber-400 transition-colors ${
@@ -20,10 +21,11 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
         </div>
       </nav>
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-24">{children}</main>
       <footer className="text-center text-zinc-600 text-xs py-4">
         HLL Stats • All-time stats from CRCON DB
       </footer>
+      <CompareBar />
     </div>
   )
 }

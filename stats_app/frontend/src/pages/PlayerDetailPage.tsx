@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { fetchPlayerDetail, findPlayerByName, PlayerDetail } from '../api/client'
+import { useCompareList } from '../hooks/useCompareList'
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import AchievementBadge from '../components/AchievementBadge'
@@ -8,6 +9,40 @@ import CountryFlag from '../components/CountryFlag'
 
 // CRCON public stats site URL — match details available on port 7010
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
+
+function AddToCompareButton({ steam_id, name }: { steam_id: string; name: string }) {
+  const { has, add, remove, list, max } = useCompareList()
+  const inList = has(steam_id)
+  const full = !inList && list.length >= max
+
+  const onClick = () => {
+    if (inList) {
+      remove(steam_id)
+    } else {
+      const result = add({ steam_id, name })
+      if (result === 'full') alert(`Список порівняння вже містить максимум ${max} гравців.`)
+    }
+  }
+
+  const label = inList
+    ? '✓ У списку порівняння'
+    : full
+      ? `Список заповнений (${max})`
+      : '➕ Додати до порівняння'
+  const cls = inList
+    ? 'bg-amber-700/40 text-amber-200 border-amber-600/50'
+    : full
+      ? 'bg-zinc-800 text-zinc-500 border-transparent cursor-not-allowed'
+      : 'bg-zinc-800 hover:bg-zinc-700 text-amber-400 hover:text-amber-300 border-transparent'
+
+  return (
+    <button onClick={onClick} disabled={full}
+      className={`text-xs px-3 py-1 rounded border ${cls}`}
+      title={inList ? 'Прибрати зі списку' : full ? 'Прибери когось зі списку щоб додати' : 'Додати до порівняння'}>
+      {label}
+    </button>
+  )
+}
 
 function formatPlaytime(seconds: number): string {
   if (!seconds) return '—'
@@ -120,20 +155,7 @@ export default function PlayerDetailPage() {
             Steam ↗
           </a>
         )}
-        <Link to={`/compare/${encodeURIComponent(p.steam_id)}/x`}
-          onClick={(e) => {
-            e.preventDefault()
-            const otherName = prompt(`Порівняти ${p.name} з іншим гравцем — введіть ім'я:`)
-            if (!otherName) return
-            findPlayerByName(otherName).then((sid) => {
-              if (sid) navigate(`/compare/${encodeURIComponent(p.steam_id)}/${encodeURIComponent(sid)}`)
-              else alert(`Гравця "${otherName}" не знайдено`)
-            })
-          }}
-          className="text-xs text-amber-400 hover:text-amber-300 px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700"
-          title="Порівняти цього гравця з іншим">
-          ⚖ Порівняти
-        </Link>
+        <AddToCompareButton steam_id={p.steam_id} name={p.name} />
       </div>
 
       {/* Achievements row */}

@@ -20,7 +20,7 @@ export default function App() {
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/achievements/:id" element={<AchievementDetailPage />} />
         <Route path="/compare" element={<ComparePage />} />
-        <Route path="/compare/:id1/:id2" element={<ComparePage />} />
+        <Route path="/compare/:ids" element={<ComparePage />} />
       </Routes>
     </Layout>
   )
