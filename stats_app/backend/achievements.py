@@ -68,6 +68,17 @@ ACHIEVEMENTS = [
     ("old_guard",    "Стара гвардія",      "🪖", "legendary",  "Зіграти 2000+ матчів",
         lambda p: (p.get("matches_played") or 0) >= 2000),
 
+    # Weapon-class achievements — require kills_by_class in profile (which
+    # _all_player_profiles_enriched provides). player_detail injects
+    # kills_by_class before calling compute_achievements.
+    ("samurai",      "Самурай",             "🔪", "rare",      "Зробити 50+ вбивств у ближньому бою",
+        lambda p: (p.get("kills_by_class") or {}).get("Melee", 0) >= 50),
+    ("tank_god",     "Танковий бог",         "🚜", "epic",      "200+ kills через Tank Gun / Anti-Tank",
+        lambda p: ((p.get("kills_by_class") or {}).get("Tank Gun", 0)
+                   + (p.get("kills_by_class") or {}).get("Anti-Tank", 0)) >= 200),
+    ("all_rounder",  "Універсальний солдат","🎻", "epic",      "Робити вбивства з 8+ різних класів зброї",
+        lambda p: (p.get("classes_with_kills") or 0) >= 8),
+
     # Hidden achievements / easter eggs. Pure aggregate from profile — no
     # per-match data needed. These reward unusual statistical signatures
     # rather than raw volume.

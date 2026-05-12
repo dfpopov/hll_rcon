@@ -125,6 +125,12 @@ PLAYSTYLES: List[Dict[str, Any]] = [
         "predicate": lambda p, c: ((p.get("peak_hour") if p.get("peak_hour") is not None else -1) in (0, 1, 2, 3, 4, 5)
                                     and (p.get("matches_played") or 0) >= _MIN_MATCHES),
     },
+    {
+        "id": "ritual", "title": "Ритуал", "emoji": "⏰", "color": "text-violet-200",
+        "description": "60%+ матчів в одну й ту саму годину — людина-розклад",
+        "predicate": lambda p, c: ((p.get("peak_hour_pct") or 0) >= 60
+                                    and (p.get("matches_played") or 0) >= 50),
+    },
 
     # ── Curiosity archetypes — must come BEFORE the generic K/D / ratio
     # catchers so their specific combos win priority. Otherwise a level-200

@@ -313,10 +313,12 @@ def _all_player_profiles_enriched(db: Session) -> List[dict]:
         GROUP BY s.steam_id_64, key
     """)
     per_class: dict[str, dict[str, int]] = {}
+    unique_weapons: dict[str, set] = {}
     for r in db.execute(sql_weapons):
         cls = classify_weapon(r.weapon) or "Other"
         per_class.setdefault(r.sid, {})
         per_class[r.sid][cls] = per_class[r.sid].get(cls, 0) + int(r.kills or 0)
+        unique_weapons.setdefault(r.sid, set()).add(r.weapon)
 
     # 2) Per-player peak hour from map_history.start
     sql_hour = text("""
@@ -345,12 +347,22 @@ def _all_player_profiles_enriched(db: Session) -> List[dict]:
             p["top_kill_class"] = None
             p["top_kill_class_kills"] = 0
             p["top_kill_class_pct"] = 0
+        # Full dict + count of nonempty classes used by Самурай / Танковий
+        # бог / Універсальний солдат achievements.
+        p["kills_by_class"] = classes
+        p["classes_with_kills"] = len([c for c, n in classes.items() if n > 0])
+        p["unique_weapons_count"] = len(unique_weapons.get(sid, set()))
         hours = per_hour.get(sid, {})
+        total_hour_matches = sum(hours.values()) if hours else 0
         if hours:
-            peak_h, _ = max(hours.items(), key=lambda x: x[1])
+            peak_h, peak_n = max(hours.items(), key=lambda x: x[1])
             p["peak_hour"] = peak_h
+            p["peak_hour_matches"] = peak_n
+            p["peak_hour_pct"] = peak_n / total_hour_matches * 100 if total_hour_matches else 0
         else:
             p["peak_hour"] = None
+            p["peak_hour_matches"] = 0
+            p["peak_hour_pct"] = 0
     return profiles
 
 
@@ -393,7 +405,10 @@ def compute_achievement_stats(db: Session) -> List[dict]:
     Returns list of {id, title, icon, tier, earned_count, percentage,
     total_players}.
     """
-    all_profiles = _all_player_profiles(db)
+    # Use enriched profiles so weapon-class achievements (Самурай, Танковий
+    # бог, Універсальний солдат) can count holders. Shares the 1h cache
+    # with playstyles, so the extra cost amortizes.
+    all_profiles = _all_player_profiles_enriched_cached(db)
     total = len(all_profiles)
     counts: dict[str, int] = {}
     for p in all_profiles:
@@ -1012,7 +1027,10 @@ def player_detail(db: Session, steam_id: str):
     if not profile_row:
         return None
     profile = dict(profile_row._mapping)
-    achievements_list = compute_achievements(profile)
+    # achievements_list is computed AFTER kills_by_class is available (below),
+    # so the new weapon-class achievements (Самурай / Танковий бог /
+    # Універсальний солдат) can fire. Placeholder for now.
+    achievements_list: list = []
 
     # 2) Top weapons used (sum kills per weapon across all matches)
     # Top-N lists trimmed to 5 — PVP grid columns are narrow, top-10 was
@@ -1238,6 +1256,16 @@ def player_detail(db: Session, steam_id: str):
     kills_by_class = _aggregate_by_class(db.execute(sql_kill_weapons, {"sid": steam_id}))
     deaths_by_class = _aggregate_by_class(db.execute(sql_death_weapons, {"sid": steam_id}))
 
+    # Re-compute achievements with kills_by_class enriched in profile so
+    # weapon-class achievements (Самурай / Танковий бог / Універсальний солдат)
+    # can fire on individual profiles.
+    _ach_profile = {
+        **profile,
+        "kills_by_class": kills_by_class,
+        "classes_with_kills": len([c for c, n in kills_by_class.items() if n > 0]),
+    }
+    achievements_list = compute_achievements(_ach_profile)
+
     # 11) Win rate — JOIN player_match_side MV with map_history.result
     # (result jsonb shape: {"Allied": <sectors>, "Axis": <sectors>}). A match
     # is a win when the player's side captured more sectors. Matches with
@@ -1316,7 +1344,7 @@ def player_detail(db: Session, steam_id: str):
     hc = hardcounters(db, steam_id, min_deaths=5, limit=5)
 
     # 17) Achievement progress — top-5 closest-to-earning badges.
-    ach_progress = compute_achievement_progress(profile, limit=5)
+    ach_progress = compute_achievement_progress(_ach_profile, limit=5)
 
     # 18) Playstyle — primary archetype + all other matching styles.
     # See playstyles.classify_one for the priority rules. Profile must be

@@ -112,6 +112,14 @@ export const MATCH_TITLES: (MatchTitle & {
     description: 'K/D 7+ при 15+ вбивствах',
     predicate: (m) => (m.kd ?? 0) >= 7 && m.kills >= 15 },
 
+  // ── High volume both ways (must come BEFORE narrower kills-only) ──
+  { id: 'training', emoji: '🚂', title: 'Тренування',
+    description: '50+ вбивств І 50+ смертей — інтенсивна нічия',
+    predicate: (m) => m.kills >= 50 && m.deaths >= 50 },
+  { id: 'frenzy', emoji: '💢', title: 'Скажений',
+    description: '50+ вбивств і 30+ смертей — об\'єм в обидві сторони',
+    predicate: (m) => m.kills >= 50 && m.deaths >= 30 },
+
   // ── High volume ────────────────────────────────────────────────────
   { id: 'terror', emoji: '👹', title: 'Терор',
     description: '100+ вбивств за один матч',
@@ -119,6 +127,15 @@ export const MATCH_TITLES: (MatchTitle & {
   { id: 'massacre', emoji: '🔥', title: 'Різанина',
     description: '80+ вбивств за один матч',
     predicate: (m) => m.kills >= 80 },
+  { id: 'merciless', emoji: '🦅', title: 'Безжальний',
+    description: '40+ вбивств при K/D 3+',
+    predicate: (m) => m.kills >= 40 && (m.kd ?? 0) >= 3 },
+  { id: 'speedrun', emoji: '🏃', title: 'Спідран',
+    description: '30+ вбивств за матч до 30 хвилин',
+    predicate: (m) => m.kills >= 30 && (m.time_seconds ?? 99999) < 1800 },
+  { id: 'machine_gunner', emoji: '🪖', title: 'Кулеметник',
+    description: 'Combat 1500+ при 30+ kills і не більш ніж 10 смертях',
+    predicate: (m) => m.combat >= 1500 && m.kills >= 30 && m.deaths <= 10 },
   { id: 'god_of_war', emoji: '⚡', title: 'Бог війни',
     description: '50+ вбивств при K/D 3+',
     predicate: (m) => m.kills >= 50 && (m.kd ?? 0) >= 3 },
