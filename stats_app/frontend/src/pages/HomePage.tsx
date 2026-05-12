@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period, GameMode,
 } from '../api/client'
@@ -176,7 +177,12 @@ export default function HomePage() {
                     >
                       {r.level}
                     </span>
-                    <span className="font-medium">{r.name}</span>
+                    <Link
+                      to={`/player/${r.steam_id}`}
+                      className="font-medium hover:text-amber-400 transition-colors"
+                    >
+                      {r.name}
+                    </Link>
                   </div>
                 </td>
                 {COLUMNS.map((c) => (

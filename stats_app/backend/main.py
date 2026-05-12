@@ -123,6 +123,38 @@ def get_weapon_classes(request: Request, db: Session = Depends(get_db)):
     return {"classes": queries.get_weapon_classes_with_examples(db)}
 
 
+@app.get("/api/best-single-game")
+@limiter.limit("60/minute")
+def get_best_single_game(
+    request: Request,
+    metric: str = Query(default="kills"),
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """Single-match records: best `metric` in any single game ever played."""
+    if metric not in queries.SINGLE_GAME_METRICS:
+        return JSONResponse(
+            {"detail": f"metric must be one of: {sorted(queries.SINGLE_GAME_METRICS.keys())}"},
+            status_code=400,
+        )
+    rows = queries.best_single_game(db, metric=metric, limit=limit)
+    return {"metric": metric, "count": len(rows), "results": rows}
+
+
+@app.get("/api/player/{steam_id}")
+@limiter.limit("60/minute")
+def get_player_detail(
+    request: Request,
+    steam_id: str,
+    db: Session = Depends(get_db),
+):
+    """Full per-player detail: profile + top weapons + PVP + recent matches."""
+    result = queries.player_detail(db, steam_id)
+    if not result:
+        return JSONResponse({"detail": "player not found"}, status_code=404)
+    return result
+
+
 @app.get("/api/maps")
 @limiter.limit("60/minute")
 def get_maps(request: Request, db: Session = Depends(get_db)):

@@ -100,3 +100,73 @@ export async function fetchWeaponClasses(): Promise<WeaponClass[]> {
   const { data } = await api.get<{ classes: WeaponClass[] }>('/weapon-classes')
   return data.classes
 }
+
+// --- Phase 3: single-game records ---
+
+export type SingleGameMetric =
+  | 'kills' | 'deaths' | 'teamkills'
+  | 'combat' | 'support' | 'offense' | 'defense'
+  | 'kills_streak' | 'kill_death_ratio' | 'kills_per_minute'
+
+export interface SingleGameRow {
+  steam_id: string
+  name: string
+  level: number
+  value: number
+  map_name: string
+  match_date: string | null
+}
+
+export async function fetchBestSingleGame(metric: SingleGameMetric, limit = 10) {
+  const { data } = await api.get<{ metric: SingleGameMetric; count: number; results: SingleGameRow[] }>(
+    '/best-single-game', { params: { metric, limit } }
+  )
+  return data
+}
+
+// --- Phase 3: player detail ---
+
+export interface PlayerProfile {
+  steam_id: string
+  name: string
+  level: number
+  kills: number
+  deaths: number
+  teamkills: number
+  deaths_by_tk: number
+  kd_ratio: number | null
+  kpm: number | null
+  matches_played: number
+  total_seconds: number
+  combat: number
+  offense: number
+  defense: number
+  support: number
+  best_kills_streak: number
+  longest_life_secs: number
+}
+
+export interface WeaponKills { weapon: string; kills: number }
+export interface PvpEntry { victim?: string; killer?: string; kills?: number; deaths?: number }
+export interface RecentMatch {
+  map_name: string
+  match_date: string | null
+  kills: number
+  deaths: number
+  kd: number | null
+  combat: number
+  support: number
+}
+
+export interface PlayerDetail {
+  profile: PlayerProfile
+  top_weapons: WeaponKills[]
+  most_killed: { victim: string; kills: number }[]
+  killed_by: { killer: string; deaths: number }[]
+  recent_matches: RecentMatch[]
+}
+
+export async function fetchPlayerDetail(steamId: string): Promise<PlayerDetail> {
+  const { data } = await api.get<PlayerDetail>(`/player/${encodeURIComponent(steamId)}`)
+  return data
+}

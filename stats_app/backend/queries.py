@@ -206,3 +206,160 @@ def get_weapon_classes_with_examples(db: Session) -> List[dict]:
         {"name": cn, "count": len(grouped.get(cn, [])), "examples": grouped.get(cn, [])[:5]}
         for cn in all_class_names() if cn in grouped
     ]
+
+
+# ============================================================================
+# Phase 3: Records page + Player detail
+# ============================================================================
+
+# Whitelist for single-game record metrics (avoids SQL injection on metric param)
+SINGLE_GAME_METRICS = {
+    "kills": "ps.kills",
+    "deaths": "ps.deaths",
+    "teamkills": "ps.teamkills",
+    "combat": "ps.combat",
+    "support": "ps.support",
+    "offense": "ps.offense",
+    "defense": "ps.defense",
+    "kills_streak": "ps.kills_streak",
+    "kill_death_ratio": "ps.kill_death_ratio",
+    "kills_per_minute": "ps.kills_per_minute",
+}
+
+
+def best_single_game(db: Session, metric: str = "kills", limit: int = 20):
+    """Top single-game records: highest value of `metric` from any single match.
+
+    Returns list of {steam_id, name, level, value, map_name, match_date}.
+    """
+    expr = SINGLE_GAME_METRICS.get(metric, SINGLE_GAME_METRICS["kills"])
+    sql = text(f"""
+        SELECT
+            s.steam_id_64 AS steam_id,
+            ps.name AS name,
+            ps.level AS level,
+            ({expr}) AS value,
+            m.map_name AS map_name,
+            m.start AS match_date
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id
+        WHERE ({expr}) IS NOT NULL
+        ORDER BY ({expr}) DESC NULLS LAST
+        LIMIT :limit
+    """)
+    result = db.execute(sql, {"limit": limit})
+    rows = []
+    for row in result:
+        d = dict(row._mapping)
+        if d.get("match_date"):
+            d["match_date"] = d["match_date"].isoformat()
+        rows.append(d)
+    return rows
+
+
+def player_detail(db: Session, steam_id: str):
+    """Aggregated all-time stats for a single player.
+
+    Returns: {profile, top_weapons, most_killed, killed_by, recent_matches} or None.
+    """
+    # 1) Profile aggregation
+    sql_profile = text("""
+        SELECT
+            s.steam_id_64 AS steam_id,
+            MAX(ps.name) AS name,
+            MAX(ps.level) AS level,
+            SUM(ps.kills) AS kills,
+            SUM(ps.deaths) AS deaths,
+            SUM(ps.teamkills) AS teamkills,
+            SUM(ps.deaths_by_tk) AS deaths_by_tk,
+            ROUND(CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0), 2) AS kd_ratio,
+            ROUND(CAST(AVG(ps.kills_per_minute) AS NUMERIC), 2) AS kpm,
+            COUNT(DISTINCT ps.map_id) AS matches_played,
+            SUM(ps.time_seconds) AS total_seconds,
+            SUM(ps.combat) AS combat,
+            SUM(ps.offense) AS offense,
+            SUM(ps.defense) AS defense,
+            SUM(ps.support) AS support,
+            MAX(ps.kills_streak) AS best_kills_streak,
+            MAX(ps.longest_life_secs) AS longest_life_secs
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        WHERE s.steam_id_64 = :sid
+        GROUP BY s.steam_id_64
+    """)
+    profile_row = db.execute(sql_profile, {"sid": steam_id}).fetchone()
+    if not profile_row:
+        return None
+    profile = dict(profile_row._mapping)
+
+    # 2) Top weapons used (sum kills per weapon across all matches)
+    sql_weapons = text("""
+        SELECT key AS weapon, SUM(value::int) AS kills
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id,
+             jsonb_each_text(ps.weapons)
+        WHERE s.steam_id_64 = :sid AND ps.weapons IS NOT NULL
+        GROUP BY key
+        ORDER BY kills DESC
+        LIMIT 10
+    """)
+    top_weapons = [dict(row._mapping) for row in db.execute(sql_weapons, {"sid": steam_id})]
+
+    # 3) Most killed (victims) — PVP
+    sql_killed = text("""
+        SELECT key AS victim, SUM(value::int) AS kills
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id,
+             jsonb_each_text(ps.most_killed)
+        WHERE s.steam_id_64 = :sid AND ps.most_killed IS NOT NULL
+        GROUP BY key
+        ORDER BY kills DESC
+        LIMIT 10
+    """)
+    most_killed = [dict(row._mapping) for row in db.execute(sql_killed, {"sid": steam_id})]
+
+    # 4) Killed by (nemeses) — PVP reverse
+    sql_killers = text("""
+        SELECT key AS killer, SUM(value::int) AS deaths
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id,
+             jsonb_each_text(ps.death_by)
+        WHERE s.steam_id_64 = :sid AND ps.death_by IS NOT NULL
+        GROUP BY key
+        ORDER BY deaths DESC
+        LIMIT 10
+    """)
+    killed_by = [dict(row._mapping) for row in db.execute(sql_killers, {"sid": steam_id})]
+
+    # 5) Recent matches (last 10)
+    sql_recent = text("""
+        SELECT
+            m.map_name AS map_name,
+            m.start AS match_date,
+            ps.kills AS kills,
+            ps.deaths AS deaths,
+            ps.kill_death_ratio AS kd,
+            ps.combat AS combat,
+            ps.support AS support
+        FROM player_stats ps
+        JOIN steam_id_64 s ON s.id = ps.playersteamid_id
+        JOIN map_history m ON m.id = ps.map_id
+        WHERE s.steam_id_64 = :sid
+        ORDER BY m.start DESC NULLS LAST
+        LIMIT 10
+    """)
+    recent_matches = []
+    for row in db.execute(sql_recent, {"sid": steam_id}):
+        d = dict(row._mapping)
+        if d.get("match_date"):
+            d["match_date"] = d["match_date"].isoformat()
+        recent_matches.append(d)
+
+    return {
+        "profile": profile,
+        "top_weapons": top_weapons,
+        "most_killed": most_killed,
+        "killed_by": killed_by,
+        "recent_matches": recent_matches,
+    }
