@@ -111,20 +111,24 @@ export default function WorldMapPage() {
                   geographies.map((geo) => {
                     const id = geo.id  // numeric ISO string
                     const n = countByNumeric.get(id) ?? 0
-                    const a2 = numericToA2.get(id) ?? ''
                     const isRussia = id === RU_ID
+                    const a2 = numericToA2.get(id) ?? (isRussia ? 'RU' : '')
                     // Hover-fill driven by shared state so Crimea and Ukraine
                     // light up together; CSS :hover only affects one element.
-                    const isHovered = hover?.a2 === a2 && n > 0
-                    const baseFill = isRussia ? 'url(#ru-strike)' : (n > 0 ? colorScale(n) : '#1f1f23')
-                    const fill = isHovered && !isRussia ? '#fbbf24' : baseFill
+                    // Russia is hover-only struck through — looks like a normal
+                    // country until pointed at, then reveals the diagonal strike.
+                    const isHovered = isRussia ? hover?.a2 === 'RU' : (hover?.a2 === a2 && n > 0)
+                    let fill: string
+                    if (isRussia && isHovered) fill = 'url(#ru-strike)'
+                    else if (isHovered) fill = '#fbbf24'
+                    else fill = n > 0 ? colorScale(n) : '#1f1f23'
                     return (
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
                         fill={fill}
-                        stroke={isRussia ? '#b91c1c' : '#3f3f46'}
-                        strokeWidth={isRussia ? 0.5 : 0.3}
+                        stroke={isRussia && isHovered ? '#b91c1c' : '#3f3f46'}
+                        strokeWidth={isRussia && isHovered ? 0.5 : 0.3}
                         onMouseEnter={() => {
                           if (isRussia) setHover({ a2: 'RU', players: n })
                           else if (n > 0) setHover({ a2, players: n })
