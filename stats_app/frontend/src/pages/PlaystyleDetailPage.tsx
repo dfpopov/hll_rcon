@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchPlaystylePlayers, PlaystylePlayersResponse } from '../api/client'
+import { useMetaLabel } from '../i18n/metaLabel'
 import Avatar from '../components/Avatar'
 import LevelBadge from '../components/LevelBadge'
 import CountryFlag from '../components/CountryFlag'
@@ -14,6 +15,7 @@ const PAGE_SIZE = 50
 
 export default function PlaystyleDetailPage() {
   const { t, i18n } = useTranslation()
+  const meta = useMetaLabel()
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const { id } = useParams<{ id: string }>()
   const [data, setData] = useState<PlaystylePlayersResponse | null>(null)
@@ -41,10 +43,10 @@ export default function PlaystyleDetailPage() {
           <>
             <div className="flex items-baseline gap-3 mb-2">
               <span className="text-4xl">{data.playstyle.emoji}</span>
-              {/* Playstyle title + description stay Ukrainian (Tier 3). */}
-              <h1 className={`text-3xl font-bold ${data.playstyle.color}`}>{data.playstyle.title}</h1>
+              {/* Resolve via meta.playstyles.<id>, fall back to backend UA. */}
+              <h1 className={`text-3xl font-bold ${data.playstyle.color}`}>{meta.title('playstyles', data.playstyle.id, data.playstyle.title)}</h1>
             </div>
-            <p className="text-zinc-200 text-base italic mb-2">📜 {data.playstyle.description}</p>
+            <p className="text-zinc-200 text-base italic mb-2">📜 {meta.description('playstyles', data.playstyle.id, data.playstyle.description)}</p>
             <p className="text-zinc-400 text-sm">
               {t('playstyles.detail.total', { value: nf.format(data.total) })}
               {data.primary_count !== data.total && (

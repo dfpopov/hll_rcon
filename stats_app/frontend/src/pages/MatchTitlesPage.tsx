@@ -5,6 +5,7 @@
  */
 import { useTranslation } from 'react-i18next'
 import { MATCH_TITLES } from '../components/PlayerMemes'
+import { useMetaLabel } from '../i18n/metaLabel'
 
 // Loose visual buckets — labels translated via `matchTitles.categories.*`.
 const CATEGORIES: { id: string; ids: string[]; emoji: string }[] = [
@@ -17,6 +18,7 @@ const CATEGORIES: { id: string; ids: string[]; emoji: string }[] = [
 
 export default function MatchTitlesPage() {
   const { t } = useTranslation()
+  const meta = useMetaLabel()
   return (
     <div className="max-w-5xl mx-auto p-6">
       <header className="mb-6">
@@ -41,11 +43,10 @@ export default function MatchTitlesPage() {
                   <div key={mt.id} className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-3">
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className="text-2xl leading-none">{mt.emoji}</span>
-                      {/* Match title names + descriptions stay Ukrainian per
-                          Tier 4 editorial decision (I18N_PLAN.md). */}
-                      <h3 className="font-semibold text-amber-200">{mt.title}</h3>
+                      {/* Resolve via meta.matchTitles.<id>, fall back to UA. */}
+                      <h3 className="font-semibold text-amber-200">{meta.title('matchTitles', mt.id, mt.title)}</h3>
                     </div>
-                    <p className="text-xs text-zinc-400 leading-snug">{mt.description}</p>
+                    <p className="text-xs text-zinc-400 leading-snug">{meta.description('matchTitles', mt.id, mt.description)}</p>
                   </div>
                 ))}
               </div>

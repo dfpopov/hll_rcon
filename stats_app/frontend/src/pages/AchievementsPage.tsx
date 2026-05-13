@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchAchievementStats, AchievementStat } from '../api/client'
+import { useMetaLabel } from '../i18n/metaLabel'
 
 const TIER_STYLES: Record<AchievementStat['tier'], string> = {
   common:    'bg-zinc-700/80 border-zinc-500/50 text-zinc-100',
@@ -22,6 +23,7 @@ function rarityBucket(pct: number): 'mythic' | 'legendary' | 'rare' | 'uncommon'
 
 export default function AchievementsPage() {
   const { t, i18n } = useTranslation()
+  const meta = useMetaLabel()
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [items, setItems] = useState<AchievementStat[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,13 +60,13 @@ export default function AchievementsPage() {
             >
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-2xl">{a.icon}</span>
-                {/* Achievement title + description stay Ukrainian by editorial
-                    decision (Tier 2 in I18N_PLAN.md). The chrome around
-                    them translates. */}
-                <h3 className="font-semibold flex-1">{a.title}</h3>
+                {/* Title + description resolve via the `meta.achievements.<id>`
+                    namespace; Ukrainian backend string is the fallback when
+                    a language hasn't been translated yet. */}
+                <h3 className="font-semibold flex-1">{meta.title('achievements', a.id, a.title)}</h3>
                 <span className="text-xs opacity-70 uppercase">{a.tier}</span>
               </div>
-              <p className="text-xs opacity-80 mb-2 leading-snug">{a.description}</p>
+              <p className="text-xs opacity-80 mb-2 leading-snug">{meta.description('achievements', a.id, a.description)}</p>
               <div className="flex items-baseline justify-between text-sm">
                 <span className="opacity-80">
                   {t('achievements.earnedBy', { value: nf.format(a.earned_count) })}

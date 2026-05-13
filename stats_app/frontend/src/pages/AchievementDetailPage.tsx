@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchAchievementPlayers, fetchAchievementStats, AchievementHoldersResponse, AchievementStat } from '../api/client'
+import { useMetaLabel } from '../i18n/metaLabel'
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
 import CountryFlag from '../components/CountryFlag'
@@ -11,6 +12,7 @@ const PAGE_SIZE = 50
 
 export default function AchievementDetailPage() {
   const { t, i18n } = useTranslation()
+  const meta = useMetaLabel()
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const { id } = useParams<{ id: string }>()
   const [holders, setHolders] = useState<AchievementHoldersResponse | null>(null)
@@ -44,13 +46,13 @@ export default function AchievementDetailPage() {
       <header className="mt-3 mb-6">
         <div className="flex items-baseline gap-3 mb-2">
           {stat && <span className="text-4xl">{stat.icon}</span>}
-          {/* Achievement title + description stay Ukrainian (Tier 2 editorial
-              policy — see I18N_PLAN.md). Surrounding chrome translates. */}
-          <h1 className="text-3xl font-bold">{stat?.title ?? id}</h1>
+          {/* Title + description resolve via meta.achievements.<id> with the
+              Ukrainian backend string as fallback. */}
+          <h1 className="text-3xl font-bold">{stat ? meta.title('achievements', stat.id, stat.title) : id}</h1>
           {stat && <span className="text-xs uppercase text-zinc-500 tracking-widest">{stat.tier}</span>}
         </div>
         {stat?.description && (
-          <p className="text-zinc-200 text-base mb-2 italic">📜 {stat.description}</p>
+          <p className="text-zinc-200 text-base mb-2 italic">📜 {meta.description('achievements', stat.id, stat.description)}</p>
         )}
         {stat && (
           <p className="text-zinc-400 text-sm">

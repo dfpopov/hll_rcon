@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Achievement } from '../api/client'
+import { useMetaLabel } from '../i18n/metaLabel'
 
 const TIER_STYLES: Record<Achievement['tier'], string> = {
   common:    'bg-zinc-700/80 border-zinc-500/50 text-zinc-100',
@@ -16,12 +17,17 @@ interface Props {
 }
 
 export default function AchievementBadge({ a, linkable = true }: Props) {
-  const tooltip = a.description ? `${a.title} (${a.tier})\n${a.description}` : `${a.title} • ${a.tier}`
+  const meta = useMetaLabel()
+  // Translated when available; otherwise falls back to the Ukrainian text
+  // the backend sent. See stats_app/I18N_PLAN.md (Tier 2).
+  const title = meta.title('achievements', a.id, a.title)
+  const desc = meta.description('achievements', a.id, a.description)
+  const tooltip = desc ? `${title} (${a.tier})\n${desc}` : `${title} • ${a.tier}`
   const cls = `inline-flex items-center gap-1.5 px-2.5 py-1 rounded border text-xs font-medium ${TIER_STYLES[a.tier]}`
   const body = (
     <>
       <span className="text-base leading-none">{a.icon}</span>
-      <span>{a.title}</span>
+      <span>{title}</span>
     </>
   )
   if (!linkable) {

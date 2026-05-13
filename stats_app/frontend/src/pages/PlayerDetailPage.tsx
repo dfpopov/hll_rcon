@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchPlayerDetail, findPlayerByName, PlayerDetail } from '../api/client'
+import { useMetaLabel } from '../i18n/metaLabel'
 import { useCompareList } from '../hooks/useCompareList'
 import LevelBadge from '../components/LevelBadge'
 import Avatar from '../components/Avatar'
@@ -194,6 +195,7 @@ function BarRow({ name, value, max, color, onClick }: {
 
 export default function PlayerDetailPage() {
   const { t, i18n } = useTranslation()
+  const meta = useMetaLabel()
   const lang = i18n.resolvedLanguage || i18n.language || 'en'
   const nf = new Intl.NumberFormat(lang)
   const { steamId } = useParams<{ steamId: string }>()
@@ -329,9 +331,9 @@ export default function PlayerDetailPage() {
                 >
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-xl leading-none">{p.icon}</span>
-                    <span className="font-medium text-sm truncate flex-1" title={p.description}>{p.title}</span>
+                    <span className="font-medium text-sm truncate flex-1" title={meta.description('achievements', p.id, p.description)}>{meta.title('achievements', p.id, p.title)}</span>
                   </div>
-                  <div className="text-xs text-zinc-500 mb-2 truncate" title={p.description}>{p.description}</div>
+                  <div className="text-xs text-zinc-500 mb-2 truncate" title={meta.description('achievements', p.id, p.description)}>{meta.description('achievements', p.id, p.description)}</div>
                   <div className="h-2 bg-zinc-800 rounded overflow-hidden mb-1">
                     <div className="bg-amber-500 h-full" style={{ width: `${p.pct}%` }} />
                   </div>
@@ -806,18 +808,18 @@ export default function PlayerDetailPage() {
                       {formatMapName(m.map_name)}
                     </a>
                     {(() => {
-                      const t = matchTitle({
+                      const mt = matchTitle({
                         kills: m.kills, deaths: m.deaths, kd: m.kd,
                         combat: m.combat, support: m.support, map_name: m.map_name,
                         time_seconds: m.time_seconds,
                       })
-                      return t ? (
+                      return mt ? (
                         <Link
                           to="/match-titles"
                           className="ml-2 text-xs px-1.5 py-0.5 rounded bg-amber-900/40 border border-amber-700/40 text-amber-200 hover:bg-amber-800/50"
-                          title={t.description}
+                          title={meta.description('matchTitles', mt.id, mt.description)}
                         >
-                          {t.emoji} {t.title}
+                          {mt.emoji} {meta.title('matchTitles', mt.id, mt.title)}
                         </Link>
                       ) : null
                     })()}

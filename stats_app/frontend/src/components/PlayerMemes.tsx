@@ -6,26 +6,31 @@
  *   - PlaystyleTag: bucket the player into a roleplay archetype based on
  *     combat/offense/defense/support distribution + K/D and streak.
  */
+import { useTranslation } from 'react-i18next'
 import { PlayerDetail, PlayerTopMap, Playstyle } from '../api/client'
 import { formatMapName } from './mapNames'
+import { useMetaLabel } from '../i18n/metaLabel'
 
 // ── Nemesis ────────────────────────────────────────────────────────────────
 
 export function NemesisStamp({ d }: { d: PlayerDetail }) {
+  const { t } = useTranslation()
   const top = d.killed_by?.[0]
   if (!top || top.deaths == null || top.deaths < 5) return null  // hide for noise
+  const tier =
+    top.deaths >= 50 ? 'shame' :
+    top.deaths >= 20 ? 'revenge' :
+    'keepEyes'
   return (
     <section className="mb-6 bg-gradient-to-r from-rose-900/40 via-zinc-900 to-zinc-900 border border-rose-700/50 rounded-lg p-4">
       <div className="flex items-center gap-4">
         <div className="text-5xl">😡</div>
         <div className="flex-1">
-          <div className="text-xs text-rose-300 uppercase tracking-widest">Твій вічний ворог</div>
+          <div className="text-xs text-rose-300 uppercase tracking-widest">{t('playerMemes.nemesis')}</div>
           <div className="text-2xl font-bold text-rose-100">{top.killer}</div>
           <div className="text-sm text-zinc-300 mt-1">
-            убив тебе <span className="font-bold text-rose-300 tabular-nums">{top.deaths}</span> разів —
-            {top.deaths >= 50 ? ' просто ганьба.' :
-             top.deaths >= 20 ? ' пора відомстити.' :
-             ' тримай очі відкритими.'}
+            {t('playerMemes.killedYouNTimes', { n: top.deaths })} —
+            {' '}{t(`playerMemes.nemesisTier.${tier}`)}
           </div>
         </div>
       </div>
@@ -36,6 +41,8 @@ export function NemesisStamp({ d }: { d: PlayerDetail }) {
 // ── Loved / Hated map ─────────────────────────────────────────────────────
 
 function MapCard({ map, tone, label, emoji }: { map: PlayerTopMap; tone: 'good' | 'bad'; label: string; emoji: string }) {
+  const { t, i18n } = useTranslation()
+  const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const color = tone === 'good' ? 'text-emerald-300 border-emerald-700/40' : 'text-rose-300 border-rose-700/40'
   return (
     <div className={`bg-zinc-900/60 border rounded-lg p-4 ${color.split(' ')[1]}`}>
@@ -43,13 +50,14 @@ function MapCard({ map, tone, label, emoji }: { map: PlayerTopMap; tone: 'good' 
       <div className="text-lg font-bold mt-1 break-all" title={map.map_name}>{formatMapName(map.map_name)}</div>
       <div className="text-sm text-zinc-400 mt-1">
         K/D <span className={`font-bold tabular-nums ${color.split(' ')[0]}`}>{map.kd ?? '—'}</span>
-        {' • '}{map.matches} матчів • {map.kills?.toLocaleString('uk-UA') ?? 0} вбивств
+        {' • '}{t('playerMemes.mapStats', { matches: map.matches, kills: map.kills != null ? nf.format(map.kills) : 0 })}
       </div>
     </div>
   )
 }
 
 export function LovedHatedMap({ topMaps }: { topMaps: PlayerTopMap[] }) {
+  const { t } = useTranslation()
   // Need at least 3 matches per map for the K/D to mean something.
   const meaningful = topMaps.filter((m) => (m.matches ?? 0) >= 3 && m.kd != null)
   if (meaningful.length < 2) return null
@@ -59,8 +67,8 @@ export function LovedHatedMap({ topMaps }: { topMaps: PlayerTopMap[] }) {
   if (loved.map_name === hated.map_name) return null
   return (
     <section className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-      <MapCard map={loved} tone="good" label="Улюблена карта" emoji="💚" />
-      <MapCard map={hated} tone="bad"  label="Прокляте місце" emoji="💀" />
+      <MapCard map={loved} tone="good" label={t('playerMemes.lovedMap')} emoji="💚" />
+      <MapCard map={hated} tone="bad"  label={t('playerMemes.hatedMap')} emoji="💀" />
     </section>
   )
 }
@@ -192,27 +200,29 @@ import { Link } from 'react-router-dom'
  *  matching archetypes (also). Primary card links to /playstyles/{id};
  *  each chip links to its own /playstyles/{id} page too. */
 export function PlaystyleCard({ playstyle, also = [] }: { playstyle: Playstyle; also?: Playstyle[] }) {
+  const { t } = useTranslation()
+  const meta = useMetaLabel()
   return (
     <section className="mb-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
       <Link to={`/playstyles/${playstyle.id}`}
         className="flex items-center gap-4 hover:bg-zinc-900 -m-1 p-1 rounded transition-colors">
         <div className="text-5xl">{playstyle.emoji}</div>
         <div className="flex-1">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest">Стиль гри · основний</div>
-          <div className={`text-xl font-bold ${playstyle.color}`}>{playstyle.title}</div>
-          <p className="text-sm text-zinc-400 mt-1">{playstyle.description}</p>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">{t('playerMemes.primaryPlaystyle')}</div>
+          <div className={`text-xl font-bold ${playstyle.color}`}>{meta.title('playstyles', playstyle.id, playstyle.title)}</div>
+          <p className="text-sm text-zinc-400 mt-1">{meta.description('playstyles', playstyle.id, playstyle.description)}</p>
         </div>
       </Link>
       {also.length > 0 && (
         <div className="mt-3 pt-3 border-t border-zinc-800">
-          <div className="text-[10px] uppercase text-zinc-600 tracking-widest mb-2">Також підходить</div>
+          <div className="text-[10px] uppercase text-zinc-600 tracking-widest mb-2">{t('playerMemes.alsoFits')}</div>
           <div className="flex flex-wrap gap-1.5">
             {also.map((ps) => (
               <Link key={ps.id} to={`/playstyles/${ps.id}`}
                 className={`text-xs px-2 py-1 rounded bg-zinc-800/60 border border-zinc-800
                             hover:bg-zinc-800 hover:border-zinc-700 ${ps.color}`}
-                title={ps.description}>
-                {ps.emoji} {ps.title}
+                title={meta.description('playstyles', ps.id, ps.description)}>
+                {ps.emoji} {meta.title('playstyles', ps.id, ps.title)}
               </Link>
             ))}
           </div>

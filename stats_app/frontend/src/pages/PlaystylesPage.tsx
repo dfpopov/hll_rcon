@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { fetchPlaystyles, PlaystyleStat } from '../api/client'
+import { useMetaLabel } from '../i18n/metaLabel'
 import Avatar from '../components/Avatar'
 
 export default function PlaystylesPage() {
   const { t, i18n } = useTranslation()
+  const meta = useMetaLabel()
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [data, setData] = useState<PlaystyleStat[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,16 +48,15 @@ export default function PlaystylesPage() {
                            hover:border-amber-700/40 hover:bg-zinc-900 transition-all block">
                 <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-3xl">{ps.emoji}</span>
-                  {/* Playstyle title + description stay Ukrainian by editorial
-                      decision (Tier 3 in I18N_PLAN.md). */}
-                  <h3 className={`font-semibold text-lg flex-1 ${ps.color}`}>{ps.title}</h3>
+                  {/* Resolve via meta.playstyles.<id>, fall back to backend UA. */}
+                  <h3 className={`font-semibold text-lg flex-1 ${ps.color}`}>{meta.title('playstyles', ps.id, ps.title)}</h3>
                   <span className="text-sm tabular-nums text-zinc-200" title={t('playstyles.primaryOverTotal')}>
                     <span className="font-bold">{ps.player_count}</span>
                     <span className="text-zinc-600"> / </span>
                     <span className="text-zinc-400">{ps.total_count}</span>
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 mb-3 italic">{ps.description}</p>
+                <p className="text-xs text-zinc-500 mb-3 italic">{meta.description('playstyles', ps.id, ps.description)}</p>
                 <div className="h-1.5 bg-zinc-800 rounded overflow-hidden mb-2">
                   <div className={`h-full ${ps.color.replace('text-', 'bg-')}`} style={{ width: `${pct}%` }} />
                 </div>
