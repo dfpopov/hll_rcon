@@ -107,7 +107,7 @@
   "achievements": {
     "title": "Osiągnięcia",
     "subtitle": "{{count}} osiągnięć • {{total}} graczy w bazie • Posortowane od najrzadszych",
-    "earnedBy": "{{count}} graczy zdobyło",
+    "earnedBy": "{{value}} graczy zdobyło",
     "rarity": "Rzadkość w bazie: {{tier}}",
     "tiers": {
       "mythic": "Mythic",
@@ -126,7 +126,7 @@
     "samplePlayerTitle": "{{kills}} kills, {{matches}} meczów",
     "backToAll": "← Wszystkie style",
     "detail": {
-      "total": "{{count}} graczy z tym stylem",
+      "total": "{{value}} graczy z tym stylem",
       "split": "w tym {{primary}} jako główny, {{secondary}} jako drugorzędny",
       "secondaryBadge": "też",
       "secondaryTooltip": "Dla tego gracza styl jest drugorzędny",

@@ -107,7 +107,7 @@
   "achievements": {
     "title": "Достижения",
     "subtitle": "{{count}} достижений • {{total}} игроков в базе • Отсортировано от самого редкого",
-    "earnedBy": "{{count}} игроков получили",
+    "earnedBy": "{{value}} игроков получили",
     "rarity": "Редкость в базе: {{tier}}",
     "tiers": {
       "mythic": "Mythic",
@@ -126,7 +126,7 @@
     "samplePlayerTitle": "{{kills}} kills, {{matches}} матчей",
     "backToAll": "← Все стили",
     "detail": {
-      "total": "{{count}} игроков с этим стилем",
+      "total": "{{value}} игроков с этим стилем",
       "split": "из них {{primary}} как основной, {{secondary}} как вторичный",
       "secondaryBadge": "также",
       "secondaryTooltip": "Для этого игрока стиль — второстепенный",

@@ -107,7 +107,7 @@
   "achievements": {
     "title": "Achievements",
     "subtitle": "{{count}} achievements • {{total}} players in DB • Sorted by rarity",
-    "earnedBy": "{{count}} players earned",
+    "earnedBy": "{{value}} players earned",
     "rarity": "Rarity in DB: {{tier}}",
     "tiers": {
       "mythic": "Mythic",
@@ -126,7 +126,7 @@
     "samplePlayerTitle": "{{kills}} kills, {{matches}} matches",
     "backToAll": "← All styles",
     "detail": {
-      "total": "{{count}} players with this style",
+      "total": "{{value}} players with this style",
       "split": "of them {{primary}} primary, {{secondary}} secondary",
       "secondaryBadge": "also",
       "secondaryTooltip": "For this player the style is secondary",

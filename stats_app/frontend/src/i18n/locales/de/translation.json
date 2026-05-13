@@ -107,7 +107,7 @@
   "achievements": {
     "title": "Erfolge",
     "subtitle": "{{count}} Erfolge • {{total}} Spieler in DB • Sortiert nach Seltenheit",
-    "earnedBy": "{{count}} Spieler erhielten",
+    "earnedBy": "{{value}} Spieler erhielten",
     "rarity": "Seltenheit in DB: {{tier}}",
     "tiers": {
       "mythic": "Mythic",
@@ -126,7 +126,7 @@
     "samplePlayerTitle": "{{kills}} Kills, {{matches}} Spiele",
     "backToAll": "← Alle Stile",
     "detail": {
-      "total": "{{count}} Spieler mit diesem Stil",
+      "total": "{{value}} Spieler mit diesem Stil",
       "split": "davon {{primary}} primär, {{secondary}} sekundär",
       "secondaryBadge": "auch",
       "secondaryTooltip": "Für diesen Spieler ist der Stil sekundär",

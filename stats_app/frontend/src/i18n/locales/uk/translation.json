@@ -107,7 +107,7 @@
   "achievements": {
     "title": "Досягнення",
     "subtitle": "{{count}} досягнень • {{total}} гравців у базі • Сортовано від найрідкіснішого",
-    "earnedBy": "{{count}} гравців отримали",
+    "earnedBy": "{{value}} гравців отримали",
     "rarity": "Рідкість у базі: {{tier}}",
     "tiers": {
       "mythic": "Mythic",
@@ -126,7 +126,7 @@
     "samplePlayerTitle": "{{kills}} kills, {{matches}} матчів",
     "backToAll": "← Усі стилі",
     "detail": {
-      "total": "{{count}} гравців з цим стилем",
+      "total": "{{value}} гравців з цим стилем",
       "split": "з них {{primary}} як основний, {{secondary}} як вторинний",
       "secondaryBadge": "також",
       "secondaryTooltip": "Для цього гравця стиль — другорядний",

@@ -46,7 +46,7 @@ export default function PlaystyleDetailPage() {
             </div>
             <p className="text-zinc-200 text-base italic mb-2">📜 {data.playstyle.description}</p>
             <p className="text-zinc-400 text-sm">
-              {t('playstyles.detail.total', { count: nf.format(data.total) })}
+              {t('playstyles.detail.total', { value: nf.format(data.total) })}
               {data.primary_count !== data.total && (
                 <>
                   {' '}· {t('playstyles.detail.split', {

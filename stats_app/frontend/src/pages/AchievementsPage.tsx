@@ -67,7 +67,7 @@ export default function AchievementsPage() {
               <p className="text-xs opacity-80 mb-2 leading-snug">{a.description}</p>
               <div className="flex items-baseline justify-between text-sm">
                 <span className="opacity-80">
-                  {t('achievements.earnedBy', { count: nf.format(a.earned_count) })}
+                  {t('achievements.earnedBy', { value: nf.format(a.earned_count) })}
                 </span>
                 <span className="font-bold tabular-nums">{a.percentage}%</span>
               </div>
