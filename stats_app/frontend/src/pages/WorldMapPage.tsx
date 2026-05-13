@@ -136,25 +136,28 @@ export default function WorldMapPage() {
                   })
                 }
               </Geographies>
-              {/* Crimea overlay — painted in Ukraine's color on top of Russia's path */}
+              {/* Crimea overlay — same exact styling as other geographies,
+                  blends seamlessly with Ukraine's body. Hover behaves like
+                  it's part of UA. */}
               <Geographies geography={CRIMEA_GEOJSON as any}>
                 {({ geographies }) =>
                   geographies.map((geo) => {
                     const uaCount = countByNumeric.get(UA_ID) ?? 0
-                    const uaFill = uaCount > 0 ? colorScale(uaCount) : '#f59e0b'
+                    const uaFill = uaCount > 0 ? colorScale(uaCount) : '#1f1f23'
                     return (
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
                         fill={uaFill}
-                        stroke="#fbbf24"
-                        strokeWidth={0.4}
+                        stroke="#3f3f46"
+                        strokeWidth={0.3}
                         style={{
                           default: { outline: 'none' },
-                          hover: { fill: '#fbbf24', outline: 'none', cursor: 'pointer' },
+                          hover: { fill: uaCount > 0 ? '#fbbf24' : uaFill, outline: 'none',
+                                   cursor: uaCount > 0 ? 'pointer' : 'default' },
                           pressed: { outline: 'none' },
                         }}
-                        onMouseEnter={() => setHover({ a2: 'UA', players: uaCount })}
+                        onMouseEnter={() => uaCount > 0 && setHover({ a2: 'UA', players: uaCount })}
                         onMouseLeave={() => setHover(null)}
                       />
                     )
@@ -167,12 +170,6 @@ export default function WorldMapPage() {
               <span>0</span>
               <div className="h-2 w-48 rounded" style={{ background: 'linear-gradient(to right, #27272a, #f59e0b)' }} />
               <span>{max.toLocaleString('uk-UA')}</span>
-            </div>
-            <div className="text-[11px] text-zinc-500 mt-2 italic leading-snug text-center px-3">
-              🇺🇦 Крим — невід'ємна частина України згідно з резолюцією ГА ООН 68/262.
-              <br />
-              🚫 РФ позначено червоною штриховкою. Прапор замінено на біло-синьо-білий —
-              символ російської опозиції до війни.
             </div>
           </div>
 
