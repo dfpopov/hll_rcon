@@ -973,7 +973,7 @@ def pvp_weapon_breakdown(db: Session, steam_id: str, top_n: int = 8) -> dict:
         SELECT
             'victim'::text AS direction,
             COALESCE(s.steam_id_64, '') AS other_sid,
-            ll.player_name_2 AS other_name,
+            ll.player2_name AS other_name,
             COALESCE(NULLIF(ll.weapon, ''), 'Unknown') AS weapon,
             COUNT(*) AS n
         FROM log_lines ll
@@ -983,7 +983,7 @@ def pvp_weapon_breakdown(db: Session, steam_id: str, top_n: int = 8) -> dict:
           AND ll.player1_steamid = me.id
           AND ll.player2_steamid IS NOT NULL
           AND ll.player2_steamid <> me.id
-        GROUP BY s.steam_id_64, ll.player_name_2, ll.weapon
+        GROUP BY s.steam_id_64, ll.player2_name, ll.weapon
 
         UNION ALL
 
@@ -991,7 +991,7 @@ def pvp_weapon_breakdown(db: Session, steam_id: str, top_n: int = 8) -> dict:
         SELECT
             'killer'::text AS direction,
             COALESCE(s.steam_id_64, '') AS other_sid,
-            ll.player_name_1 AS other_name,
+            ll.player1_name AS other_name,
             COALESCE(NULLIF(ll.weapon, ''), 'Unknown') AS weapon,
             COUNT(*) AS n
         FROM log_lines ll
@@ -1001,7 +1001,7 @@ def pvp_weapon_breakdown(db: Session, steam_id: str, top_n: int = 8) -> dict:
           AND ll.player2_steamid = me.id
           AND ll.player1_steamid IS NOT NULL
           AND ll.player1_steamid <> me.id
-        GROUP BY s.steam_id_64, ll.player_name_1, ll.weapon
+        GROUP BY s.steam_id_64, ll.player1_name, ll.weapon
     """)
     # Two flat lists keyed by direction. Group in Python — Postgres window-
     # functions for top-N-per-group are doable but harder to read.
