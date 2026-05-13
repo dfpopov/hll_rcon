@@ -15,6 +15,31 @@ import { ISO_A2_TO_NUMERIC } from '../components/isoCountryCodes'
 
 const TOPO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
 
+// Numeric ISO codes for special-case rendering on the map.
+const RU_ID = '643'   // Russia — struck through with diagonal pattern
+const UA_ID = '804'   // Ukraine — Crimea overlay also painted in this color
+
+// Crimea boundary polygon (simplified ~20 points). Drawn ON TOP of Russia's
+// path so it visually returns to Ukraine, matching internationally
+// recognized territorial integrity (UN GA Resolution 68/262).
+const CRIMEA_GEOJSON = {
+  type: 'FeatureCollection',
+  features: [{
+    type: 'Feature',
+    properties: { name: 'Crimea (UA)' },
+    geometry: {
+      type: 'Polygon',
+      coordinates: [[
+        [33.50, 46.20], [34.20, 46.20], [34.90, 46.18], [35.40, 46.10],
+        [35.95, 45.60], [36.65, 45.45], [36.55, 45.25], [36.10, 45.00],
+        [35.50, 44.95], [35.00, 44.85], [34.50, 44.70], [34.00, 44.55],
+        [33.55, 44.45], [33.30, 44.40], [33.00, 44.50], [32.55, 44.85],
+        [32.50, 45.20], [32.65, 45.55], [32.85, 45.85], [33.50, 46.20],
+      ]],
+    },
+  }],
+} as const
+
 export default function WorldMapPage() {
   const [data, setData] = useState<CountryEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,26 +98,64 @@ export default function WorldMapPage() {
               height={420}
               style={{ width: '100%', height: 'auto' }}
             >
+              {/* SVG patterns: diagonal red strike for Russia, used as fill */}
+              <defs>
+                <pattern id="ru-strike" patternUnits="userSpaceOnUse" width="6" height="6"
+                  patternTransform="rotate(45)">
+                  <rect width="6" height="6" fill="#3a1010" />
+                  <line x1="0" y1="0" x2="0" y2="6" stroke="#b91c1c" strokeWidth="2" />
+                </pattern>
+              </defs>
               <Geographies geography={TOPO_URL}>
                 {({ geographies }) =>
                   geographies.map((geo) => {
                     const id = geo.id  // numeric ISO string
                     const n = countByNumeric.get(id) ?? 0
                     const a2 = numericToA2.get(id) ?? ''
+                    const isRussia = id === RU_ID
                     return (
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
-                        fill={n > 0 ? colorScale(n) : '#1f1f23'}
-                        stroke="#3f3f46"
-                        strokeWidth={0.3}
-                        onMouseEnter={() => n > 0 && setHover({ a2, players: n })}
+                        fill={isRussia ? 'url(#ru-strike)' : (n > 0 ? colorScale(n) : '#1f1f23')}
+                        stroke={isRussia ? '#b91c1c' : '#3f3f46'}
+                        strokeWidth={isRussia ? 0.5 : 0.3}
+                        onMouseEnter={() => {
+                          if (isRussia) setHover({ a2: 'RU', players: n })
+                          else if (n > 0) setHover({ a2, players: n })
+                        }}
                         onMouseLeave={() => setHover(null)}
                         style={{
                           default: { outline: 'none' },
-                          hover: { fill: '#fbbf24', outline: 'none', cursor: n > 0 ? 'pointer' : 'default' },
+                          hover: { fill: isRussia ? 'url(#ru-strike)' : '#fbbf24', outline: 'none',
+                                   cursor: n > 0 ? 'pointer' : 'default' },
                           pressed: { outline: 'none' },
                         }}
+                      />
+                    )
+                  })
+                }
+              </Geographies>
+              {/* Crimea overlay — painted in Ukraine's color on top of Russia's path */}
+              <Geographies geography={CRIMEA_GEOJSON as any}>
+                {({ geographies }) =>
+                  geographies.map((geo) => {
+                    const uaCount = countByNumeric.get(UA_ID) ?? 0
+                    const uaFill = uaCount > 0 ? colorScale(uaCount) : '#f59e0b'
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        fill={uaFill}
+                        stroke="#fbbf24"
+                        strokeWidth={0.4}
+                        style={{
+                          default: { outline: 'none' },
+                          hover: { fill: '#fbbf24', outline: 'none', cursor: 'pointer' },
+                          pressed: { outline: 'none' },
+                        }}
+                        onMouseEnter={() => setHover({ a2: 'UA', players: uaCount })}
+                        onMouseLeave={() => setHover(null)}
                       />
                     )
                   })
@@ -104,6 +167,12 @@ export default function WorldMapPage() {
               <span>0</span>
               <div className="h-2 w-48 rounded" style={{ background: 'linear-gradient(to right, #27272a, #f59e0b)' }} />
               <span>{max.toLocaleString('uk-UA')}</span>
+            </div>
+            <div className="text-[11px] text-zinc-500 mt-2 italic leading-snug text-center px-3">
+              🇺🇦 Крим — невід'ємна частина України згідно з резолюцією ГА ООН 68/262.
+              <br />
+              🚫 РФ позначено червоною штриховкою. Прапор замінено на біло-синьо-білий —
+              символ російської опозиції до війни.
             </div>
           </div>
 
