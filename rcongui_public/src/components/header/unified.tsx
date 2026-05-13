@@ -36,8 +36,12 @@ type NavItem = {
   match: 'exact' | 'prefix' | 'liveCurrent' | 'liveGames'
 }
 
-// Identical to stats_app/frontend/src/components/Layout.tsx — keep in sync.
+// Identical order to stats_app/frontend/src/components/Layout.tsx — keep in sync.
+// Live items come first since they're the most "active" / time-sensitive
+// destinations and the user is already on a /live/* page when seeing this.
 const NAV: NavItem[] = [
+  { href: '/live/',               label: '🟢 Зараз',   title: 'Поточний матч',            match: 'liveCurrent' },
+  { href: '/live/games',          label: '📜 Матчі',   title: 'Історія матчів',           match: 'liveGames' },
   { href: '/',                    label: 'Лідерборд',  match: 'exact' },
   { href: '/records/all-time',    label: '★ Весь час', title: 'Рекорди за весь час',     match: 'prefix' },
   { href: '/records/single-game', label: '⚡ 1 матч',   title: 'Рекорди в одному матчі',   match: 'prefix' },
@@ -46,8 +50,6 @@ const NAV: NavItem[] = [
   { href: '/compare',             label: 'Порівняння', match: 'prefix' },
   { href: '/hall-of-shame',       label: '💀 Сором',   title: 'Hall of Shame',            match: 'prefix' },
   { href: '/server/countries',    label: '🌍 Карта',   match: 'prefix' },
-  { href: '/live/',               label: '🟢 Зараз',   title: 'Поточний матч',            match: 'liveCurrent' },
-  { href: '/live/games',          label: '📜 Матчі',   title: 'Історія матчів',           match: 'liveGames' },
 ]
 
 function navClass(active: boolean): string {

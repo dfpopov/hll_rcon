@@ -25,6 +25,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         {/* gap-4 + compact labels keep all items + search on a single row down to ~1280px. */}
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4 flex-wrap">
           <span className="text-amber-500 font-bold text-lg">{t('nav.brand')}</span>
+          {/* Live items first — they're the most "active" / time-sensitive
+              destinations and should be top of mind. */}
+          <a href="/live/" className={liveLinkClass} title={t('nav.liveCurrentTitle')}>{t('nav.liveCurrent')}</a>
+          <a href="/live/games" className={liveLinkClass} title={t('nav.liveGamesTitle')}>{t('nav.liveGames')}</a>
           <NavLink to="/" className={navClass} end>{t('nav.leaderboard')}</NavLink>
           <NavLink to="/records/all-time" className={navClass} title={t('nav.recordsAllTimeTitle')}>{t('nav.recordsAllTime')}</NavLink>
           <NavLink to="/records/single-game" className={navClass} title={t('nav.recordsSingleGameTitle')}>{t('nav.recordsSingleGame')}</NavLink>
@@ -33,8 +37,6 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/compare" className={navClass}>{t('nav.compare')}</NavLink>
           <NavLink to="/hall-of-shame" className={navClass} title={t('nav.hallOfShameTitle')}>{t('nav.hallOfShame')}</NavLink>
           <NavLink to="/server/countries" className={navClass}>{t('nav.worldMap')}</NavLink>
-          <a href="/live/" className={liveLinkClass} title={t('nav.liveCurrentTitle')}>{t('nav.liveCurrent')}</a>
-          <a href="/live/games" className={liveLinkClass} title={t('nav.liveGamesTitle')}>{t('nav.liveGames')}</a>
           <NavSearch />
           <LanguageSelector />
         </div>

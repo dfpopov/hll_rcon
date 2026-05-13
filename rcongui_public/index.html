@@ -11,18 +11,32 @@
     <!-- When this app is embedded inside stats_app at /live/*, replace the
          war-scene <body> background with stats_app's zinc-950 BEFORE the
          body renders. Otherwise the war scene flashes for ~300ms while the
-         JS bundle loads and React mounts the UnifiedHeader. The classList
-         add runs in <head>, the <style> block uses !important to win over
-         the inline body style attribute below. -->
+         JS bundle loads and React mounts the UnifiedHeader.
+         Three layers of defense:
+           1. add `embedded` class on <html> before <body> parses,
+           2. CSS rule with !important to win over the inline body style,
+           3. MutationObserver that strips the inline style attribute as
+              soon as the body element appears — belt and suspenders in case
+              the browser somehow paints from the inline style before the
+              <style> rule kicks in (Chrome on slow first paint). -->
     <script>
       if (window.location.pathname.indexOf('/live') === 0) {
         document.documentElement.classList.add('embedded')
+        new MutationObserver(function (_, obs) {
+          if (document.body) {
+            document.body.style.backgroundImage = 'none'
+            document.body.style.backgroundColor = '#09090b'
+            document.body.style.backgroundAttachment = 'initial'
+            obs.disconnect()
+          }
+        }).observe(document.documentElement, { childList: true, subtree: true })
       }
     </script>
     <style>
       html.embedded body {
         background-image: none !important;
         background-color: #09090b !important;
+        background-attachment: initial !important;
       }
     </style>
   </head>
