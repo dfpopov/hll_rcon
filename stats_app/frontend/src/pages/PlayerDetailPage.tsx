@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchPlayerDetail, findPlayerByName, PlayerDetail } from '../api/client'
 import { useCompareList } from '../hooks/useCompareList'
 import LevelBadge from '../components/LevelBadge'
@@ -81,6 +82,7 @@ function SectionDivider({ label }: { label: string }) {
 
 
 function AddToCompareButton({ steam_id, name }: { steam_id: string; name: string }) {
+  const { t } = useTranslation()
   const { has, add, remove, list, max } = useCompareList()
   const inList = has(steam_id)
   const full = !inList && list.length >= max
@@ -90,15 +92,15 @@ function AddToCompareButton({ steam_id, name }: { steam_id: string; name: string
       remove(steam_id)
     } else {
       const result = add({ steam_id, name })
-      if (result === 'full') alert(`Список порівняння вже містить максимум ${max} гравців.`)
+      if (result === 'full') alert(t('player.compareFull', { max }))
     }
   }
 
   const label = inList
-    ? '✓ У списку порівняння'
+    ? t('player.inCompareList')
     : full
-      ? `Список заповнений (${max})`
-      : '➕ Додати до порівняння'
+      ? t('player.listFull', { max })
+      : t('player.addToCompare')
   const cls = inList
     ? 'bg-amber-700/40 text-amber-200 border-amber-600/50'
     : full
@@ -108,7 +110,7 @@ function AddToCompareButton({ steam_id, name }: { steam_id: string; name: string
   return (
     <button onClick={onClick} disabled={full}
       className={`text-xs px-3 py-1 rounded border ${cls}`}
-      title={inList ? 'Прибрати зі списку' : full ? 'Прибери когось зі списку щоб додати' : 'Додати до порівняння'}>
+      title={inList ? t('player.removeFromList') : full ? t('player.removeOneFirst') : t('player.addToCompare')}>
       {label}
     </button>
   )
@@ -133,12 +135,13 @@ function StatCard({ label, value, accent }: { label: string; value: string | num
 function BarRow({ name, value, max, color, onClick }: {
   name: string; value: number; max: number; color: string; onClick?: () => void
 }) {
+  const { t } = useTranslation()
   const pct = max > 0 ? Math.round((value / max) * 100) : 0
   return (
     <div className="flex items-center gap-2 text-sm">
       <span
         className={`w-44 truncate ${onClick ? 'cursor-pointer hover:text-amber-400 transition-colors' : ''}`}
-        title={onClick ? `${name} — клікніть для профілю` : name}
+        title={onClick ? t('player.clickForProfile', { name }) : name}
         onClick={onClick}
       >
         {name}
@@ -152,6 +155,9 @@ function BarRow({ name, value, max, color, onClick }: {
 }
 
 export default function PlayerDetailPage() {
+  const { t, i18n } = useTranslation()
+  const lang = i18n.resolvedLanguage || i18n.language || 'en'
+  const nf = new Intl.NumberFormat(lang)
   const { steamId } = useParams<{ steamId: string }>()
   const navigate = useNavigate()
   const [data, setData] = useState<PlayerDetail | null>(null)
@@ -181,15 +187,15 @@ export default function PlayerDetailPage() {
   }
 
   if (loading) {
-    return <div className="max-w-6xl mx-auto p-6 text-zinc-400">Завантаження…</div>
+    return <div className="max-w-6xl mx-auto p-6 text-zinc-400">{t('common.loading')}</div>
   }
   if (error || !data) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="bg-red-900/30 border border-red-700 text-red-200 p-4 rounded mb-4">
-          {error ?? 'Гравець не знайдений'}
+          {error ?? t('player.notFound')}
         </div>
-        <Link to="/" className="text-amber-400 hover:underline">← До лідерборду</Link>
+        <Link to="/" className="text-amber-400 hover:underline">{t('player.backToLeaderboard')}</Link>
       </div>
     )
   }
@@ -202,7 +208,7 @@ export default function PlayerDetailPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-4">
-        <Link to="/" className="text-zinc-400 hover:text-amber-400 text-sm">← До лідерборду</Link>
+        <Link to="/" className="text-zinc-400 hover:text-amber-400 text-sm">{t('player.backToLeaderboard')}</Link>
       </div>
 
       {/* Header */}
@@ -231,7 +237,7 @@ export default function PlayerDetailPage() {
         {p.profile_url && (
           <a href={p.profile_url} target="_blank" rel="noopener noreferrer"
              className="text-xs text-zinc-100 hover:text-white px-3 py-1.5 rounded bg-[#1b2838] hover:bg-[#2a475e] inline-flex items-center gap-1.5 border border-[#2a475e]"
-             title="Відкрити Steam-профіль гравця">
+             title={t('player.openSteam')}>
             <svg width="14" height="14" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
               <path d="M16 0C7.523 0 .58 6.55.022 14.876l8.605 3.559a4.4 4.4 0 0 1 2.481-.766c.082 0 .164.002.245.006l3.831-5.547v-.077c0-3.34 2.722-6.058 6.058-6.058a6.07 6.07 0 0 1 6.063 6.063 6.07 6.07 0 0 1-6.063 6.058h-.14l-5.464 3.901a4.43 4.43 0 0 1-2.643 4.045 4.43 4.43 0 0 1-5.93-2.265L3.91 21.31C5.755 27.494 10.367 32 16 32c8.836 0 16-7.164 16-16S24.836 0 16 0zm-5.96 24.297l-1.98-.818a3.34 3.34 0 0 0 1.748 1.795 3.34 3.34 0 0 0 4.486-1.683 3.34 3.34 0 0 0 .013-2.55 3.34 3.34 0 0 0-1.74-1.804 3.36 3.36 0 0 0-2.523-.062l2.045.85a2.45 2.45 0 0 1 1.319 3.207 2.45 2.45 0 0 1-3.21 1.319zM25.4 12.05a4.04 4.04 0 0 0-4.038-4.038 4.04 4.04 0 0 0-4.041 4.038 4.04 4.04 0 0 0 4.041 4.041 4.04 4.04 0 0 0 4.038-4.041zm-7.066-.005a3.04 3.04 0 0 1 3.034-3.029 3.04 3.04 0 0 1 3.029 3.029c0 1.67-1.36 3.034-3.029 3.034a3.04 3.04 0 0 1-3.034-3.034z"/>
             </svg>
@@ -245,7 +251,7 @@ export default function PlayerDetailPage() {
       {data.achievements && data.achievements.length > 0 && (
         <section className="mb-6">
           <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-2">
-            Досягнення ({data.achievements.length})
+            {t('nav.achievements')} ({data.achievements.length})
           </h2>
           <div className="flex flex-wrap gap-2">
             {data.achievements.map((a) => (
@@ -259,16 +265,16 @@ export default function PlayerDetailPage() {
       {data.achievement_progress && data.achievement_progress.length > 0 && (
         <section className="mb-6">
           <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-2">
-            📈 Близькі досягнення
+            📈 {t('player.upcomingAchievements')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
             {data.achievement_progress.map((p) => {
               // Format current/threshold according to the metric scale.
               const fmt = (v: number) => {
-                if (p.threshold >= 100000) return Math.round(v).toLocaleString('uk-UA')
+                if (p.threshold >= 100000) return nf.format(Math.round(v))
                 if (p.threshold >= 3600 && p.id !== 'survivor') {
-                  // total_seconds → hours
-                  return `${Math.floor(v / 3600)} год`
+                  // total_seconds → hours, localized suffix
+                  return t('records.allTime.hours', { h: Math.floor(v / 3600) })
                 }
                 // Ratio thresholds (kd_ratio = 2.0, 3.0) — show 2 decimals
                 // so "1.85 / 2.00" is honest instead of being rounded to 2/2.
@@ -281,7 +287,7 @@ export default function PlayerDetailPage() {
                   key={p.id}
                   to={`/achievements/${p.id}`}
                   className="bg-zinc-900/60 border border-zinc-800 rounded p-3 hover:border-amber-700/50 hover:bg-zinc-900 transition-colors block"
-                  title="Натисни щоб подивитись усіх власників"
+                  title={t('player.clickToSeeOwners')}
                 >
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-xl leading-none">{p.icon}</span>
@@ -305,53 +311,53 @@ export default function PlayerDetailPage() {
       {/* Playstyle classifier — personality tag derived from score distribution */}
       <PlaystyleCard playstyle={data.playstyle} also={data.playstyle_also} />
 
-      <SectionDivider label="📊 Цифри" />
+      <SectionDivider label={`📊 ${t('player.numbers')}`} />
 
       {/* Overview stats */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
-        <StatCard label="Kills"          value={p.kills.toLocaleString('uk-UA')} accent="text-green-400" />
-        <StatCard label="Deaths"         value={p.deaths.toLocaleString('uk-UA')} accent="text-red-400" />
-        <StatCard label="K/D"            value={p.kd_ratio ?? '—'} accent="text-amber-400" />
-        <StatCard label="KPM"            value={p.kpm ?? '—'} />
-        <StatCard label="Час гри"        value={formatPlaytime(p.total_seconds)} />
-        <StatCard label="Матчів"         value={p.matches_played} />
-        <StatCard label="Team Kills"     value={p.teamkills} accent="text-amber-500" />
-        <StatCard label="Combat"         value={p.combat?.toLocaleString('uk-UA') ?? '—'} />
-        <StatCard label="Offense"        value={p.offense?.toLocaleString('uk-UA') ?? '—'} />
-        <StatCard label="Defense"        value={p.defense?.toLocaleString('uk-UA') ?? '—'} />
-        <StatCard label="Support"        value={p.support?.toLocaleString('uk-UA') ?? '—'} />
-        <StatCard label="Best kill streak" value={p.best_kills_streak ?? '—'} accent="text-emerald-400" />
+        <StatCard label={t('table.kills')}      value={nf.format(p.kills)} accent="text-green-400" />
+        <StatCard label={t('table.deaths')}     value={nf.format(p.deaths)} accent="text-red-400" />
+        <StatCard label={t('table.kd')}         value={p.kd_ratio ?? '—'} accent="text-amber-400" />
+        <StatCard label={t('table.kpm')}        value={p.kpm ?? '—'} />
+        <StatCard label={t('table.playtime')}   value={formatPlaytime(p.total_seconds)} />
+        <StatCard label={t('table.matches')}    value={p.matches_played} />
+        <StatCard label={t('compare.stats.teamkills')} value={p.teamkills} accent="text-amber-500" />
+        <StatCard label={t('compare.stats.combat')}    value={p.combat != null ? nf.format(p.combat) : '—'} />
+        <StatCard label={t('compare.stats.offense')}   value={p.offense != null ? nf.format(p.offense) : '—'} />
+        <StatCard label={t('compare.stats.defense')}   value={p.defense != null ? nf.format(p.defense) : '—'} />
+        <StatCard label={t('compare.stats.support')}   value={p.support != null ? nf.format(p.support) : '—'} />
+        <StatCard label={t('compare.stats.bestStreak')} value={p.best_kills_streak ?? '—'} accent="text-emerald-400" />
       </section>
 
       {/* Profile overview: first seen, 100+ kill matches, faction & mode preference */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest">Перший матч</div>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">{t('player.firstMatch')}</div>
           <div className="text-base font-medium mt-1">
             {data.overview.first_seen
-              ? new Date(data.overview.first_seen).toLocaleDateString('uk-UA', { year: 'numeric', month: 'short', day: 'numeric' })
+              ? new Date(data.overview.first_seen).toLocaleDateString(lang, { year: 'numeric', month: 'short', day: 'numeric' })
               : '—'}
           </div>
-          <div className="text-xs text-zinc-500 mt-1">{data.overview.total_matches} матчів усього</div>
+          <div className="text-xs text-zinc-500 mt-1">{t('player.matchesTotal', { n: data.overview.total_matches })}</div>
         </div>
 
         <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest">100+ kill матчів</div>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest">{t('player.kill100Matches')}</div>
           <div className="text-2xl font-bold mt-1 tabular-nums text-emerald-400">{data.overview.matches_100plus}</div>
           <div className="text-xs text-zinc-500 mt-1">
             {data.overview.total_matches > 0
-              ? `${(data.overview.matches_100plus / data.overview.total_matches * 100).toFixed(2)}% усіх ігор`
+              ? t('player.pctOfAllGames', { pct: (data.overview.matches_100plus / data.overview.total_matches * 100).toFixed(2) })
               : '—'}
           </div>
         </div>
 
         {/* Game mode preference */}
         <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">Режими</div>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">{t('player.modes')}</div>
           {(() => {
             const m = data.overview.mode_counts
             const total = m.warfare + m.offensive + m.skirmish
-            if (total === 0) return <div className="text-zinc-600 text-sm">немає даних</div>
+            if (total === 0) return <div className="text-zinc-600 text-sm">{t('records.noData')}</div>
             const seg = (n: number, color: string, label: string) => {
               const pct = n / total * 100
               if (pct < 0.5) return null
@@ -375,10 +381,10 @@ export default function PlayerDetailPage() {
         {/* Faction preference */}
         <div className="bg-zinc-900/60 border border-zinc-800 rounded p-3">
           <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">
-            Сторона <span className="text-zinc-600 normal-case">(з логів)</span>
+            {t('player.side')} <span className="text-zinc-600 normal-case">{t('player.fromLogs')}</span>
           </div>
           {data.faction_pref.total_known === 0 ? (
-            <div className="text-zinc-600 text-sm">матчі без лог-покриття</div>
+            <div className="text-zinc-600 text-sm">{t('player.noLogCoverage')}</div>
           ) : (
             <>
               <div className="flex h-3 rounded overflow-hidden bg-zinc-800">
@@ -389,56 +395,55 @@ export default function PlayerDetailPage() {
                 <span className="text-blue-400">🟦 Allies {data.faction_pref.allies_pct}%</span>
                 <span className="text-red-400">🟥 Axis {data.faction_pref.axis_pct}%</span>
               </div>
-              <div className="text-xs text-zinc-500 mt-1">з {data.faction_pref.total_known} відомих матчів</div>
+              <div className="text-xs text-zinc-500 mt-1">{t('player.fromKnownMatches', { n: data.faction_pref.total_known })}</div>
             </>
           )}
         </div>
       </section>
 
-      <SectionDivider label="🎯 Як грає" />
+      <SectionDivider label={`🎯 ${t('player.howPlays')}`} />
 
       {/* Win rate — overall + per side */}
       {data.win_rate && data.win_rate.total > 0 && (
         <section className="mb-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
             <div className="text-center">
-              <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">Win rate</div>
+              <div className="text-xs text-zinc-500 uppercase tracking-widest mb-1">{t('player.winRate')}</div>
               <div className={`text-4xl font-bold tabular-nums ${
                 data.win_rate.win_pct >= 60 ? 'text-emerald-400' :
                 data.win_rate.win_pct >= 50 ? 'text-amber-400' : 'text-red-400'
               }`}>{data.win_rate.win_pct}%</div>
               <div className="text-xs text-zinc-500 mt-1">
-                {data.win_rate.wins}W / {data.win_rate.losses}L
-                {data.win_rate.draws > 0 ? ` / ${data.win_rate.draws}D` : ''} з {data.win_rate.total}
+                {t('player.wlDraws', { w: data.win_rate.wins, l: data.win_rate.losses, dPart: data.win_rate.draws > 0 ? ` / ${data.win_rate.draws}D` : '', total: data.win_rate.total })}
               </div>
             </div>
             <div>
-              <div className="text-xs text-blue-400 uppercase tracking-widest mb-1">🟦 Як Allies</div>
+              <div className="text-xs text-blue-400 uppercase tracking-widest mb-1">🟦 {t('player.asAllies')}</div>
               {data.win_rate.allies_total > 0 ? (
                 <>
                   <div className="text-2xl font-bold text-blue-300 tabular-nums">{data.win_rate.allies_win_pct}%</div>
-                  <div className="text-xs text-zinc-500">{data.win_rate.allies_wins} перемог з {data.win_rate.allies_total}</div>
+                  <div className="text-xs text-zinc-500">{t('player.winsOf', { w: data.win_rate.allies_wins, t: data.win_rate.allies_total })}</div>
                   <div className="h-1.5 bg-zinc-800 rounded mt-2 overflow-hidden">
                     <div className="bg-blue-500 h-full" style={{ width: `${data.win_rate.allies_win_pct}%` }} />
                   </div>
                 </>
-              ) : <div className="text-zinc-600 text-sm">немає даних</div>}
+              ) : <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
             </div>
             <div>
-              <div className="text-xs text-red-400 uppercase tracking-widest mb-1">🟥 Як Axis</div>
+              <div className="text-xs text-red-400 uppercase tracking-widest mb-1">🟥 {t('player.asAxis')}</div>
               {data.win_rate.axis_total > 0 ? (
                 <>
                   <div className="text-2xl font-bold text-red-300 tabular-nums">{data.win_rate.axis_win_pct}%</div>
-                  <div className="text-xs text-zinc-500">{data.win_rate.axis_wins} перемог з {data.win_rate.axis_total}</div>
+                  <div className="text-xs text-zinc-500">{t('player.winsOf', { w: data.win_rate.axis_wins, t: data.win_rate.axis_total })}</div>
                   <div className="h-1.5 bg-zinc-800 rounded mt-2 overflow-hidden">
                     <div className="bg-red-500 h-full" style={{ width: `${data.win_rate.axis_win_pct}%` }} />
                   </div>
                 </>
-              ) : <div className="text-zinc-600 text-sm">немає даних</div>}
+              ) : <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
             </div>
           </div>
           <div className="text-xs text-zinc-600 mt-3 text-center">
-            На основі матчів з відомою стороною та збереженим результатом
+            {t('player.winRateBasis')}
           </div>
         </section>
       )}
@@ -446,43 +451,43 @@ export default function PlayerDetailPage() {
       {/* Radar + progression sparkline */}
       <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2 text-center">⭐ Стиль гри</div>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2 text-center">⭐ {t('player.playstyle')}</div>
           <PlayerRadar p={p} />
         </div>
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 flex flex-col">
-          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">📈 K/D тренд по останніх матчах</div>
+          <div className="text-xs text-zinc-500 uppercase tracking-widest mb-2">📈 {t('player.kdTrend')}</div>
           <div className="flex-1">
             <ProgressionSparkline matches={data.recent_matches} />
           </div>
-          <div className="text-xs text-zinc-600 text-center mt-1">пунктир = K/D 1.0</div>
+          <div className="text-xs text-zinc-600 text-center mt-1">{t('player.dashedLine')}</div>
         </div>
       </section>
 
       {/* Kill / death type breakdown + melee callout */}
       <section className="mb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-          <ClassBreakdownBar counts={data.kills_by_class} title="🔫 Вбивства за типом зброї" />
+          <ClassBreakdownBar counts={data.kills_by_class} title={`🔫 ${t('player.killsByWeaponClass')}`} />
         </div>
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-          <ClassBreakdownBar counts={data.deaths_by_class} title="💀 Смерті за типом зброї" />
+          <ClassBreakdownBar counts={data.deaths_by_class} title={`💀 ${t('player.deathsByWeaponClass')}`} />
         </div>
       </section>
 
       {(data.kills_by_class.Melee || data.deaths_by_class.Melee) && (
         <section className="mb-6 bg-gradient-to-r from-violet-900/30 via-zinc-900 to-rose-900/30 border border-violet-700/40 rounded-lg p-4">
-          <h2 className="text-violet-300 uppercase text-xs tracking-widest mb-2">🔪 Ближній бій</h2>
+          <h2 className="text-violet-300 uppercase text-xs tracking-widest mb-2">🔪 {t('player.melee')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-violet-300 tabular-nums">{data.kills_by_class.Melee ?? 0}</div>
-              <div className="text-xs text-zinc-500">вбито в ближньому бою</div>
+              <div className="text-xs text-zinc-500">{t('player.meleeKilled')}</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-rose-300 tabular-nums">{data.deaths_by_class.Melee ?? 0}</div>
-              <div className="text-xs text-zinc-500">загинуло від ближнього бою</div>
+              <div className="text-xs text-zinc-500">{t('player.meleeDied')}</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-amber-300 tabular-nums">{data.melee_meta?.current_streak ?? 0}</div>
-              <div className="text-xs text-zinc-500">поточна серія без melee-смерті</div>
+              <div className="text-xs text-zinc-500">{t('player.meleeStreak')}</div>
             </div>
             <div>
               {data.melee_meta?.last_melee_death ? (
@@ -491,9 +496,9 @@ export default function PlayerDetailPage() {
                     {data.melee_meta.last_melee_death.weapon}
                   </div>
                   <div className="text-xs text-zinc-500 mt-1">
-                    остання смерть від мелі
+                    {t('player.lastMeleeDeath')}
                     {data.melee_meta.last_melee_death.event_time && (
-                      <> • {new Date(data.melee_meta.last_melee_death.event_time).toLocaleDateString('uk-UA')}</>
+                      <> • {new Date(data.melee_meta.last_melee_death.event_time).toLocaleDateString(lang)}</>
                     )}
                   </div>
                   {data.melee_meta.last_melee_death.killer_sid && data.melee_meta.last_melee_death.killer_name && (
@@ -506,7 +511,7 @@ export default function PlayerDetailPage() {
               ) : (
                 <>
                   <div className="text-2xl font-bold text-emerald-300">∞</div>
-                  <div className="text-xs text-zinc-500">жодної melee-смерті</div>
+                  <div className="text-xs text-zinc-500">{t('player.noMeleeDeath')}</div>
                 </>
               )}
             </div>
@@ -514,7 +519,7 @@ export default function PlayerDetailPage() {
         </section>
       )}
 
-      <SectionDivider label="⚔ PVP" />
+      <SectionDivider label={`⚔ ${t('player.pvpSection')}`} />
 
       {/* Nemesis stamp — top killer highlighted as eternal rival */}
       <NemesisStamp d={data} />
@@ -523,10 +528,10 @@ export default function PlayerDetailPage() {
         {/* PVP: most killed */}
         <section>
           <h2 className="text-amber-400 uppercase text-xs tracking-widest mb-3">
-            🎯 Найчастіші жертви
+            🎯 {t('player.topVictims')}
           </h2>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 space-y-2">
-            {data.most_killed.length === 0 && <div className="text-zinc-600 text-sm">немає даних</div>}
+            {data.most_killed.length === 0 && <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
             {data.most_killed.map((v) => (
               <BarRow key={v.victim} name={v.victim} value={v.kills} max={maxKilled}
                 color="bg-gradient-to-r from-green-700 to-green-500"
@@ -538,10 +543,10 @@ export default function PlayerDetailPage() {
         {/* PVP: killers */}
         <section>
           <h2 className="text-red-400 uppercase text-xs tracking-widest mb-3">
-            💀 Найзлісніші вбивці
+            💀 {t('player.worstKillers')}
           </h2>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 space-y-2">
-            {data.killed_by.length === 0 && <div className="text-zinc-600 text-sm">немає даних</div>}
+            {data.killed_by.length === 0 && <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
             {data.killed_by.map((k) => (
               <BarRow key={k.killer} name={k.killer} value={k.deaths} max={maxKillers}
                 color="bg-gradient-to-r from-red-700 to-red-500"
@@ -553,10 +558,10 @@ export default function PlayerDetailPage() {
         {/* Weapons */}
         <section>
           <h2 className="text-blue-400 uppercase text-xs tracking-widest mb-3">
-            🔫 Улюблена зброя
+            🔫 {t('player.favWeapon')}
           </h2>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 space-y-2">
-            {data.top_weapons.length === 0 && <div className="text-zinc-600 text-sm">немає даних</div>}
+            {data.top_weapons.length === 0 && <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
             {data.top_weapons.map((w) => (
               <BarRow key={w.weapon} name={w.weapon} value={w.kills} max={maxWeapon}
                 color="bg-gradient-to-r from-blue-700 to-blue-500" />
@@ -570,7 +575,7 @@ export default function PlayerDetailPage() {
       {data.hardcounters && data.hardcounters.length > 0 && (
         <section className="mb-6 bg-gradient-to-r from-zinc-900 via-rose-950/30 to-zinc-900 border border-rose-900/40 rounded-lg p-4">
           <h2 className="text-rose-300 uppercase text-xs tracking-widest mb-3">
-            🥊 Hardcounters — мають позитивний K/D проти тебе
+            🥊 {t('player.hardcounters')}
           </h2>
           <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-sm">
             {data.hardcounters.map((h, i) => (
@@ -580,12 +585,12 @@ export default function PlayerDetailPage() {
                   {h.name}
                 </Link>
                 <MiniCompareButton steam_id={h.steam_id} name={h.name} />
-                <span className="text-xs text-zinc-400 tabular-nums whitespace-nowrap" title={`${h.killed_me} вбив / ${h.i_killed_them} помстився`}>
+                <span className="text-xs text-zinc-400 tabular-nums whitespace-nowrap" title={t('player.killedVsRevenged', { killed: h.killed_me, revenged: h.i_killed_them })}>
                   <span className="text-red-400">{h.killed_me}</span>
                   <span className="text-zinc-600">/</span>
                   <span className="text-green-400">{h.i_killed_them}</span>
                 </span>
-                <span className="text-xs text-rose-400 font-bold tabular-nums" title="перевага">+{h.advantage}</span>
+                <span className="text-xs text-rose-400 font-bold tabular-nums" title={t('player.advantage')}>+{h.advantage}</span>
               </li>
             ))}
           </ol>
@@ -596,41 +601,41 @@ export default function PlayerDetailPage() {
       {(data.played_with_against?.teammates?.length || data.played_with_against?.opponents?.length) && (
         <section className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-emerald-400 uppercase text-xs tracking-widest mb-3">🤝 Найчастіші союзники</h2>
+            <h2 className="text-emerald-400 uppercase text-xs tracking-widest mb-3">🤝 {t('player.topTeammates')}</h2>
             <ol className="space-y-1 text-sm">
-              {data.played_with_against.teammates.map((t, i) => (
-                <li key={t.steam_id} className="flex items-baseline gap-2">
+              {data.played_with_against.teammates.map((tm, i) => (
+                <li key={tm.steam_id} className="flex items-baseline gap-2">
                   <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
-                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-emerald-300 transition-colors" title={t.name}>{t.name}</Link>
-                  <MiniCompareButton steam_id={t.steam_id} name={t.name} />
-                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
+                  <Link to={`/player/${tm.steam_id}`} className="flex-1 truncate hover:text-emerald-300 transition-colors" title={tm.name}>{tm.name}</Link>
+                  <MiniCompareButton steam_id={tm.steam_id} name={tm.name} />
+                  <span className="text-zinc-300 tabular-nums">{tm.matches}</span>
                 </li>
               ))}
               {data.played_with_against.teammates.length === 0 && (
-                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
+                <li className="text-zinc-600 text-xs italic">{t('player.noDataLogs')}</li>
               )}
             </ol>
           </div>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-rose-400 uppercase text-xs tracking-widest mb-3">⚔ Найчастіші противники</h2>
+            <h2 className="text-rose-400 uppercase text-xs tracking-widest mb-3">⚔ {t('player.topOpponents')}</h2>
             <ol className="space-y-1 text-sm">
-              {data.played_with_against.opponents.map((t, i) => (
-                <li key={t.steam_id} className="flex items-baseline gap-2">
+              {data.played_with_against.opponents.map((op, i) => (
+                <li key={op.steam_id} className="flex items-baseline gap-2">
                   <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
-                  <Link to={`/player/${t.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={t.name}>{t.name}</Link>
-                  <MiniCompareButton steam_id={t.steam_id} name={t.name} />
-                  <span className="text-zinc-300 tabular-nums">{t.matches}</span>
+                  <Link to={`/player/${op.steam_id}`} className="flex-1 truncate hover:text-rose-300 transition-colors" title={op.name}>{op.name}</Link>
+                  <MiniCompareButton steam_id={op.steam_id} name={op.name} />
+                  <span className="text-zinc-300 tabular-nums">{op.matches}</span>
                 </li>
               ))}
               {data.played_with_against.opponents.length === 0 && (
-                <li className="text-zinc-600 text-xs italic">немає даних (нема лог-покриття)</li>
+                <li className="text-zinc-600 text-xs italic">{t('player.noDataLogs')}</li>
               )}
             </ol>
           </div>
         </section>
       )}
 
-      <SectionDivider label="🗺 Активність та історія" />
+      <SectionDivider label={`🗺 ${t('player.activityHistory')}`} />
 
       {/* Loved / Hated map cards — best vs worst K/D among top played maps */}
       <LovedHatedMap topMaps={data.top_maps ?? []} />
@@ -638,16 +643,16 @@ export default function PlayerDetailPage() {
       {/* Top maps table */}
       {data.top_maps && data.top_maps.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🗺 Топ-10 карт за матчами</h2>
+          <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🗺 {t('player.top10Maps')}</h2>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-zinc-800 text-zinc-400 text-xs uppercase">
                 <tr>
-                  <th className="p-2 text-left">Карта</th>
-                  <th className="p-2 text-right">Матчів</th>
-                  <th className="p-2 text-right">Kills</th>
-                  <th className="p-2 text-right">K/D</th>
-                  <th className="p-2 text-right" title="З матчів, де відома сторона та результат">Win %</th>
+                  <th className="p-2 text-left">{t('filters.map')}</th>
+                  <th className="p-2 text-right">{t('table.matches')}</th>
+                  <th className="p-2 text-right">{t('table.kills')}</th>
+                  <th className="p-2 text-right">{t('table.kd')}</th>
+                  <th className="p-2 text-right" title={t('player.winPctTooltip')}>{t('player.winPct')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -655,7 +660,7 @@ export default function PlayerDetailPage() {
                   <tr key={m.map_name} className="border-t border-zinc-800">
                     <td className="p-2" title={m.map_name}>{formatMapName(m.map_name)}</td>
                     <td className="p-2 text-right tabular-nums">{m.matches}</td>
-                    <td className="p-2 text-right tabular-nums text-green-400">{m.kills?.toLocaleString('uk-UA') ?? '—'}</td>
+                    <td className="p-2 text-right tabular-nums text-green-400">{m.kills != null ? nf.format(m.kills) : '—'}</td>
                     <td className="p-2 text-right tabular-nums">{m.kd ?? '—'}</td>
                     <td className="p-2 text-right tabular-nums">
                       {m.win_pct !== null ? (
@@ -663,10 +668,10 @@ export default function PlayerDetailPage() {
                           m.win_pct >= 65 ? 'text-emerald-400' :
                           m.win_pct >= 50 ? 'text-amber-400' :
                           m.win_pct >= 35 ? 'text-orange-400' : 'text-red-400'
-                        } title={`${m.win_pct}% з ${m.known_outcomes} матчів з відомим результатом`}>
+                        } title={t('player.winOf', { pct: m.win_pct, n: m.known_outcomes })}>
                           {m.win_pct}%
                         </span>
-                      ) : <span className="text-zinc-600" title="немає лог-покриття">—</span>}
+                      ) : <span className="text-zinc-600" title={t('player.noLogCoverageShort')}>—</span>}
                     </td>
                   </tr>
                 ))}
@@ -679,7 +684,7 @@ export default function PlayerDetailPage() {
       {/* Time-of-day heatmap */}
       <section className="mt-6 bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
         <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">
-          🕐 Коли грає (за годинами)
+          🕐 {t('player.whenPlays')}
         </h2>
         <TimeOfDayHeatmap hours={data.hour_distribution ?? []} />
       </section>
@@ -702,19 +707,19 @@ export default function PlayerDetailPage() {
           <section className="mt-6">
             <div className="flex items-center gap-1 mb-3 border-b border-zinc-800">
               <button onClick={() => setRecentFilter('all')} className={tabCls(recentFilter === 'all')}>
-                Останні матчі ({Math.min(10, data.recent_matches.length)})
+                {t('player.recentMatches', { n: Math.min(10, data.recent_matches.length) })}
               </button>
               <button onClick={() => setRecentFilter('titled')} className={tabCls(recentFilter === 'titled')}>
-                🏷 З титулами ({titledMatches.length})
+                🏷 {t('player.withTitles', { n: titledMatches.length })}
               </button>
             </div>
             <div className="overflow-x-auto bg-zinc-900/40 border border-zinc-800 rounded-lg">
               <table className="w-full text-sm">
                 <thead className="bg-zinc-800 text-zinc-300 text-xs uppercase">
                   <tr>
-                    <th className="p-3 text-left">Дата</th>
-                    <th className="p-3 text-left">Карта</th>
-                    <th className="p-3 text-right" title="% часу матчу, який гравець був присутній">Час %</th>
+                    <th className="p-3 text-left">{t('player.date')}</th>
+                    <th className="p-3 text-left">{t('filters.map')}</th>
+                    <th className="p-3 text-right" title={t('player.timePctTooltip')}>{t('player.timePct')}</th>
                     <th className="p-3 text-right">K</th>
                     <th className="p-3 text-right">D</th>
                     <th className="p-3 text-right">K/D</th>
@@ -725,13 +730,13 @@ export default function PlayerDetailPage() {
                 <tbody>
                   {visibleMatches.length === 0 && (
                     <tr><td colSpan={8} className="p-4 text-center text-zinc-600 italic">
-                      {recentFilter === 'titled' ? 'Жоден з останніх 30 матчів не отримав титулу' : 'Немає матчів'}
+                      {recentFilter === 'titled' ? t('player.noTitledMatches') : t('player.noMatches')}
                     </td></tr>
                   )}
                   {visibleMatches.map((m, i) => (
                 <tr key={i} className="border-t border-zinc-800 hover:bg-zinc-800/40">
                   <td className="p-3 text-zinc-400 text-xs whitespace-nowrap">
-                    {m.match_date ? new Date(m.match_date).toLocaleDateString('uk-UA') : '—'}
+                    {m.match_date ? new Date(m.match_date).toLocaleDateString(lang) : '—'}
                   </td>
                   <td className="p-3">
                     <a
@@ -739,7 +744,7 @@ export default function PlayerDetailPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-amber-400 hover:text-amber-300 hover:underline"
-                      title={`${m.map_name} • Відкрити деталі матчу в CRCON ↗`}
+                      title={t('player.openMatchInCrcon', { map: m.map_name })}
                     >
                       {formatMapName(m.map_name)}
                     </a>
@@ -763,7 +768,7 @@ export default function PlayerDetailPage() {
                   <td className="p-3 text-right tabular-nums text-zinc-400 text-xs">
                     {m.time_pct !== null && m.time_pct !== undefined ? (
                       <span className={m.time_pct >= 80 ? 'text-zinc-300' : m.time_pct >= 50 ? 'text-amber-400' : 'text-zinc-500'}
-                        title={`${Math.floor((m.time_seconds || 0) / 60)} хв`}>
+                        title={t('player.minutes', { n: Math.floor((m.time_seconds || 0) / 60) })}>
                         {m.time_pct}%
                       </span>
                     ) : '—'}

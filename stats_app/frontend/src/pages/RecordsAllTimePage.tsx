@@ -1,29 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchTopPlayers, fetchWeaponClasses,
   PlayerRow, SortKey, Period, GameMode, Side, WeaponClass,
 } from '../api/client'
 import MiniCompareButton from '../components/MiniCompareButton'
 
-// Per-card min_matches override. Most cards leave it at 0 — no global gate.
-// K/D and KPM are ratios that need a floor to filter out single-match outliers.
+// `titleKey` resolves to `records.allTime.cards.<key>` at render time so
+// the card title translates with the active language.
 const AGGREGATE_CARDS: {
   key: SortKey;
-  title: string;
-  valueFmt: (r: PlayerRow) => string | number;
+  titleKey: string;
+  valueFmt: (r: PlayerRow, fmt: (hours: number) => string) => string | number;
   min_matches?: number;
 }[] = [
-  { key: 'kills',     title: 'Найбільше вбивств',       valueFmt: (r) => r.kills },
-  { key: 'playtime',  title: 'Найбільше часу гри',      valueFmt: (r) => `${Math.floor(r.total_seconds / 3600)} год` },
-  { key: 'combat',    title: 'Combat (бойова еф-сть)',  valueFmt: (r) => (r as any).combat ?? '—' },
-  { key: 'support',   title: 'Support',                 valueFmt: (r) => (r as any).support ?? '—' },
-  { key: 'offense',   title: 'Offense',                 valueFmt: (r) => (r as any).offense ?? '—' },
-  { key: 'defense',   title: 'Defense',                 valueFmt: (r) => (r as any).defense ?? '—' },
-  { key: 'kd_ratio',  title: 'K/D ratio (≥30 матчів)',  valueFmt: (r) => r.kd_ratio ?? '—', min_matches: 30 },
-  { key: 'kpm',       title: 'KPM (≥30 матчів)',        valueFmt: (r) => r.kpm ?? '—', min_matches: 30 },
-  { key: 'teamkills', title: 'Team kills (анти-топ)',   valueFmt: (r) => r.teamkills },
-  { key: 'matches',   title: 'Найбільше матчів',        valueFmt: (r) => r.matches_played },
+  { key: 'kills',     titleKey: 'kills',     valueFmt: (r) => r.kills },
+  { key: 'playtime',  titleKey: 'playtime',  valueFmt: (r, hFmt) => hFmt(Math.floor(r.total_seconds / 3600)) },
+  { key: 'combat',    titleKey: 'combat',    valueFmt: (r) => (r as any).combat ?? '—' },
+  { key: 'support',   titleKey: 'support',   valueFmt: (r) => (r as any).support ?? '—' },
+  { key: 'offense',   titleKey: 'offense',   valueFmt: (r) => (r as any).offense ?? '—' },
+  { key: 'defense',   titleKey: 'defense',   valueFmt: (r) => (r as any).defense ?? '—' },
+  { key: 'kd_ratio',  titleKey: 'kd',        valueFmt: (r) => r.kd_ratio ?? '—', min_matches: 30 },
+  { key: 'kpm',       titleKey: 'kpm',       valueFmt: (r) => r.kpm ?? '—', min_matches: 30 },
+  { key: 'teamkills', titleKey: 'teamkills', valueFmt: (r) => r.teamkills },
+  { key: 'matches',   titleKey: 'matches',   valueFmt: (r) => r.matches_played },
 ]
 
 function Card({ title, rows, fmt, accent = 'amber' }: {
@@ -32,6 +33,7 @@ function Card({ title, rows, fmt, accent = 'amber' }: {
   fmt: (r: PlayerRow) => string | number
   accent?: string
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? rows : rows.slice(0, 5)
   const colorClass = accent === 'emerald' ? 'text-emerald-400' : 'text-amber-400'
@@ -46,7 +48,7 @@ function Card({ title, rows, fmt, accent = 'amber' }: {
             onClick={() => setExpanded((e) => !e)}
             className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-0.5 rounded bg-zinc-800/50"
           >
-            {expanded ? '▲ менше' : `▼ ще ${rows.length - 5}`}
+            {expanded ? `▲ ${t('records.showLess')}` : t('records.showMoreN', { n: rows.length - 5 })}
           </button>
         )}
       </div>
@@ -65,13 +67,16 @@ function Card({ title, rows, fmt, accent = 'amber' }: {
             <span className="font-bold text-zinc-200 tabular-nums">{fmt(r)}</span>
           </li>
         ))}
-        {rows.length === 0 && <li className="text-zinc-600 text-xs italic">немає даних</li>}
+        {rows.length === 0 && <li className="text-zinc-600 text-xs italic">{t('records.noData')}</li>}
       </ol>
     </div>
   )
 }
 
 export default function RecordsAllTimePage() {
+  const { t } = useTranslation()
+  // Hours formatter — wraps the integer hour count with a localized "hr" suffix.
+  const hoursFmt = (h: number) => t('records.allTime.hours', { h })
   // Filters subset (no map_name — would be too narrow for records grid).
   // No min_matches slider — most cards run unfiltered, only K/D and KPM
   // cards hardcode a 30-match floor to filter ratio outliers.
@@ -147,10 +152,8 @@ export default function RecordsAllTimePage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <header className="mb-4">
-        <h1 className="text-3xl font-bold mb-1">Рекорди за весь час</h1>
-        <p className="text-zinc-400 text-sm">
-          Топ-10 в кожній категорії за всю історію матчів • Розгорни картку для топ-N
-        </p>
+        <h1 className="text-3xl font-bold mb-1">{t('records.allTime.title')}</h1>
+        <p className="text-zinc-400 text-sm">{t('records.allTime.subtitle')}</p>
       </header>
 
       {/* Subset of FilterBar — only what makes sense for records grid */}
@@ -158,14 +161,14 @@ export default function RecordsAllTimePage() {
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-grow min-w-[220px] max-w-md">
             <label className="block text-xs text-zinc-400 mb-1">
-              Пошук гравця <span className="text-zinc-600">(мін. 2 символи)</span>
+              {t('filters.search')} <span className="text-zinc-600">{t('records.allTime.searchHint')}</span>
             </label>
             <div className="relative">
               <input
                 type="text"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
-                placeholder="Heartattack, Пакет, BaNnY..."
+                placeholder={t('filters.searchPlaceholder')}
                 className="w-full bg-zinc-800 text-zinc-100 px-3 py-2 pr-8 rounded text-sm placeholder-zinc-500
                            focus:outline-none focus:ring-2 focus:ring-amber-500/50"
               />
@@ -173,23 +176,23 @@ export default function RecordsAllTimePage() {
                 <button
                   onClick={() => setLocalSearch('')}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
-                  title="Очистити"
+                  title={t('filters.clear')}
                 >✕</button>
               )}
             </div>
           </div>
           <div>
-            <label className="block text-xs text-zinc-400 mb-1">Період</label>
+            <label className="block text-xs text-zinc-400 mb-1">{t('filters.period')}</label>
             <select value={period} onChange={(e) => setPeriod(e.target.value as Period)}
               className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[160px]">
-              <option value="">Увесь час</option>
-              <option value="7d">Останні 7 днів</option>
-              <option value="30d">Останні 30 днів</option>
-              <option value="90d">Останні 90 днів</option>
+              <option value="">{t('filters.allTime')}</option>
+              <option value="7d">{t('filters.last7d')}</option>
+              <option value="30d">{t('filters.last30d')}</option>
+              <option value="90d">{t('filters.last90d')}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-zinc-400 mb-1">Сторона / фракція</label>
+            <label className="block text-xs text-zinc-400 mb-1">{t('filters.sideFaction')}</label>
             <select value={side} onChange={(e) => setSide(e.target.value as Side)}
               className={`px-3 py-2 rounded text-sm min-w-[160px] border ${
                 side === 'Allies' || side === 'US' || side === 'GB' || side === 'USSR'
@@ -198,25 +201,25 @@ export default function RecordsAllTimePage() {
                   ? 'bg-red-900/60 border-red-500/50' :
                 'bg-zinc-800 border-transparent'
               }`}
-              title="Фракція = сторона + театр">
-              <option value="">Будь-яка</option>
-              <optgroup label="Сторона">
-                <option value="Allies">🟦 Allies (усі)</option>
-                <option value="Axis">🟥 Axis (усі)</option>
+              title={t('filters.factionTooltip')}>
+              <option value="">{t('filters.any')}</option>
+              <optgroup label={t('filters.sideLabel')}>
+                <option value="Allies">{t('filters.alliesAll')}</option>
+                <option value="Axis">{t('filters.axisAll')}</option>
               </optgroup>
-              <optgroup label="Фракція (Allies)">
+              <optgroup label={t('filters.alliesFaction')}>
                 <option value="US">🇺🇸 US</option>
                 <option value="GB">🇬🇧 GB / Commonwealth</option>
                 <option value="USSR">☭ USSR</option>
               </optgroup>
-              <optgroup label="Фракція (Axis)">
+              <optgroup label={t('filters.axisFaction')}>
                 <option value="Wehrmacht">🦅 Wehrmacht</option>
-                <option value="DAK">🐪 DAK (Африка)</option>
+                <option value="DAK">🐪 DAK (Africa)</option>
               </optgroup>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-zinc-400 mb-1">Режим</label>
+            <label className="block text-xs text-zinc-400 mb-1">{t('filters.mode')}</label>
             <select value={gameMode} onChange={(e) => setGameMode(e.target.value as GameMode)}
               className={`px-3 py-2 rounded text-sm min-w-[140px] border ${
                 gameMode === 'warfare'   ? 'bg-sky-900/60 border-sky-500/50' :
@@ -224,40 +227,43 @@ export default function RecordsAllTimePage() {
                 gameMode === 'skirmish'  ? 'bg-emerald-900/60 border-emerald-500/50' :
                 'bg-zinc-800 border-transparent'
               }`}>
-              <option value="">Усі режими</option>
+              <option value="">{t('filters.allModes')}</option>
               <option value="warfare">⚔️ Warfare</option>
               <option value="offensive">🗡 Offensive</option>
               <option value="skirmish">🎯 Skirmish</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs text-zinc-400 mb-1">Клас зброї</label>
+            <label className="block text-xs text-zinc-400 mb-1">{t('filters.weaponClass')}</label>
             <select value={weaponClass} onChange={(e) => setWeaponClass(e.target.value)}
               className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[180px]">
-              <option value="">Усі класи</option>
+              <option value="">{t('filters.allClasses')}</option>
               {classes.map((c) => <option key={c.name} value={c.name}>{c.name} ({c.count})</option>)}
             </select>
           </div>
           {hasActive && (
             <button onClick={handleReset}
               className="px-3 py-2 rounded bg-zinc-700 hover:bg-zinc-600 text-sm self-end">
-              ✕ Скинути
+              {t('filters.reset')}
             </button>
           )}
         </div>
       </div>
 
-      {loading && <div className="text-zinc-400 py-8 text-center">Завантаження…</div>}
+      {loading && <div className="text-zinc-400 py-8 text-center">{t('common.loading')}</div>}
 
       {!loading && (
         <>
           <section className="mb-8">
             <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">
-              Аґреговано за весь час
+              {t('records.allTime.aggregated')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {AGGREGATE_CARDS.map((c) => (
-                <Card key={c.key} title={c.title} rows={aggData[c.key] ?? []} fmt={c.valueFmt} />
+                <Card key={c.key}
+                  title={t(`records.allTime.cards.${c.titleKey}`)}
+                  rows={aggData[c.key] ?? []}
+                  fmt={(r) => c.valueFmt(r, hoursFmt)} />
               ))}
             </div>
           </section>
@@ -265,7 +271,7 @@ export default function RecordsAllTimePage() {
           {!weaponClass && (
             <section>
               <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">
-                Топ по класу зброї
+                {t('records.allTime.byWeaponClass')}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {classes.map((cls) => (
