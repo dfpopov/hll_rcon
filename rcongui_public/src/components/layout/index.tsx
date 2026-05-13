@@ -25,7 +25,10 @@ export default function Layout() {
         <main className="container px-1 pb-10 sm:px-4 relative flex flex-col grow bg-background gap-1">
           <Outlet />
         </main>
-        <Footer />
+        {/* Hide rcongui_public's amber "Створено CRCON TEAM" footer when
+            embedded — stats_app has its own footer rendered by the host
+            page, and stacking two looks broken. */}
+        {!IS_EMBEDDED && <Footer />}
       </div>
     </>
   )
