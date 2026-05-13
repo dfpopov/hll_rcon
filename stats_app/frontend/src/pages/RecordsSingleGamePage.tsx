@@ -33,7 +33,9 @@ const CLASS_CARDS: { weapon_class: string; i18nKey: string }[] = [
   { weapon_class: 'Melee',        i18nKey: 'melee' },
 ]
 
-const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
+// Match details live at /live/games/<id> on this same site now — the
+// embedded rcongui_public. No more cross-port jumps.
+const MATCH_URL_PREFIX = '/live/games/'
 
 function SingleGameCard({ title, rows, fmt }: {
   title: string
@@ -68,8 +70,7 @@ function SingleGameCard({ title, rows, fmt }: {
                 </Link>
                 <MiniCompareButton steam_id={r.steam_id} name={r.name} />
               </div>
-              <a href={`${CRCON_PUBLIC_BASE}/games/${r.match_id}`}
-                target="_blank" rel="noopener noreferrer"
+              <a href={`${MATCH_URL_PREFIX}${r.match_id}`}
                 className="text-xs text-zinc-500 hover:text-amber-400 block truncate"
                 title={r.map_name}>
                 {formatMapName(r.map_name)}

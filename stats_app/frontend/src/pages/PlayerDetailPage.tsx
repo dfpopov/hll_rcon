@@ -14,8 +14,10 @@ import { formatMapName } from '../components/mapNames'
 import { NemesisStamp, LovedHatedMap, PlaystyleCard, matchTitle } from '../components/PlayerMemes'
 import TimeOfDayHeatmap from '../components/TimeOfDayHeatmap'
 
-// CRCON public stats site URL — match details available on port 7010
-const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
+// Match details now live inside this same site at /live/games/<id> — the
+// embedded rcongui_public served by stats_app's own nginx. Relative URL so
+// scheme/host/port follow whatever the user is currently on.
+const MATCH_URL_PREFIX = '/live/games/'
 
 // Weapon class display order + colour (matches weapon_classes.py).
 const CLASS_DISPLAY: { name: string; color: string }[] = [
@@ -797,9 +799,7 @@ export default function PlayerDetailPage() {
                   </td>
                   <td className="p-3">
                     <a
-                      href={`${CRCON_PUBLIC_BASE}/games/${m.match_id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`${MATCH_URL_PREFIX}${m.match_id}`}
                       className="text-amber-400 hover:text-amber-300 hover:underline"
                       title={t('player.openMatchInCrcon', { map: m.map_name })}
                     >

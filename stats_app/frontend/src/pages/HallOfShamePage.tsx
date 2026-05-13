@@ -22,7 +22,9 @@ interface ShameCardDef {
   valueFmt?: (r: any, nf: Intl.NumberFormat) => string | number
 }
 
-const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
+// Match details live at /live/games/<id> on this same site now — the
+// embedded rcongui_public. Relative URL stays on the user's current host.
+const MATCH_URL_PREFIX = '/live/games/'
 
 const SHAME_CARDS: ShameCardDef[] = [
   { key: 'tk_total',         emoji: '🤡', mode: 'aggregate',   sort: 'teamkills',    valueFmt: (r: PlayerRow, nf) => nf.format(r.teamkills) },
@@ -54,7 +56,7 @@ function SingleGameLine({ rank, row, nf }: { rank: number; row: SingleGameRow; n
         <Link to={`/player/${row.steam_id}`} className="hover:text-rose-300 transition-colors block truncate">
           {row.name}
         </Link>
-        <a href={`${CRCON_PUBLIC_BASE}/games/${row.match_id}`} target="_blank" rel="noopener noreferrer"
+        <a href={`${MATCH_URL_PREFIX}${row.match_id}`}
           className="text-xs text-zinc-500 hover:text-amber-400" title={row.map_name}>
           {formatMapName(row.map_name)}
         </a>
