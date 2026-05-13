@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchMaps, fetchWeapons, fetchWeaponClasses, fetchAutocomplete,
   AutocompletePlayer, Period, GameMode, Side, WeaponClass,
@@ -33,6 +34,7 @@ export default function FilterBar({
   search, period, gameMode, minMatches, weapon, weaponClass, mapName, side,
   onChange, onReset,
 }: FilterBarProps) {
+  const { t } = useTranslation()
   const [maps, setMaps] = useState<string[]>([])
   const [weapons, setWeapons] = useState<string[]>([])
   const [classes, setClasses] = useState<WeaponClass[]>([])
@@ -95,7 +97,7 @@ export default function FilterBar({
       <div className="flex flex-wrap gap-3 items-end">
         <div className="flex-grow min-w-[220px] max-w-md" ref={containerRef}>
           <label className="block text-xs text-zinc-400 mb-1">
-            Пошук гравця <span className="text-zinc-600">(мін. 2 символи, шукає й попередні імена)</span>
+            {t('filters.search')} <span className="text-zinc-600">{t('filters.searchHint')}</span>
           </label>
           <div className="relative">
             <input
@@ -103,7 +105,7 @@ export default function FilterBar({
               value={localSearch}
               onChange={(e) => { setLocalSearch(e.target.value); setShowDropdown(true) }}
               onFocus={() => setShowDropdown(true)}
-              placeholder="Heartattack, Пакет, BaNnY..."
+              placeholder={t('filters.searchPlaceholder')}
               className="w-full bg-zinc-800 text-zinc-100 px-3 py-2 pr-8 rounded text-sm placeholder-zinc-500
                          focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
@@ -111,7 +113,7 @@ export default function FilterBar({
               <button
                 onClick={() => { setLocalSearch(''); setSuggestions([]); setShowDropdown(false) }}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200"
-                title="Очистити"
+                title={t('filters.clear')}
               >✕</button>
             )}
             {showDropdown && suggestions.length > 0 && (
@@ -135,21 +137,21 @@ export default function FilterBar({
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Період</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('filters.period')}</label>
           <select
             value={period}
             onChange={(e) => onChange({ period: e.target.value as Period })}
             className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[160px]"
           >
-            <option value="">Увесь час</option>
-            <option value="7d">Останні 7 днів</option>
-            <option value="30d">Останні 30 днів</option>
-            <option value="90d">Останні 90 днів</option>
+            <option value="">{t('filters.allTime')}</option>
+            <option value="7d">{t('filters.last7d')}</option>
+            <option value="30d">{t('filters.last30d')}</option>
+            <option value="90d">{t('filters.last90d')}</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Сторона / фракція</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('filters.sideFaction')}</label>
           <select
             value={side}
             onChange={(e) => onChange({ side: e.target.value as Side })}
@@ -160,27 +162,27 @@ export default function FilterBar({
                 ? 'bg-red-900/60 text-red-100 border-red-500/50' :
               'bg-zinc-800 text-zinc-100 border-transparent'
             }`}
-            title="Фракція = сторона + театр (за map_name). Матчі без лог-покриття виключаються."
+            title={t('filters.factionTooltip')}
           >
-            <option value="">Будь-яка</option>
-            <optgroup label="Сторона">
-              <option value="Allies">🟦 Allies (усі)</option>
-              <option value="Axis">🟥 Axis (усі)</option>
+            <option value="">{t('filters.any')}</option>
+            <optgroup label={t('filters.sideLabel')}>
+              <option value="Allies">{t('filters.alliesAll')}</option>
+              <option value="Axis">{t('filters.axisAll')}</option>
             </optgroup>
-            <optgroup label="Фракція (Allies)">
+            <optgroup label={t('filters.alliesFaction')}>
               <option value="US">🇺🇸 US</option>
               <option value="GB">🇬🇧 GB / Commonwealth</option>
               <option value="USSR">☭ USSR</option>
             </optgroup>
-            <optgroup label="Фракція (Axis)">
+            <optgroup label={t('filters.axisFaction')}>
               <option value="Wehrmacht">🦅 Wehrmacht</option>
-              <option value="DAK">🐪 DAK (Африка)</option>
+              <option value="DAK">🐪 DAK (Africa)</option>
             </optgroup>
           </select>
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Режим</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('filters.mode')}</label>
           <select
             value={gameMode}
             onChange={(e) => onChange({ gameMode: e.target.value as GameMode })}
@@ -191,7 +193,7 @@ export default function FilterBar({
               'bg-zinc-800 text-zinc-100 border-transparent'
             }`}
           >
-            <option value="">Усі режими</option>
+            <option value="">{t('filters.allModes')}</option>
             <option value="warfare">⚔️ Warfare</option>
             <option value="offensive">🗡 Offensive</option>
             <option value="skirmish">🎯 Skirmish</option>
@@ -199,25 +201,25 @@ export default function FilterBar({
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Карта</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('filters.map')}</label>
           <select
             value={mapName}
             onChange={(e) => onChange({ mapName: e.target.value })}
             className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[200px]"
           >
-            <option value="">Усі карти ({maps.length})</option>
+            <option value="">{t('filters.allMaps', { count: maps.length })}</option>
             {maps.map((m) => <option key={m} value={m}>{formatMapName(m)}</option>)}
           </select>
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Клас зброї</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('filters.weaponClass')}</label>
           <select
             value={weaponClass}
             onChange={(e) => onChange({ weaponClass: e.target.value })}
             className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[180px]"
           >
-            <option value="">Усі класи</option>
+            <option value="">{t('filters.allClasses')}</option>
             {classes.map((c) => (
               <option key={c.name} value={c.name}>{c.name} ({c.count})</option>
             ))}
@@ -225,20 +227,20 @@ export default function FilterBar({
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">Конкретна зброя</label>
+          <label className="block text-xs text-zinc-400 mb-1">{t('filters.weapon')}</label>
           <select
             value={weapon}
             onChange={(e) => onChange({ weapon: e.target.value })}
             className="bg-zinc-800 text-zinc-100 px-3 py-2 rounded text-sm min-w-[200px]"
           >
-            <option value="">Усе ({weapons.length})</option>
+            <option value="">{t('filters.allWeapons', { count: weapons.length })}</option>
             {weapons.map((w) => <option key={w} value={w}>{w}</option>)}
           </select>
         </div>
 
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
-            Мін. матчів: <span className="text-amber-400 font-bold">{minMatches}</span>
+            {t('filters.minMatches')}: <span className="text-amber-400 font-bold">{minMatches}</span>
           </label>
           <input
             type="range"
@@ -255,8 +257,8 @@ export default function FilterBar({
           <button
             onClick={onReset}
             className="px-3 py-2 rounded bg-zinc-700 hover:bg-zinc-600 text-sm self-end"
-            title="Скинути всі фільтри"
-          >✕ Скинути</button>
+            title={t('filters.resetTitle')}
+          >{t('filters.reset')}</button>
         )}
       </div>
     </div>

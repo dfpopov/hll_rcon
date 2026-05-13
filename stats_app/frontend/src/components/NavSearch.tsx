@@ -6,10 +6,12 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchAutocomplete, AutocompletePlayer } from '../api/client'
 import Avatar from './Avatar'
 
 export default function NavSearch() {
+  const { t } = useTranslation()
   const [q, setQ] = useState('')
   const [suggestions, setSuggestions] = useState<AutocompletePlayer[]>([])
   const [open, setOpen] = useState(false)
@@ -61,7 +63,7 @@ export default function NavSearch() {
           value={q}
           onChange={(e) => { setQ(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
-          placeholder="🔍 Пошук гравця…"
+          placeholder={t('nav.searchPlayer')}
           className="w-56 bg-zinc-800/80 text-zinc-100 px-3 py-1.5 rounded text-sm placeholder-zinc-500
                      focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:bg-zinc-800"
         />
@@ -69,7 +71,7 @@ export default function NavSearch() {
           <button
             onClick={() => { setQ(''); setSuggestions([]); setOpen(false) }}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-200 text-xs"
-            title="Очистити"
+            title={t('filters.clear')}
           >✕</button>
         )}
       </div>

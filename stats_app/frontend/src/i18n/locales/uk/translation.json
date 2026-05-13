@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "brand": "HLL Stats",
+    "leaderboard": "Лідерборд",
+    "recordsAllTime": "★ Весь час",
+    "recordsAllTimeTitle": "Рекорди за весь час",
+    "recordsSingleGame": "⚡ 1 матч",
+    "recordsSingleGameTitle": "Рекорди в одному матчі",
+    "achievements": "Досягнення",
+    "playstyles": "🎭 Стилі",
+    "compare": "Порівняння",
+    "hallOfShame": "💀 Сором",
+    "hallOfShameTitle": "Hall of Shame",
+    "worldMap": "🌍 Карта",
+    "liveCurrent": "🟢 Зараз",
+    "liveCurrentTitle": "Поточний матч",
+    "liveGames": "📜 Матчі",
+    "liveGamesTitle": "Історія матчів",
+    "searchPlayer": "🔍 Пошук гравця..."
+  },
+  "filters": {
+    "search": "Пошук гравця",
+    "searchHint": "(мін. 2 символи, шукає й попередні імена)",
+    "searchPlaceholder": "Heartattack, Пакет, BaNnY...",
+    "clear": "Очистити",
+    "reset": "✕ Скинути",
+    "resetTitle": "Скинути всі фільтри",
+    "period": "Період",
+    "allTime": "Увесь час",
+    "last7d": "Останні 7 днів",
+    "last30d": "Останні 30 днів",
+    "last90d": "Останні 90 днів",
+    "sideFaction": "Сторона / фракція",
+    "any": "Будь-яка",
+    "sideLabel": "Сторона",
+    "alliesAll": "🟦 Allies (усі)",
+    "axisAll": "🟥 Axis (усі)",
+    "alliesFaction": "Фракція (Allies)",
+    "axisFaction": "Фракція (Axis)",
+    "factionTooltip": "Фракція = сторона + театр (за map_name). Матчі без лог-покриття виключаються.",
+    "mode": "Режим",
+    "allModes": "Усі режими",
+    "map": "Карта",
+    "allMaps": "Усі карти ({{count}})",
+    "weaponClass": "Клас зброї",
+    "allClasses": "Усі класи",
+    "weapon": "Конкретна зброя",
+    "allWeapons": "Усе ({{count}})",
+    "minMatches": "Мін. матчів"
+  },
+  "table": {
+    "rank": "#",
+    "player": "Гравець",
+    "kills": "Kills",
+    "deaths": "Deaths",
+    "tk": "TK",
+    "kd": "K/D",
+    "kpm": "KPM",
+    "playtime": "Час гри",
+    "matches": "Матчів",
+    "level": "Lvl",
+    "sortBy": "Сортувати за {{column}}"
+  },
+  "pagination": {
+    "first": "« Перша",
+    "prev": "‹ Попер.",
+    "next": "Наст. ›",
+    "last": "Остан. »",
+    "pageOf": "Сторінка {{current}} з {{total}}",
+    "rangeOf": "{{start}}–{{end}} з {{total}}"
+  },
+  "home": {
+    "title": "Топ гравці",
+    "subtitle": "{{count}} гравців у вибірці"
+  },
+  "common": {
+    "loading": "Завантаження…",
+    "noData": "Немає даних — спробуйте змінити фільтри",
+    "error": "Помилка: {{message}}",
+    "selectPlayer": "Виберіть гравця",
+    "language": "Мова"
+  },
+  "footer": {
+    "tagline": "All-time stats from CRCON DB"
+  }
+}

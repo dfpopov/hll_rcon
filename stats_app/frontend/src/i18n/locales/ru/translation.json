@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "brand": "HLL Stats",
+    "leaderboard": "Лидерборд",
+    "recordsAllTime": "★ Всё время",
+    "recordsAllTimeTitle": "Рекорды за всё время",
+    "recordsSingleGame": "⚡ 1 матч",
+    "recordsSingleGameTitle": "Рекорды в одном матче",
+    "achievements": "Достижения",
+    "playstyles": "🎭 Стили",
+    "compare": "Сравнение",
+    "hallOfShame": "💀 Позор",
+    "hallOfShameTitle": "Hall of Shame",
+    "worldMap": "🌍 Карта",
+    "liveCurrent": "🟢 Сейчас",
+    "liveCurrentTitle": "Текущий матч",
+    "liveGames": "📜 Матчи",
+    "liveGamesTitle": "История матчей",
+    "searchPlayer": "🔍 Поиск игрока..."
+  },
+  "filters": {
+    "search": "Поиск игрока",
+    "searchHint": "(мин. 2 символа, ищет и предыдущие имена)",
+    "searchPlaceholder": "Heartattack, Pakset, BaNnY...",
+    "clear": "Очистить",
+    "reset": "✕ Сбросить",
+    "resetTitle": "Сбросить все фильтры",
+    "period": "Период",
+    "allTime": "Всё время",
+    "last7d": "Последние 7 дней",
+    "last30d": "Последние 30 дней",
+    "last90d": "Последние 90 дней",
+    "sideFaction": "Сторона / фракция",
+    "any": "Любая",
+    "sideLabel": "Сторона",
+    "alliesAll": "🟦 Allies (все)",
+    "axisAll": "🟥 Axis (все)",
+    "alliesFaction": "Фракция (Allies)",
+    "axisFaction": "Фракция (Axis)",
+    "factionTooltip": "Фракция = сторона + театр (по map_name). Матчи без лог-покрытия исключаются.",
+    "mode": "Режим",
+    "allModes": "Все режимы",
+    "map": "Карта",
+    "allMaps": "Все карты ({{count}})",
+    "weaponClass": "Класс оружия",
+    "allClasses": "Все классы",
+    "weapon": "Конкретное оружие",
+    "allWeapons": "Всё ({{count}})",
+    "minMatches": "Мин. матчей"
+  },
+  "table": {
+    "rank": "#",
+    "player": "Игрок",
+    "kills": "Kills",
+    "deaths": "Deaths",
+    "tk": "TK",
+    "kd": "K/D",
+    "kpm": "KPM",
+    "playtime": "Время игры",
+    "matches": "Матчей",
+    "level": "Lvl",
+    "sortBy": "Сортировать по {{column}}"
+  },
+  "pagination": {
+    "first": "« Первая",
+    "prev": "‹ Пред.",
+    "next": "След. ›",
+    "last": "Послед. »",
+    "pageOf": "Страница {{current}} из {{total}}",
+    "rangeOf": "{{start}}–{{end}} из {{total}}"
+  },
+  "home": {
+    "title": "Топ игроки",
+    "subtitle": "{{count}} игроков в выборке"
+  },
+  "common": {
+    "loading": "Загрузка…",
+    "noData": "Нет данных — попробуйте изменить фильтры",
+    "error": "Ошибка: {{message}}",
+    "selectPlayer": "Выберите игрока",
+    "language": "Язык"
+  },
+  "footer": {
+    "tagline": "All-time stats from CRCON DB"
+  }
+}

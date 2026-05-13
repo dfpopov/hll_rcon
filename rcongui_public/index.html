@@ -8,6 +8,23 @@
     <meta name="keywords" content="hell let loose, hll, crcon, stats, game history" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <title>Hell Let Loose Stats</title>
+    <!-- When this app is embedded inside stats_app at /live/*, replace the
+         war-scene <body> background with stats_app's zinc-950 BEFORE the
+         body renders. Otherwise the war scene flashes for ~300ms while the
+         JS bundle loads and React mounts the UnifiedHeader. The classList
+         add runs in <head>, the <style> block uses !important to win over
+         the inline body style attribute below. -->
+    <script>
+      if (window.location.pathname.indexOf('/live') === 0) {
+        document.documentElement.classList.add('embedded')
+      }
+    </script>
+    <style>
+      html.embedded body {
+        background-image: none !important;
+        background-color: #09090b !important;
+      }
+    </style>
   </head>
   <body
     style="

@@ -1,7 +1,9 @@
 import { NavLink } from 'react-router-dom'
 import { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import CompareBar from './CompareBar'
 import NavSearch from './NavSearch'
+import LanguageSelector from './LanguageSelector'
 
 function navClass({ isActive }: { isActive: boolean }) {
   return `text-sm hover:text-amber-400 transition-colors ${
@@ -16,29 +18,30 @@ function navClass({ isActive }: { isActive: boolean }) {
 const liveLinkClass = 'text-sm text-zinc-300 hover:text-amber-400 transition-colors'
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const { t } = useTranslation()
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-10">
-        {/* gap-4 + compact labels (★ / ⚡ icons replace the "Рекорди" prefix)
-            keep all 11 items + search on a single row down to ~1280px. */}
+        {/* gap-4 + compact labels keep all items + search on a single row down to ~1280px. */}
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4 flex-wrap">
-          <span className="text-amber-500 font-bold text-lg">HLL Stats</span>
-          <NavLink to="/" className={navClass} end>Лідерборд</NavLink>
-          <NavLink to="/records/all-time" className={navClass} title="Рекорди за весь час">★ Весь час</NavLink>
-          <NavLink to="/records/single-game" className={navClass} title="Рекорди в одному матчі">⚡ 1 матч</NavLink>
-          <NavLink to="/achievements" className={navClass}>Досягнення</NavLink>
-          <NavLink to="/playstyles" className={navClass}>🎭 Стилі</NavLink>
-          <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
-          <NavLink to="/hall-of-shame" className={navClass} title="Hall of Shame">💀 Сором</NavLink>
-          <NavLink to="/server/countries" className={navClass}>🌍 Карта</NavLink>
-          <a href="/live/" className={liveLinkClass} title="Поточний матч">🟢 Зараз</a>
-          <a href="/live/games" className={liveLinkClass} title="Історія матчів">📜 Матчі</a>
+          <span className="text-amber-500 font-bold text-lg">{t('nav.brand')}</span>
+          <NavLink to="/" className={navClass} end>{t('nav.leaderboard')}</NavLink>
+          <NavLink to="/records/all-time" className={navClass} title={t('nav.recordsAllTimeTitle')}>{t('nav.recordsAllTime')}</NavLink>
+          <NavLink to="/records/single-game" className={navClass} title={t('nav.recordsSingleGameTitle')}>{t('nav.recordsSingleGame')}</NavLink>
+          <NavLink to="/achievements" className={navClass}>{t('nav.achievements')}</NavLink>
+          <NavLink to="/playstyles" className={navClass}>{t('nav.playstyles')}</NavLink>
+          <NavLink to="/compare" className={navClass}>{t('nav.compare')}</NavLink>
+          <NavLink to="/hall-of-shame" className={navClass} title={t('nav.hallOfShameTitle')}>{t('nav.hallOfShame')}</NavLink>
+          <NavLink to="/server/countries" className={navClass}>{t('nav.worldMap')}</NavLink>
+          <a href="/live/" className={liveLinkClass} title={t('nav.liveCurrentTitle')}>{t('nav.liveCurrent')}</a>
+          <a href="/live/games" className={liveLinkClass} title={t('nav.liveGamesTitle')}>{t('nav.liveGames')}</a>
           <NavSearch />
+          <LanguageSelector />
         </div>
       </nav>
       <main className="flex-1 pb-24">{children}</main>
       <footer className="text-center text-zinc-600 text-xs py-4">
-        HLL Stats • All-time stats from CRCON DB
+        {t('nav.brand')} • {t('footer.tagline')}
       </footer>
       <CompareBar />
     </div>

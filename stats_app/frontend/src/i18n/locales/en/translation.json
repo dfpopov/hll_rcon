@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "brand": "HLL Stats",
+    "leaderboard": "Leaderboard",
+    "recordsAllTime": "★ All-time",
+    "recordsAllTimeTitle": "All-time records",
+    "recordsSingleGame": "⚡ Single game",
+    "recordsSingleGameTitle": "Single-game records",
+    "achievements": "Achievements",
+    "playstyles": "🎭 Styles",
+    "compare": "Compare",
+    "hallOfShame": "💀 Shame",
+    "hallOfShameTitle": "Hall of Shame",
+    "worldMap": "🌍 World map",
+    "liveCurrent": "🟢 Live",
+    "liveCurrentTitle": "Current match",
+    "liveGames": "📜 Games",
+    "liveGamesTitle": "Match history",
+    "searchPlayer": "🔍 Search player..."
+  },
+  "filters": {
+    "search": "Search player",
+    "searchHint": "(min. 2 chars, also matches former names)",
+    "searchPlaceholder": "Heartattack, Pakset, BaNnY...",
+    "clear": "Clear",
+    "reset": "✕ Reset",
+    "resetTitle": "Reset all filters",
+    "period": "Period",
+    "allTime": "All time",
+    "last7d": "Last 7 days",
+    "last30d": "Last 30 days",
+    "last90d": "Last 90 days",
+    "sideFaction": "Side / faction",
+    "any": "Any",
+    "sideLabel": "Side",
+    "alliesAll": "🟦 Allies (all)",
+    "axisAll": "🟥 Axis (all)",
+    "alliesFaction": "Faction (Allies)",
+    "axisFaction": "Faction (Axis)",
+    "factionTooltip": "Faction = side + theater (by map_name). Matches without log coverage are excluded.",
+    "mode": "Mode",
+    "allModes": "All modes",
+    "map": "Map",
+    "allMaps": "All maps ({{count}})",
+    "weaponClass": "Weapon class",
+    "allClasses": "All classes",
+    "weapon": "Specific weapon",
+    "allWeapons": "All ({{count}})",
+    "minMatches": "Min. matches"
+  },
+  "table": {
+    "rank": "#",
+    "player": "Player",
+    "kills": "Kills",
+    "deaths": "Deaths",
+    "tk": "TK",
+    "kd": "K/D",
+    "kpm": "KPM",
+    "playtime": "Playtime",
+    "matches": "Matches",
+    "level": "Lvl",
+    "sortBy": "Sort by {{column}}"
+  },
+  "pagination": {
+    "first": "« First",
+    "prev": "‹ Prev",
+    "next": "Next ›",
+    "last": "Last »",
+    "pageOf": "Page {{current}} of {{total}}",
+    "rangeOf": "{{start}}–{{end}} of {{total}}"
+  },
+  "home": {
+    "title": "Top players",
+    "subtitle": "{{count}} players in selection"
+  },
+  "common": {
+    "loading": "Loading…",
+    "noData": "No data — try adjusting the filters",
+    "error": "Error: {{message}}",
+    "selectPlayer": "Select a player",
+    "language": "Language"
+  },
+  "footer": {
+    "tagline": "All-time stats from CRCON DB"
+  }
+}

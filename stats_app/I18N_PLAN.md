@@ -71,11 +71,12 @@ formatter. Mirror rcongui_public's `LocaleHandler` for dayjs.
 
 ## Recommended phasing
 
-| Phase | Scope | Estimated time |
-|------|------|--------------|
-| 1 | Tier 1 chrome, 4 priority languages (`en`, `de`, `pl`, `ru`) | 3 h + translator review |
-| 2 | Tier 1 chrome, all 14 languages | +2 h (AI first pass + native review) |
-| 3 | Decide Tier 2-4 editorial policy, translate accordingly | Variable |
+| Phase | Scope | Estimated time | Status |
+|------|------|--------------|------|
+| 1 | Tier 1 chrome, 4 priority languages (`en`, `de`, `pl`, `ru`) | 3 h + translator review | **shipped** — navbar, FilterBar, HomePage table & pagination; LanguageSelector in nav; cross-app sync via shared `i18nextLng` key |
+| 2 | Tier 1 chrome, all 14 languages | +2 h (AI first pass + native review) | pending — `fr`, `es`, `it`, `pt`, `cs`, `zh-Hans`, `zh-Hant`, `ja`, `ko` fall back to `en` until JSON files added under `i18n/locales/<lang>/` |
+| 2b | Translate remaining pages (PlayerDetail, Records, Achievements, Playstyles, WorldMap, HallOfShame, MatchTitles, Compare) | ~4-6 h | pending |
+| 3 | Decide Tier 2-4 editorial policy, translate accordingly | Variable | pending — see open questions below |
 
 Priority languages chosen by world-map distribution (top non-UA after EN/DE
 already covered: PL=467, RU=215). Together with EN, covers ~40% of

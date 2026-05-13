@@ -1,0 +1,86 @@
+{
+  "nav": {
+    "brand": "HLL Stats",
+    "leaderboard": "Ranking",
+    "recordsAllTime": "★ Cały czas",
+    "recordsAllTimeTitle": "Rekordy z całego czasu",
+    "recordsSingleGame": "⚡ 1 mecz",
+    "recordsSingleGameTitle": "Rekordy w jednym meczu",
+    "achievements": "Osiągnięcia",
+    "playstyles": "🎭 Style",
+    "compare": "Porównanie",
+    "hallOfShame": "💀 Wstyd",
+    "hallOfShameTitle": "Hall of Shame",
+    "worldMap": "🌍 Mapa",
+    "liveCurrent": "🟢 Teraz",
+    "liveCurrentTitle": "Bieżący mecz",
+    "liveGames": "📜 Mecze",
+    "liveGamesTitle": "Historia meczów",
+    "searchPlayer": "🔍 Szukaj gracza..."
+  },
+  "filters": {
+    "search": "Szukaj gracza",
+    "searchHint": "(min. 2 znaki, wyszukuje też poprzednie nicki)",
+    "searchPlaceholder": "Heartattack, Pakset, BaNnY...",
+    "clear": "Wyczyść",
+    "reset": "✕ Resetuj",
+    "resetTitle": "Resetuj wszystkie filtry",
+    "period": "Okres",
+    "allTime": "Cały czas",
+    "last7d": "Ostatnie 7 dni",
+    "last30d": "Ostatnie 30 dni",
+    "last90d": "Ostatnie 90 dni",
+    "sideFaction": "Strona / frakcja",
+    "any": "Dowolna",
+    "sideLabel": "Strona",
+    "alliesAll": "🟦 Allies (wszyscy)",
+    "axisAll": "🟥 Axis (wszyscy)",
+    "alliesFaction": "Frakcja (Allies)",
+    "axisFaction": "Frakcja (Axis)",
+    "factionTooltip": "Frakcja = strona + teatr działań (wg map_name). Mecze bez logów są wykluczane.",
+    "mode": "Tryb",
+    "allModes": "Wszystkie tryby",
+    "map": "Mapa",
+    "allMaps": "Wszystkie mapy ({{count}})",
+    "weaponClass": "Klasa broni",
+    "allClasses": "Wszystkie klasy",
+    "weapon": "Konkretna broń",
+    "allWeapons": "Wszystko ({{count}})",
+    "minMatches": "Min. meczów"
+  },
+  "table": {
+    "rank": "#",
+    "player": "Gracz",
+    "kills": "Kills",
+    "deaths": "Zgony",
+    "tk": "TK",
+    "kd": "K/D",
+    "kpm": "KPM",
+    "playtime": "Czas gry",
+    "matches": "Mecze",
+    "level": "Lvl",
+    "sortBy": "Sortuj wg {{column}}"
+  },
+  "pagination": {
+    "first": "« Pierwsza",
+    "prev": "‹ Poprz.",
+    "next": "Nast. ›",
+    "last": "Ostat. »",
+    "pageOf": "Strona {{current}} z {{total}}",
+    "rangeOf": "{{start}}–{{end}} z {{total}}"
+  },
+  "home": {
+    "title": "Najlepsi gracze",
+    "subtitle": "{{count}} graczy w zbiorze"
+  },
+  "common": {
+    "loading": "Ładowanie…",
+    "noData": "Brak danych — zmień filtry",
+    "error": "Błąd: {{message}}",
+    "selectPlayer": "Wybierz gracza",
+    "language": "Język"
+  },
+  "footer": {
+    "tagline": "All-time stats from CRCON DB"
+  }
+}

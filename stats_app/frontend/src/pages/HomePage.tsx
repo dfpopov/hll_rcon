@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchTopPlayers, PlayerRow, SortKey, SortOrder, Period, GameMode, Side,
 } from '../api/client'
@@ -7,20 +8,22 @@ import FilterBar from '../components/FilterBar'
 
 interface ColumnDef {
   key: SortKey
-  label: string
+  // i18n translation key under `table.*` — column label is looked up by t()
+  // at render time so it updates when the user changes language.
+  i18nKey: string
   align?: 'left' | 'right'
   fmt?: (r: PlayerRow) => string | number | null
 }
 
 const COLUMNS: ColumnDef[] = [
-  { key: 'kills',     label: 'Kills',     align: 'right', fmt: (r) => r.kills },
-  { key: 'deaths',    label: 'Deaths',    align: 'right', fmt: (r) => r.deaths },
-  { key: 'teamkills', label: 'TK',        align: 'right', fmt: (r) => r.teamkills },
-  { key: 'kd_ratio',  label: 'K/D',       align: 'right', fmt: (r) => r.kd_ratio ?? '—' },
-  { key: 'kpm',       label: 'KPM',       align: 'right', fmt: (r) => r.kpm ?? '—' },
-  { key: 'playtime',  label: 'Час гри',   align: 'right', fmt: (r) => formatPlaytime(r.total_seconds) },
-  { key: 'matches',   label: 'Матчів',    align: 'right', fmt: (r) => r.matches_played },
-  { key: 'level',     label: 'Lvl',       align: 'right', fmt: (r) => r.level },
+  { key: 'kills',     i18nKey: 'kills',    align: 'right', fmt: (r) => r.kills },
+  { key: 'deaths',    i18nKey: 'deaths',   align: 'right', fmt: (r) => r.deaths },
+  { key: 'teamkills', i18nKey: 'tk',       align: 'right', fmt: (r) => r.teamkills },
+  { key: 'kd_ratio',  i18nKey: 'kd',       align: 'right', fmt: (r) => r.kd_ratio ?? '—' },
+  { key: 'kpm',       i18nKey: 'kpm',      align: 'right', fmt: (r) => r.kpm ?? '—' },
+  { key: 'playtime',  i18nKey: 'playtime', align: 'right', fmt: (r) => formatPlaytime(r.total_seconds) },
+  { key: 'matches',   i18nKey: 'matches',  align: 'right', fmt: (r) => r.matches_played },
+  { key: 'level',     i18nKey: 'level',    align: 'right', fmt: (r) => r.level },
 ]
 
 function formatPlaytime(seconds: number): string {
@@ -40,6 +43,11 @@ const PAGE_SIZE = 50
 const DEFAULT_MIN_MATCHES = 30
 
 export default function HomePage() {
+  const { t, i18n } = useTranslation()
+  // Locale-aware number formatter — uses Ukrainian non-breaking spaces in uk,
+  // standard thousands separator everywhere else. Falls back to en if i18n
+  // hasn't resolved yet.
+  const numFmt = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [rows, setRows] = useState<PlayerRow[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(0)
@@ -117,9 +125,13 @@ export default function HomePage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <header className="mb-4">
-        <h1 className="text-3xl font-bold mb-1">HLL Stats — All time</h1>
+        <h1 className="text-3xl font-bold mb-1">{t('nav.brand')} — {t('filters.allTime')}</h1>
         <p className="text-zinc-400 text-sm">
-          Топ гравці • <span className="text-zinc-200 font-medium">{total.toLocaleString('uk-UA')}</span> гравців у вибірці
+          {t('home.title')} • <span className="text-zinc-200 font-medium">{numFmt.format(total)}</span>{' '}
+          {/* `home.subtitle` translation uses "{{count}} players" — strip the
+              leading "{{count}} " so we can render the formatted number with
+              custom styling and keep the rest of the sentence translated. */}
+          {t('home.subtitle', { count: total }).replace(/^\S+\s+/, '')}
         </p>
       </header>
 
@@ -138,7 +150,7 @@ export default function HomePage() {
 
       {error && (
         <div className="bg-red-900/30 border border-red-700 text-red-200 p-4 rounded mb-4">
-          Помилка: {error}
+          {t('common.error', { message: error })}
         </div>
       )}
 
@@ -146,23 +158,26 @@ export default function HomePage() {
         <table className="w-full text-sm">
           <thead className="bg-zinc-800 text-zinc-300 text-xs uppercase">
             <tr>
-              <th className="p-3 text-left w-12">#</th>
-              <th className="p-3 text-left">Гравець</th>
-              {COLUMNS.map((c) => (
-                <th
-                  key={c.key}
-                  onClick={() => handleSort(c.key)}
-                  className={`p-3 cursor-pointer select-none hover:bg-zinc-700/50 ${
-                    c.align === 'right' ? 'text-right' : 'text-left'
-                  } ${sort === c.key ? 'text-amber-400' : ''}`}
-                  title={`Сортувати за ${c.label}`}
-                >
-                  {c.label}
-                  {sort === c.key && (
-                    <span className="ml-1">{order === 'desc' ? '↓' : '↑'}</span>
-                  )}
-                </th>
-              ))}
+              <th className="p-3 text-left w-12">{t('table.rank')}</th>
+              <th className="p-3 text-left">{t('table.player')}</th>
+              {COLUMNS.map((c) => {
+                const label = t(`table.${c.i18nKey}`)
+                return (
+                  <th
+                    key={c.key}
+                    onClick={() => handleSort(c.key)}
+                    className={`p-3 cursor-pointer select-none hover:bg-zinc-700/50 ${
+                      c.align === 'right' ? 'text-right' : 'text-left'
+                    } ${sort === c.key ? 'text-amber-400' : ''}`}
+                    title={t('table.sortBy', { column: label })}
+                  >
+                    {label}
+                    {sort === c.key && (
+                      <span className="ml-1">{order === 'desc' ? '↓' : '↑'}</span>
+                    )}
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody className={loading ? 'opacity-50' : ''}>
@@ -198,7 +213,7 @@ export default function HomePage() {
             {!loading && rows.length === 0 && (
               <tr>
                 <td colSpan={2 + COLUMNS.length} className="p-8 text-center text-zinc-500">
-                  Немає даних — спробуйте змінити фільтри
+                  {t('common.noData')}
                 </td>
               </tr>
             )}
@@ -209,28 +224,28 @@ export default function HomePage() {
       <div className="flex items-center justify-between mt-4 text-sm flex-wrap gap-3">
         <div className="text-zinc-400">
           {total > 0
-            ? `${startIdx}–${endIdx} з ${total.toLocaleString('uk-UA')}`
-            : 'Завантаження…'}
+            ? t('pagination.rangeOf', { start: startIdx, end: endIdx, total: numFmt.format(total) })
+            : t('common.loading')}
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setPage(0)} disabled={page === 0 || loading}
             className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
-            « Перша
+            {t('pagination.first')}
           </button>
           <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0 || loading}
             className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
-            ‹ Попер.
+            {t('pagination.prev')}
           </button>
           <span className="text-zinc-300 px-2">
-            Сторінка {page + 1} з {totalPages || 1}
+            {t('pagination.pageOf', { current: page + 1, total: totalPages || 1 })}
           </span>
           <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1 || loading}
             className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
-            Наст. ›
+            {t('pagination.next')}
           </button>
           <button onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1 || loading}
             className="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed">
-            Остан. »
+            {t('pagination.last')}
           </button>
         </div>
       </div>
