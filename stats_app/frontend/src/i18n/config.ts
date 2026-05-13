@@ -48,6 +48,30 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
   ko: '한국어',
 }
 
+/**
+ * Initial language preference resolution.
+ *
+ * Editorial policy: a Russian-language browser defaults to Ukrainian on first
+ * visit (this is a Ukrainian community server hosting players harmed by the
+ * russian invasion — see also the anti-war flag in CountryFlag.tsx and the
+ * /kick ПТН ПНХ hook for Steam country=RU). Users can still switch to RU
+ * manually via the language selector — the manual choice is persisted in
+ * localStorage and respected on subsequent visits.
+ *
+ * Mechanism: we read localStorage ourselves to see if the user has ever
+ * picked a language. If yes — honor it (pass to i18next via `lng`). If no
+ * (first visit), look at navigator.language; map any ru-* to uk; otherwise
+ * let LanguageDetector handle it normally (so en-US → en, de-DE → de, etc.).
+ */
+function resolveInitialLng(): string | undefined {
+  if (typeof window === 'undefined') return undefined
+  const stored = window.localStorage.getItem('i18nextLng')
+  if (stored) return stored  // manual choice — never overwrite
+  const nav = (typeof navigator !== 'undefined' && navigator.language) || 'en'
+  if (nav.toLowerCase().startsWith('ru')) return 'uk'
+  return undefined  // let LanguageDetector pick from navigator for other langs
+}
+
 i18next
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -59,6 +83,7 @@ i18next
   )
   .init({
     debug: import.meta.env.DEV,
+    lng: resolveInitialLng(),
     fallbackLng: 'en',
     defaultNS: 'translation',
     interpolation: {

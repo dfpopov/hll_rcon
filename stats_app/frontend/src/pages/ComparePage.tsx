@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchPlayerDetail, fetchHeadToHead, findPlayerByName,
   HeadToHead, PlayerDetail, PlayerProfile,
@@ -10,9 +11,9 @@ import Avatar from '../components/Avatar'
 import CountryFlag from '../components/CountryFlag'
 import AchievementBadge from '../components/AchievementBadge'
 
-function fmt(v: number | null | undefined): string {
+function fmt(v: number | null | undefined, nf: Intl.NumberFormat): string {
   if (v == null) return '—'
-  if (Math.abs(v) >= 10000) return v.toLocaleString('uk-UA')
+  if (Math.abs(v) >= 10000) return nf.format(v)
   return String(v)
 }
 
@@ -38,30 +39,33 @@ function multiColor(value: number, all: number[], higherBetter = true): string {
 }
 
 // Stat rows for the comparison table — shared by 1v1 (paired) and Nv view.
+// `labelKey` resolves to `compare.stats.<key>` at render time so the labels
+// translate; values are pulled via `get` from PlayerProfile.
 interface StatDef {
-  label: string
+  labelKey: string
   get: (p: PlayerProfile) => number
   higherBetter?: boolean
 }
 const STAT_ROWS: StatDef[] = [
-  { label: 'Level',              get: (p) => p.level },
-  { label: 'Kills',              get: (p) => p.kills },
-  { label: 'Deaths',             get: (p) => p.deaths, higherBetter: false },
-  { label: 'K/D',                get: (p) => p.kd_ratio ?? 0 },
-  { label: 'KPM',                get: (p) => p.kpm ?? 0 },
-  { label: 'Матчів',             get: (p) => p.matches_played },
-  { label: 'Годин',              get: (p) => Math.floor(p.total_seconds / 3600) },
-  { label: 'Combat',             get: (p) => p.combat },
-  { label: 'Offense',            get: (p) => p.offense },
-  { label: 'Defense',            get: (p) => p.defense },
-  { label: 'Support',            get: (p) => p.support },
-  { label: 'Best streak',        get: (p) => p.best_kills_streak },
-  { label: 'Найдовше життя (с)', get: (p) => p.longest_life_secs },
-  { label: 'Team kills',         get: (p) => p.teamkills, higherBetter: false },
-  { label: 'Смертей від ТК',     get: (p) => p.deaths_by_tk, higherBetter: false },
+  { labelKey: 'level',         get: (p) => p.level },
+  { labelKey: 'kills',         get: (p) => p.kills },
+  { labelKey: 'deaths',        get: (p) => p.deaths, higherBetter: false },
+  { labelKey: 'kd',            get: (p) => p.kd_ratio ?? 0 },
+  { labelKey: 'kpm',           get: (p) => p.kpm ?? 0 },
+  { labelKey: 'matches',       get: (p) => p.matches_played },
+  { labelKey: 'hours',         get: (p) => Math.floor(p.total_seconds / 3600) },
+  { labelKey: 'combat',        get: (p) => p.combat },
+  { labelKey: 'offense',       get: (p) => p.offense },
+  { labelKey: 'defense',       get: (p) => p.defense },
+  { labelKey: 'support',       get: (p) => p.support },
+  { labelKey: 'bestStreak',    get: (p) => p.best_kills_streak },
+  { labelKey: 'longestLife',   get: (p) => p.longest_life_secs },
+  { labelKey: 'teamkills',     get: (p) => p.teamkills, higherBetter: false },
+  { labelKey: 'deathsByTk',    get: (p) => p.deaths_by_tk, higherBetter: false },
 ]
 
 function PlayerHeader({ p, large = false }: { p: PlayerProfile; large?: boolean }) {
+  const { t } = useTranslation()
   return (
     <div className="text-center">
       <div className="flex justify-center mb-2">
@@ -73,7 +77,7 @@ function PlayerHeader({ p, large = false }: { p: PlayerProfile; large?: boolean 
       </div>
       <div className={`font-bold break-all ${large ? 'text-lg' : 'text-sm'}`}>{p.name}</div>
       <Link to={`/player/${p.steam_id}`} className="text-xs text-amber-400 hover:underline">
-        Профіль ↗
+        {t('compare.profileLink')}
       </Link>
     </div>
   )
@@ -82,6 +86,8 @@ function PlayerHeader({ p, large = false }: { p: PlayerProfile; large?: boolean 
 // ─────────────────────────── 1v1 rich layout ───────────────────────────
 
 function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; h2h: HeadToHead | null }) {
+  const { t, i18n } = useTranslation()
+  const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const p1 = d1.profile, p2 = d2.profile
 
   return (
@@ -94,40 +100,40 @@ function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; 
       {h2h && (h2h.p1_killed_p2 > 0 || h2h.p2_killed_p1 > 0) ? (
         <div className="bg-gradient-to-r from-zinc-900 via-zinc-800/80 to-zinc-900 border border-amber-700/40 rounded-lg p-4 mb-6">
           <h2 className="text-amber-400 text-xs uppercase tracking-widest mb-3 text-center">
-            ⚔ Особистий рахунок
+            ⚔ {t('compare.personalScore')}
           </h2>
           <div className="grid grid-cols-3 items-center gap-2 text-center">
             <div>
               <div className="text-3xl font-bold text-green-400 tabular-nums">{h2h.p1_killed_p2}</div>
               <div className="text-xs text-zinc-400 mt-1">
-                <span className="font-medium">{p1.name}</span> вбив <span className="font-medium">{p2.name}</span>
+                <span className="font-medium">{p1.name}</span> {t('compare.killed')} <span className="font-medium">{p2.name}</span>
               </div>
               {h2h.p1_top_weapon && (
-                <div className="text-xs text-zinc-500 mt-1">улюблена зброя: <span className="text-zinc-300">{h2h.p1_top_weapon}</span></div>
+                <div className="text-xs text-zinc-500 mt-1">{t('compare.favoriteWeapon')}: <span className="text-zinc-300">{h2h.p1_top_weapon}</span></div>
               )}
             </div>
             <div className="text-2xl text-zinc-600">vs</div>
             <div>
               <div className="text-3xl font-bold text-red-400 tabular-nums">{h2h.p2_killed_p1}</div>
               <div className="text-xs text-zinc-400 mt-1">
-                <span className="font-medium">{p2.name}</span> вбив <span className="font-medium">{p1.name}</span>
+                <span className="font-medium">{p2.name}</span> {t('compare.killed')} <span className="font-medium">{p1.name}</span>
               </div>
               {h2h.p2_top_weapon && (
-                <div className="text-xs text-zinc-500 mt-1">улюблена зброя: <span className="text-zinc-300">{h2h.p2_top_weapon}</span></div>
+                <div className="text-xs text-zinc-500 mt-1">{t('compare.favoriteWeapon')}: <span className="text-zinc-300">{h2h.p2_top_weapon}</span></div>
               )}
             </div>
           </div>
           {h2h.p1_killed_p2 !== h2h.p2_killed_p1 && (
             <div className="text-center text-xs text-zinc-500 mt-3">
               {h2h.p1_killed_p2 > h2h.p2_killed_p1
-                ? `${p1.name} домінує (+${h2h.p1_killed_p2 - h2h.p2_killed_p1})`
-                : `${p2.name} домінує (+${h2h.p2_killed_p1 - h2h.p1_killed_p2})`}
+                ? t('compare.dominates', { name: p1.name, delta: h2h.p1_killed_p2 - h2h.p2_killed_p1 })
+                : t('compare.dominates', { name: p2.name, delta: h2h.p2_killed_p1 - h2h.p1_killed_p2 })}
             </div>
           )}
         </div>
       ) : h2h && (
         <div className="bg-zinc-900/40 border border-zinc-800 rounded-lg p-3 mb-6 text-center text-zinc-500 text-sm">
-          🤝 Не зустрічались на полі бою (за наявністю логів)
+          🤝 {t('compare.neverMet')}
         </div>
       )}
 
@@ -135,13 +141,13 @@ function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; 
         <table className="w-full text-sm">
           <tbody>
             {STAT_ROWS.map((s) => (
-              <tr key={s.label} className="border-t border-zinc-800">
+              <tr key={s.labelKey} className="border-t border-zinc-800">
                 <td className={`p-3 text-right font-medium tabular-nums ${pairColor(s.get(p1), s.get(p2), s.higherBetter)}`}>
-                  {fmt(s.get(p1))}
+                  {fmt(s.get(p1), nf)}
                 </td>
-                <td className="p-3 text-center text-zinc-500 text-xs uppercase">{s.label}</td>
+                <td className="p-3 text-center text-zinc-500 text-xs uppercase">{t(`compare.stats.${s.labelKey}`)}</td>
                 <td className={`p-3 text-left font-medium tabular-nums ${pairColor(s.get(p2), s.get(p1), s.higherBetter)}`}>
-                  {fmt(s.get(p2))}
+                  {fmt(s.get(p2), nf)}
                 </td>
               </tr>
             ))}
@@ -150,7 +156,7 @@ function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; 
       </div>
 
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 mb-6">
-        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">🔫 Топ-3 зброя</h2>
+        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">🔫 {t('compare.top3Weapons')}</h2>
         <div className="grid grid-cols-2 gap-6">
           {[d1, d2].map((d, idx) => (
             <ol key={idx} className="space-y-1 text-sm">
@@ -158,10 +164,10 @@ function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; 
                 <li key={w.weapon} className="flex items-baseline gap-2">
                   <span className="text-zinc-500 w-5 text-right">{i + 1}.</span>
                   <span className="flex-1 truncate" title={w.weapon}>{w.weapon}</span>
-                  <span className="text-zinc-200 tabular-nums font-medium">{w.kills.toLocaleString('uk-UA')}</span>
+                  <span className="text-zinc-200 tabular-nums font-medium">{nf.format(w.kills)}</span>
                 </li>
               ))}
-              {d.top_weapons.length === 0 && <li className="text-zinc-600 text-xs italic">немає даних</li>}
+              {d.top_weapons.length === 0 && <li className="text-zinc-600 text-xs italic">{t('records.noData')}</li>}
             </ol>
           ))}
         </div>
@@ -169,13 +175,13 @@ function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; 
 
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
         <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">
-          🏅 Досягнення ({d1.achievements.length} vs {d2.achievements.length})
+          {t('compare.achievementsCount', { a: d1.achievements.length, b: d2.achievements.length })}
         </h2>
         <div className="grid grid-cols-2 gap-6">
           {[d1, d2].map((d, idx) => (
             <div key={idx} className="flex flex-wrap gap-1.5">
               {d.achievements.map((a) => <AchievementBadge key={a.id} a={a} />)}
-              {d.achievements.length === 0 && <div className="text-zinc-600 text-xs italic">немає досягнень</div>}
+              {d.achievements.length === 0 && <div className="text-zinc-600 text-xs italic">{t('compare.noAchievements')}</div>}
             </div>
           ))}
         </div>
@@ -187,6 +193,8 @@ function RichCompareView({ d1, d2, h2h }: { d1: PlayerDetail; d2: PlayerDetail; 
 // ─────────────────────────── Nv compact layout (N=3..4) ───────────────────────────
 
 function CompactCompareView({ details }: { details: PlayerDetail[] }) {
+  const { t, i18n } = useTranslation()
+  const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   return (
     <>
       <div className={`grid gap-4 mb-6`}
@@ -199,7 +207,7 @@ function CompactCompareView({ details }: { details: PlayerDetail[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-zinc-800 text-zinc-300 text-xs uppercase">
-              <th className="p-3 text-left">Метрика</th>
+              <th className="p-3 text-left">{t('compare.metric')}</th>
               {details.map((d) => (
                 <th key={d.profile.steam_id} className="p-3 text-center">
                   <span className="truncate inline-block max-w-[140px]" title={d.profile.name}>{d.profile.name}</span>
@@ -211,14 +219,14 @@ function CompactCompareView({ details }: { details: PlayerDetail[] }) {
             {STAT_ROWS.map((row) => {
               const values = details.map((d) => row.get(d.profile))
               return (
-                <tr key={row.label} className="border-t border-zinc-800">
-                  <td className="p-3 text-zinc-400 text-xs uppercase">{row.label}</td>
+                <tr key={row.labelKey} className="border-t border-zinc-800">
+                  <td className="p-3 text-zinc-400 text-xs uppercase">{t(`compare.stats.${row.labelKey}`)}</td>
                   {details.map((d, i) => (
                     <td
                       key={d.profile.steam_id}
                       className={`p-3 text-center tabular-nums ${multiColor(values[i], values, row.higherBetter)}`}
                     >
-                      {fmt(values[i])}
+                      {fmt(values[i], nf)}
                     </td>
                   ))}
                 </tr>
@@ -229,7 +237,7 @@ function CompactCompareView({ details }: { details: PlayerDetail[] }) {
       </div>
 
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">🏅 Досягнення</h2>
+        <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3 text-center">🏅 {t('compare.achievements')}</h2>
         <div className={`grid gap-4`}
           style={{ gridTemplateColumns: `repeat(${details.length}, minmax(0, 1fr))` }}
         >
@@ -237,7 +245,7 @@ function CompactCompareView({ details }: { details: PlayerDetail[] }) {
             <div key={d.profile.steam_id} className="flex flex-wrap gap-1.5 justify-center">
               <span className="w-full text-center text-xs text-zinc-500">{d.profile.name}: {d.achievements.length}</span>
               {d.achievements.map((a) => <AchievementBadge key={a.id} a={a} />)}
-              {d.achievements.length === 0 && <span className="text-zinc-600 text-xs italic">немає</span>}
+              {d.achievements.length === 0 && <span className="text-zinc-600 text-xs italic">{t('compare.none')}</span>}
             </div>
           ))}
         </div>
@@ -249,6 +257,7 @@ function CompactCompareView({ details }: { details: PlayerDetail[] }) {
 // ─────────────────────────── No-ids landing ───────────────────────────
 
 function LandingView({ initialName1 = '' }: { initialName1?: string }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { list } = useCompareList()
   const [name1, setName1] = useState(initialName1)
@@ -261,7 +270,7 @@ function LandingView({ initialName1 = '' }: { initialName1?: string }) {
     const [s1, s2] = await Promise.all([findPlayerByName(name1), findPlayerByName(name2)])
     setSubmitting(false)
     if (!s1 || !s2) {
-      alert(`Не знайдено: ${!s1 ? name1 + ' ' : ''}${!s2 ? name2 : ''}`)
+      alert(t('compare.notFound', { names: `${!s1 ? name1 + ' ' : ''}${!s2 ? name2 : ''}`.trim() }))
       return
     }
     navigate(`/compare/${encodeURIComponent(s1)},${encodeURIComponent(s2)}`)
@@ -275,44 +284,42 @@ function LandingView({ initialName1 = '' }: { initialName1?: string }) {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">Порівняння гравців</h1>
-        <p className="text-zinc-400 text-sm">
-          Додавайте гравців з їхніх профілів кнопкою «➕ Додати до порівняння» (до 4), або введіть імена напряму.
-        </p>
+        <h1 className="text-3xl font-bold mb-1">{t('compare.title')}</h1>
+        <p className="text-zinc-400 text-sm">{t('compare.subtitle')}</p>
       </header>
 
       {list.length >= 2 && (
         <div className="bg-amber-900/20 border border-amber-700/40 rounded-lg p-4 mb-4 flex items-center justify-between">
           <div>
-            <div className="text-amber-300 font-medium text-sm">У вашому списку {list.length} гравців</div>
+            <div className="text-amber-300 font-medium text-sm">{t('compare.inYourList', { n: list.length })}</div>
             <div className="text-zinc-400 text-xs mt-1">{list.map((p) => p.name).join(' • ')}</div>
           </div>
           <button
             onClick={goFromList}
             className="px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium text-sm"
           >
-            Порівняти ({list.length})
+            {t('compareBar.compareN', { n: list.length })}
           </button>
         </div>
       )}
 
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-6 space-y-4">
-        <div className="text-zinc-400 text-xs uppercase tracking-widest">Швидке 1v1 за іменами</div>
+        <div className="text-zinc-400 text-xs uppercase tracking-widest">{t('compare.quick1v1')}</div>
         <div>
-          <label className="block text-sm text-zinc-300 mb-1">Гравець 1</label>
+          <label className="block text-sm text-zinc-300 mb-1">{t('compare.player1')}</label>
           <input value={name1} onChange={(e) => setName1(e.target.value)}
             placeholder="Heartattack333" autoFocus
             className="w-full bg-zinc-800 text-zinc-100 px-3 py-2 rounded" />
         </div>
         <div>
-          <label className="block text-sm text-zinc-300 mb-1">Гравець 2</label>
+          <label className="block text-sm text-zinc-300 mb-1">{t('compare.player2')}</label>
           <input value={name2} onChange={(e) => setName2(e.target.value)}
             placeholder="BaNnY"
             className="w-full bg-zinc-800 text-zinc-100 px-3 py-2 rounded" />
         </div>
         <button onClick={handleCompare} disabled={!name1 || !name2 || submitting}
           className="w-full px-4 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-medium disabled:opacity-50">
-          {submitting ? 'Шукаю…' : 'Порівняти 1v1'}
+          {submitting ? t('compare.searching') : t('compare.compare1v1')}
         </button>
       </div>
     </div>
@@ -322,6 +329,7 @@ function LandingView({ initialName1 = '' }: { initialName1?: string }) {
 // ─────────────────────────── Page ───────────────────────────
 
 export default function ComparePage() {
+  const { t } = useTranslation()
   const { ids: idsParam } = useParams<{ ids?: string }>()
   const ids = useMemo(
     () => (idsParam || '').split(',').map((s) => decodeURIComponent(s.trim())).filter(Boolean).slice(0, 4),
@@ -351,23 +359,21 @@ export default function ComparePage() {
   if (ids.length === 1) {
     return (
       <div className="max-w-3xl mx-auto p-6 text-center">
-        <Link to="/compare" className="text-zinc-400 hover:text-amber-400 text-sm">← Порівняння</Link>
-        <div className="mt-6 text-zinc-300">
-          У порівнянні лише 1 гравець. Додайте ще {2 - ids.length}-3 з профілів кнопкою «➕ Додати до порівняння».
-        </div>
+        <Link to="/compare" className="text-zinc-400 hover:text-amber-400 text-sm">{t('compare.backCompare')}</Link>
+        <div className="mt-6 text-zinc-300">{t('compare.onlyOne')}</div>
       </div>
     )
   }
 
-  if (loading) return <div className="text-zinc-400 p-6 text-center">Завантаження…</div>
-  if (error || details.length === 0) return <div className="text-red-400 p-6">{error ?? 'не вдалось завантажити'}</div>
+  if (loading) return <div className="text-zinc-400 p-6 text-center">{t('common.loading')}</div>
+  if (error || details.length === 0) return <div className="text-red-400 p-6">{error ?? t('compare.loadFailed')}</div>
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <Link to="/compare" className="text-zinc-400 hover:text-amber-400 text-sm">← Інше порівняння</Link>
+      <Link to="/compare" className="text-zinc-400 hover:text-amber-400 text-sm">{t('compare.backOther')}</Link>
       <header className="my-6">
         <h1 className="text-3xl font-bold text-center">
-          Порівняння {details.length === 2 ? 'гравців' : `${details.length} гравців`}
+          {t('compare.headerN', { n: details.length })}
         </h1>
       </header>
       {details.length === 2
