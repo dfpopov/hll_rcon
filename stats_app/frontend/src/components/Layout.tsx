@@ -23,14 +23,13 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
           <NavLink to="/hall-of-shame" className={navClass}>💀 Hall of Shame</NavLink>
           <NavLink to="/server/countries" className={navClass}>🌍 Карта</NavLink>
-          {/* Single cross-app link into the embedded rcongui_public at /live/.
-              From there its own navbar handles "Поточний матч ↔ Історія матчів".
-              Plain <a> because /live/ is served by nginx outside React Router. */}
-          <a
-            href="/live/"
-            className="text-sm text-zinc-300 hover:text-amber-400 transition-colors border-l border-zinc-700 pl-4 ml-1"
-            title="Поточний матч і історія — rcongui_public"
-          >
+          {/* Cross-app link into the embedded rcongui_public at /live/. Plain
+              <a> because /live/ is outside React Router. Styled identically
+              to NavLinks above so visual unity is preserved. Active state
+              isn't reachable in stats_app (clicking it leaves the SPA), so
+              the inactive style is fine here — the matching `UnifiedHeader`
+              inside rcongui_public highlights it amber while you're at /live/. */}
+          <a href="/live/" className="text-sm text-zinc-300 hover:text-amber-400 transition-colors">
             🎮 Live
           </a>
           <NavSearch />
