@@ -21,8 +21,88 @@
  *   • Active state from `window.location.pathname` so it stays correct
  *     across full page navigations.
  */
-import { useLayoutEffect } from 'react'
-import { DropdownLanguageSelector } from '../language-selector'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+// ─── Inline language selector — mirrors stats_app/LanguageSelector exactly ─────────
+//
+// rcongui_public's own DropdownLanguageSelector offers 14 languages and lives
+// in its own DOM tree; stats_app's offers 5 with a custom dropdown. Showing
+// two different selectors broke the "single site" illusion. This component
+// is a self-contained copy of stats_app's variant — same icon, same 5 langs,
+// same styling — embedded straight into UnifiedHeader.
+//
+// Language sync still works through localStorage["i18nextLng"] which both
+// SPAs read on init.
+const UNIFIED_LANGS = [
+  { code: 'uk', name: 'Українська' },
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'ru', name: 'Русский' },
+  { code: 'pl', name: 'Polski' },
+] as const
+
+function InlineLanguageSelector() {
+  const { i18n, t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const current = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 7)
+
+  useEffect(() => {
+    if (!open) return
+    const click = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', click)
+    document.addEventListener('keydown', key)
+    return () => {
+      document.removeEventListener('mousedown', click)
+      document.removeEventListener('keydown', key)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="size-8 inline-flex items-center justify-center rounded text-zinc-400 hover:text-amber-400 hover:bg-zinc-800/60 transition-colors"
+        title={t('language', { defaultValue: 'Language' })}
+        aria-label="Language"
+        aria-expanded={open}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="m5 8 6 6" />
+          <path d="m4 14 6-6 2-3" />
+          <path d="M2 5h12" />
+          <path d="M7 2h1" />
+          <path d="m22 22-5-10-5 10" />
+          <path d="M14 18h6" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 min-w-[160px] py-1">
+          {UNIFIED_LANGS.map((l) => {
+            const active = current === l.code || current.startsWith(l.code + '-')
+            return (
+              <button
+                key={l.code}
+                onClick={() => { i18n.changeLanguage(l.code); setOpen(false) }}
+                className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
+                  active
+                    ? 'text-amber-400 bg-zinc-800/70 font-medium'
+                    : 'text-zinc-200 hover:bg-zinc-800/60 hover:text-amber-300'
+                }`}
+              >
+                {l.name}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 type NavItem = {
   href: string
@@ -112,10 +192,12 @@ export function UnifiedHeader() {
             {item.label}
           </a>
         ))}
-        <div className="ml-auto flex items-center gap-1 [&_button]:size-8">
+        <div className="ml-auto flex items-center">
           {/* Theme toggle removed — stats_app is dark-only and we lock dark
-              mode here too to keep both apps visually consistent. */}
-          <DropdownLanguageSelector />
+              mode here too to keep both apps visually consistent.
+              Language selector inlined (5 langs, same as stats_app) — see
+              InlineLanguageSelector above. */}
+          <InlineLanguageSelector />
         </div>
       </div>
     </header>

@@ -5,7 +5,7 @@ import { points, scores, isSteamPlayer, getSteamProfileUrl, getXboxProfileUrl } 
 import { Button } from '@/components/ui/button'
 import { SimpleIcon } from '@/components/simple-icon'
 import { siSteam } from 'simple-icons'
-import { Gamepad2Icon } from 'lucide-react'
+import { BarChart3, Gamepad2Icon } from 'lucide-react'
 import { SimpleTable } from '@/components/game/statistics/simple-table'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { IconStatistic } from '../icon'
@@ -56,7 +56,18 @@ export default function PlayerGameDetail({
               {player.player}
             </Button>
           </div>
-          <div className="flex flex-row justify-center items-center">
+          <div className="flex flex-row justify-center items-center gap-1">
+            {/* Stats_app profile link — opens /player/{steam_id} on the host
+                stats_app at /. Only meaningful for Steam players; Xbox IDs
+                aren't tracked in our player DB. */}
+            {isSteamPlayer(player) && (
+              <Button size={'icon'} variant={'outline'} asChild
+                title="HLL Stats — all-time profile of this player">
+                <a href={`/player/${player.player_id}`}>
+                  <BarChart3 size={18} />
+                </a>
+              </Button>
+            )}
             <Button size={'icon'} variant={'outline'} asChild>
               {isSteamPlayer(player) ? (
                 <a href={getSteamProfileUrl(player.player_id)} target="_blank" rel="noreferrer">

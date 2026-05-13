@@ -13,7 +13,7 @@ import { SimpleIcon } from '@/components/simple-icon'
 import { siSteam } from 'simple-icons'
 import { Status } from '@/components/game/statistics/player-status'
 import { getSteamProfileUrl, getXboxProfileUrl, isPlayerWithStatus, isSteamPlayer } from './player/utils'
-import { Gamepad2Icon } from 'lucide-react'
+import { BarChart3, Gamepad2Icon } from 'lucide-react'
 import PlayerGameDetail from './player'
 import { useTranslation } from 'react-i18next'
 import {useGameStatsContext} from "@/components/game/statistics/game-stats-container";
@@ -62,7 +62,16 @@ export function MobilePlayerGameDetail({
               </div>
             </DrawerTitle>
             <DrawerDescription className="sr-only">Game statistics for {player.player}</DrawerDescription>
-            <div className="flex flex-row justify-center items-center">
+            <div className="flex flex-row justify-center items-center gap-1">
+              {/* Stats_app profile link — same pattern as player/index.tsx. */}
+              {isSteamPlayer(player) && (
+                <Button size={'icon'} variant={'outline'} asChild
+                  title="HLL Stats — all-time profile of this player">
+                  <a href={`/player/${player.player_id}`}>
+                    <BarChart3 size={18} />
+                  </a>
+                </Button>
+              )}
               <Button size={'icon'} variant={'outline'} asChild>
                 {isSteamPlayer(player) ? (
                   <a href={getSteamProfileUrl(player.player_id)} target="_blank" rel="noreferrer">
