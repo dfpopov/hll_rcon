@@ -113,11 +113,16 @@ export default function WorldMapPage() {
                     const n = countByNumeric.get(id) ?? 0
                     const a2 = numericToA2.get(id) ?? ''
                     const isRussia = id === RU_ID
+                    // Hover-fill driven by shared state so Crimea and Ukraine
+                    // light up together; CSS :hover only affects one element.
+                    const isHovered = hover?.a2 === a2 && n > 0
+                    const baseFill = isRussia ? 'url(#ru-strike)' : (n > 0 ? colorScale(n) : '#1f1f23')
+                    const fill = isHovered && !isRussia ? '#fbbf24' : baseFill
                     return (
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
-                        fill={isRussia ? 'url(#ru-strike)' : (n > 0 ? colorScale(n) : '#1f1f23')}
+                        fill={fill}
                         stroke={isRussia ? '#b91c1c' : '#3f3f46'}
                         strokeWidth={isRussia ? 0.5 : 0.3}
                         onMouseEnter={() => {
@@ -126,9 +131,8 @@ export default function WorldMapPage() {
                         }}
                         onMouseLeave={() => setHover(null)}
                         style={{
-                          default: { outline: 'none' },
-                          hover: { fill: isRussia ? 'url(#ru-strike)' : '#fbbf24', outline: 'none',
-                                   cursor: n > 0 ? 'pointer' : 'default' },
+                          default: { outline: 'none', cursor: n > 0 ? 'pointer' : 'default' },
+                          hover: { outline: 'none' },
                           pressed: { outline: 'none' },
                         }}
                       />
@@ -136,25 +140,24 @@ export default function WorldMapPage() {
                   })
                 }
               </Geographies>
-              {/* Crimea overlay — same exact styling as other geographies,
-                  blends seamlessly with Ukraine's body. Hover behaves like
-                  it's part of UA. */}
+              {/* Crimea overlay — shares Ukraine's hover state so both
+                  highlight together when hovered. */}
               <Geographies geography={CRIMEA_GEOJSON as any}>
                 {({ geographies }) =>
                   geographies.map((geo) => {
                     const uaCount = countByNumeric.get(UA_ID) ?? 0
-                    const uaFill = uaCount > 0 ? colorScale(uaCount) : '#1f1f23'
+                    const uaBaseFill = uaCount > 0 ? colorScale(uaCount) : '#1f1f23'
+                    const uaHovered = hover?.a2 === 'UA' && uaCount > 0
                     return (
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
-                        fill={uaFill}
+                        fill={uaHovered ? '#fbbf24' : uaBaseFill}
                         stroke="#3f3f46"
                         strokeWidth={0.3}
                         style={{
-                          default: { outline: 'none' },
-                          hover: { fill: uaCount > 0 ? '#fbbf24' : uaFill, outline: 'none',
-                                   cursor: uaCount > 0 ? 'pointer' : 'default' },
+                          default: { outline: 'none', cursor: uaCount > 0 ? 'pointer' : 'default' },
+                          hover: { outline: 'none' },
                           pressed: { outline: 'none' },
                         }}
                         onMouseEnter={() => uaCount > 0 && setHover({ a2: 'UA', players: uaCount })}
