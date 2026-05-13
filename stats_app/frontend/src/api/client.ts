@@ -274,9 +274,28 @@ export interface PlayerDetail {
   played_with_against: PlayedWithAgainst
   melee_meta: MeleeMeta
   hardcounters: Hardcounter[]
+  pvp_breakdown: PvpBreakdown
   achievement_progress: AchievementProgress[]
   playstyle: Playstyle
   playstyle_also: Playstyle[]
+}
+
+/** Per-victim and per-killer weapon breakdown — see queries.py:pvp_weapon_breakdown. */
+export interface PvpBreakdown {
+  victims: PvpBreakdownVictim[]
+  killers: PvpBreakdownKiller[]
+}
+export interface PvpBreakdownVictim {
+  victim_sid: string  // may be empty if log row has no FK to steam_id_64
+  victim_name: string
+  total: number
+  weapons: { weapon: string; count: number }[]
+}
+export interface PvpBreakdownKiller {
+  killer_sid: string
+  killer_name: string
+  total: number
+  weapons: { weapon: string; count: number }[]
 }
 
 export interface Playstyle {

@@ -132,6 +132,42 @@ function StatCard({ label, value, accent }: { label: string; value: string | num
   )
 }
 
+/**
+ * Compact sub-line under a PVP BarRow showing the weapon breakdown for that
+ * specific victim / killer. Renders nothing when there are no logged events.
+ * Resolves the question "with what weapon did I kill PlayerX in our 5
+ * encounters?" — see queries.py:pvp_weapon_breakdown.
+ *
+ * The "logged" caveat matters: counts here can be ≤ the bar's total because
+ * matches without log coverage don't appear in log_lines. We don't surface
+ * this caveat per-row to keep the UI quiet — a one-time legend would be
+ * better long-term.
+ */
+function WeaponSubline({ weapons, accent }: { weapons: { weapon: string; count: number }[]; accent: 'green' | 'red' }) {
+  if (!weapons.length) return null
+  // Show top 4 inline; collapse the rest into a "+N more" pill.
+  const shown = weapons.slice(0, 4)
+  const rest = weapons.length - shown.length
+  const chipCls = accent === 'green'
+    ? 'text-green-300/80 border-green-900/50 bg-green-950/30'
+    : 'text-red-300/80 border-red-900/50 bg-red-950/30'
+  return (
+    <div className="flex flex-wrap gap-1 mt-1 ml-44 pl-2 text-xs text-zinc-500">
+      {shown.map((w) => (
+        <span key={w.weapon}
+          className={`inline-flex items-baseline gap-1 px-1.5 py-0.5 rounded border ${chipCls}`}
+          title={w.weapon}>
+          <span className="truncate max-w-[120px]">{w.weapon}</span>
+          <span className="font-medium tabular-nums">×{w.count}</span>
+        </span>
+      ))}
+      {rest > 0 && (
+        <span className="text-zinc-600 italic px-1.5 py-0.5">+{rest}</span>
+      )}
+    </div>
+  )
+}
+
 function BarRow({ name, value, max, color, onClick }: {
   name: string; value: number; max: number; color: string; onClick?: () => void
 }) {
@@ -532,11 +568,24 @@ export default function PlayerDetailPage() {
           </h2>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 space-y-2">
             {data.most_killed.length === 0 && <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
-            {data.most_killed.map((v) => (
-              <BarRow key={v.victim} name={v.victim} value={v.kills} max={maxKilled}
-                color="bg-gradient-to-r from-green-700 to-green-500"
-                onClick={() => handlePvpClick(v.victim)} />
-            ))}
+            {data.most_killed.map((v) => {
+              // Weapon breakdown for this victim, from log_lines (only logged
+              // matches). Match by name — most_killed lacks the FK we'd need
+              // for sid-level join, and the log entry name is the same denorm
+              // string. Total in pvp_breakdown can be ≤ v.kills because of
+              // matches without log coverage; we just show what's logged.
+              const breakdown = data.pvp_breakdown?.victims.find(
+                (b) => b.victim_name === v.victim,
+              )
+              return (
+                <div key={v.victim}>
+                  <BarRow name={v.victim} value={v.kills} max={maxKilled}
+                    color="bg-gradient-to-r from-green-700 to-green-500"
+                    onClick={() => handlePvpClick(v.victim)} />
+                  <WeaponSubline weapons={breakdown?.weapons ?? []} accent="green" />
+                </div>
+              )
+            })}
           </div>
         </section>
 
@@ -547,11 +596,19 @@ export default function PlayerDetailPage() {
           </h2>
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 space-y-2">
             {data.killed_by.length === 0 && <div className="text-zinc-600 text-sm">{t('records.noData')}</div>}
-            {data.killed_by.map((k) => (
-              <BarRow key={k.killer} name={k.killer} value={k.deaths} max={maxKillers}
-                color="bg-gradient-to-r from-red-700 to-red-500"
-                onClick={() => handlePvpClick(k.killer)} />
-            ))}
+            {data.killed_by.map((k) => {
+              const breakdown = data.pvp_breakdown?.killers.find(
+                (b) => b.killer_name === k.killer,
+              )
+              return (
+                <div key={k.killer}>
+                  <BarRow name={k.killer} value={k.deaths} max={maxKillers}
+                    color="bg-gradient-to-r from-red-700 to-red-500"
+                    onClick={() => handlePvpClick(k.killer)} />
+                  <WeaponSubline weapons={breakdown?.weapons ?? []} accent="red" />
+                </div>
+              )
+            })}
           </div>
         </section>
 

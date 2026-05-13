@@ -79,6 +79,40 @@ ACHIEVEMENTS = [
     ("all_rounder",  "Універсальний солдат","🎻", "epic",      "Робити вбивства з 8+ різних класів зброї",
         lambda p: (p.get("classes_with_kills") or 0) >= 8),
 
+    # Per-weapon-class achievements (E-batch). Driven by kills_by_class which
+    # _all_player_profiles_enriched fills in. The "200+ kills" thresholds are
+    # tuned so a focused specialist earns them while a generalist with the
+    # same total kill count doesn't — see also `tank_god` / `samurai` which
+    # already cover Tank/AT and Melee buckets.
+    ("sniper_ghost",   "Снайпер-привид",       "👻", "epic",      "Зробити 500+ вбивств зі Sniper Rifle",
+        lambda p: (p.get("kills_by_class") or {}).get("Sniper Rifle", 0) >= 500),
+    ("mg_master",      "Майстер MG",           "🔫", "rare",      "Зробити 500+ вбивств з Machine Gun",
+        lambda p: (p.get("kills_by_class") or {}).get("Machine Gun", 0) >= 500),
+    ("artillerist",    "Артилерист",           "💥", "epic",      "Зробити 300+ вбивств з артилерії",
+        lambda p: (p.get("kills_by_class") or {}).get("Artillery", 0) >= 300),
+    ("grenadier",      "Гранатомет",           "💣", "rare",      "Зробити 300+ вбивств вибухівкою (granade/satchel/rocket)",
+        lambda p: (p.get("kills_by_class") or {}).get("Explosive", 0) >= 300),
+    ("miner",          "Сапер",                "⚙️", "rare",       "Зробити 100+ вбивств мінами",
+        lambda p: (p.get("kills_by_class") or {}).get("Mine", 0) >= 100),
+    ("fire_fist",      "Вогняний кулак",       "🔥", "legendary", "Зробити 100+ вбивств вогнеметом",
+        lambda p: (p.get("kills_by_class") or {}).get("Flame", 0) >= 100),
+    ("anti_tank_ace",  "Бронебійник",          "🚀", "rare",      "Зробити 200+ вбивств з Anti-Tank зброї",
+        lambda p: (p.get("kills_by_class") or {}).get("Anti-Tank", 0) >= 200),
+
+    # Behavioural / pace (F-batch). Profile-only signals — no per-match data
+    # needed thanks to the enriched fields kpm, unique_weapons_count, peak_hour_pct.
+    ("fast_killer",    "Швидкий стрілець",     "⚡", "rare",      "KPM 1.5+ з 30+ матчів",
+        lambda p: (p.get("kpm") or 0) >= 1.5 and (p.get("matches_played") or 0) >= 30),
+    ("loyal_soldier",  "Вірний солдат",        "🕊", "legendary", "500+ матчів і жодного власного TK",
+        lambda p: (p.get("matches_played") or 0) >= 500 and (p.get("teamkills") or 0) == 0),
+    ("weapon_master",  "Майстер арсеналу",     "🎻", "uncommon",  "Використати 50+ різних видів зброї",
+        lambda p: (p.get("unique_weapons_count") or 0) >= 50),
+    ("night_owl",      "Сова",                 "🦉", "rare",      "60%+ усіх матчів грав у одну й ту саму годину доби",
+        lambda p: (p.get("peak_hour_pct") or 0) >= 60),
+    ("storm",          "Шторм",                "🌪", "epic",      "Сумарний score (combat+offense+defense+support) 1M+",
+        lambda p: ((p.get("combat") or 0) + (p.get("offense") or 0)
+                   + (p.get("defense") or 0) + (p.get("support") or 0)) >= 1_000_000),
+
     # Hidden achievements / easter eggs. Pure aggregate from profile — no
     # per-match data needed. These reward unusual statistical signatures
     # rather than raw volume.
@@ -156,6 +190,13 @@ SIMPLE_THRESHOLDS: Dict[str, tuple] = {
     "tireless":      ("total_seconds",      1000 * 3600),
     "lone_survivor": ("longest_life_secs",  1800),
     "old_guard":     ("matches_played",     2000),
+    # F-batch progress entries — single-axis only. Weapon-class predicates
+    # use kills_by_class.<class> which doesn't fit the flat profile.get(key)
+    # lookup used here, so they're shown as binary earned/not-earned only.
+    "fast_killer":   ("kpm",                1.5),
+    "weapon_master": ("unique_weapons_count", 50),
+    "night_owl":     ("peak_hour_pct",      60),
+    "storm":         ("combat",             1_000_000),  # rough proxy — total score = combat+others
 }
 
 

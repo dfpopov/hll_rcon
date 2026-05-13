@@ -940,6 +940,105 @@ def hardcounters(db: Session, steam_id: str, min_deaths: int = 5, limit: int = 5
     ]
 
 
+def pvp_weapon_breakdown(db: Session, steam_id: str, top_n: int = 8) -> dict:
+    """Per-victim and per-killer weapon breakdown from log_lines.
+
+    Resolves the question "I killed PlayerX five times, but with what
+    weapon each time?" — useful when the player can't remember whether
+    a memorable knife kill was on this specific victim or another.
+
+    Returns:
+      {
+        "victims": [
+          {
+            "victim_sid": "7656…",   # may be empty if log row missing FK
+            "victim_name": "PlayerX",
+            "total": 5,
+            "weapons": [{"weapon": "KNIFE M3", "count": 3},
+                        {"weapon": "M1 GARAND", "count": 2}],
+          },
+          …  # up to top_n
+        ],
+        "killers": [ … same shape for who killed me … ]
+      }
+
+    Counts come from log_lines.type='KILL' (logged matches only) — they
+    may be smaller than the player_stats.most_killed totals shown on the
+    bars above, which include matches without log coverage. The UI labels
+    this section accordingly.
+    """
+    sql = text("""
+        WITH me AS (SELECT id FROM steam_id_64 WHERE steam_id_64 = :sid)
+        -- Direction: kills I made (victims)
+        SELECT
+            'victim'::text AS direction,
+            COALESCE(s.steam_id_64, '') AS other_sid,
+            ll.player_name_2 AS other_name,
+            COALESCE(NULLIF(ll.weapon, ''), 'Unknown') AS weapon,
+            COUNT(*) AS n
+        FROM log_lines ll
+        CROSS JOIN me
+        LEFT JOIN steam_id_64 s ON s.id = ll.player2_steamid
+        WHERE ll.type = 'KILL'
+          AND ll.player1_steamid = me.id
+          AND ll.player2_steamid IS NOT NULL
+          AND ll.player2_steamid <> me.id
+        GROUP BY s.steam_id_64, ll.player_name_2, ll.weapon
+
+        UNION ALL
+
+        -- Direction: deaths I suffered (killers)
+        SELECT
+            'killer'::text AS direction,
+            COALESCE(s.steam_id_64, '') AS other_sid,
+            ll.player_name_1 AS other_name,
+            COALESCE(NULLIF(ll.weapon, ''), 'Unknown') AS weapon,
+            COUNT(*) AS n
+        FROM log_lines ll
+        CROSS JOIN me
+        LEFT JOIN steam_id_64 s ON s.id = ll.player1_steamid
+        WHERE ll.type = 'KILL'
+          AND ll.player2_steamid = me.id
+          AND ll.player1_steamid IS NOT NULL
+          AND ll.player1_steamid <> me.id
+        GROUP BY s.steam_id_64, ll.player_name_1, ll.weapon
+    """)
+    # Two flat lists keyed by direction. Group in Python — Postgres window-
+    # functions for top-N-per-group are doable but harder to read.
+    by_dir: dict[str, dict[tuple, dict]] = {"victim": {}, "killer": {}}
+    for row in db.execute(sql, {"sid": steam_id}):
+        if not row.other_name:
+            continue
+        key = (row.other_sid, row.other_name)
+        bucket = by_dir[row.direction].setdefault(
+            key,
+            {"sid": row.other_sid, "name": row.other_name, "total": 0, "weapons": []},
+        )
+        bucket["total"] += int(row.n)
+        bucket["weapons"].append({"weapon": row.weapon, "count": int(row.n)})
+
+    def _top(direction: str, sid_field: str, name_field: str) -> list[dict]:
+        items = sorted(
+            by_dir[direction].values(), key=lambda d: d["total"], reverse=True
+        )[:top_n]
+        for it in items:
+            it["weapons"].sort(key=lambda w: w["count"], reverse=True)
+        return [
+            {
+                sid_field: it["sid"],
+                name_field: it["name"],
+                "total": it["total"],
+                "weapons": it["weapons"],
+            }
+            for it in items
+        ]
+
+    return {
+        "victims": _top("victim", "victim_sid", "victim_name"),
+        "killers": _top("killer", "killer_sid", "killer_name"),
+    }
+
+
 def best_single_game_by_class(
     db: Session,
     weapon_class: str,
@@ -1344,6 +1443,11 @@ def player_detail(db: Session, steam_id: str):
     # 16) Hardcounters — players with positive K/D against this player.
     hc = hardcounters(db, steam_id, min_deaths=5, limit=5)
 
+    # 16b) PvP weapon breakdown — for each top victim/killer, how the kills
+    # split across weapons (resolves the "knife kill — but which victim?"
+    # ambiguity in the UI). Logged matches only.
+    pvp_bd = pvp_weapon_breakdown(db, steam_id, top_n=8)
+
     # 17) Achievement progress — top-5 closest-to-earning badges.
     ach_progress = compute_achievement_progress(_ach_profile, limit=5)
 
@@ -1380,6 +1484,7 @@ def player_detail(db: Session, steam_id: str):
         "played_with_against": pwa,
         "melee_meta": melee,
         "hardcounters": hc,
+        "pvp_breakdown": pvp_bd,
         "achievement_progress": ach_progress,
         "playstyle": playstyle,
         "playstyle_also": playstyle_also,
