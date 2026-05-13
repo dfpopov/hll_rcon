@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   fetchTopPlayers, fetchBestSingleGame,
   PlayerRow, SingleGameRow, SortKey, SingleGameMetric,
@@ -8,8 +9,7 @@ import MiniCompareButton from '../components/MiniCompareButton'
 import { formatMapName } from '../components/mapNames'
 
 interface ShameCardDef {
-  key: string
-  title: string
+  key: string  // also used as the i18n suffix under `shame.cards.<key>.*`
   emoji: string
   // Either an aggregate (top players) or a single-game record.
   mode: 'aggregate' | 'single_game'
@@ -17,67 +17,20 @@ interface ShameCardDef {
   metric?: SingleGameMetric
   order?: 'asc' | 'desc'
   min_matches?: number
-  valueFmt?: (r: any) => string | number
-  caption: string  // explanation shown under the title
+  // valueFmt receives a locale-aware number formatter so display stays
+  // i18n-consistent (e.g. "1 234" in uk, "1,234" in en, "1.234" in de).
+  valueFmt?: (r: any, nf: Intl.NumberFormat) => string | number
 }
 
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
 
 const SHAME_CARDS: ShameCardDef[] = [
-  {
-    key: 'tk_total',
-    title: 'Найбільше TK за весь час',
-    emoji: '🤡',
-    mode: 'aggregate',
-    sort: 'teamkills',
-    valueFmt: (r: PlayerRow) => r.teamkills.toLocaleString('uk-UA'),
-    caption: 'Шкільні стрільці. Своїх вбили більше, ніж усі решта.',
-  },
-  {
-    key: 'tk_victims',
-    title: 'Найбільше смертей від ТК своїх',
-    emoji: '😅',
-    mode: 'aggregate',
-    sort: 'deaths_by_tk',
-    valueFmt: (r: PlayerRow) => (r.deaths_by_tk ?? 0).toLocaleString('uk-UA'),
-    caption: 'Завжди не там стоять. Магніт для союзницьких куль.',
-  },
-  {
-    key: 'worst_kd',
-    title: 'Найгірший K/D з 100+ матчами',
-    emoji: '📉',
-    mode: 'aggregate',
-    sort: 'kd_ratio',
-    order: 'asc',
-    min_matches: 100,
-    valueFmt: (r: PlayerRow) => r.kd_ratio ?? '—',
-    caption: 'Грали довго, грали постійно. Стріляти так і не навчилися.',
-  },
-  {
-    key: 'most_deaths',
-    title: 'Найбільше смертей за весь час',
-    emoji: '🪦',
-    mode: 'aggregate',
-    sort: 'deaths',
-    valueFmt: (r: PlayerRow) => r.deaths.toLocaleString('uk-UA'),
-    caption: 'Кожен матч — нова сторінка некролога.',
-  },
-  {
-    key: 'worst_game_deaths',
-    title: 'Найгірший матч за смертями',
-    emoji: '💩',
-    mode: 'single_game',
-    metric: 'deaths',
-    caption: 'Один матч — одна катастрофа. 70+ смертей за гру — це треба ще постаратися.',
-  },
-  {
-    key: 'worst_game_tk',
-    title: 'Найбільше TK в одному матчі',
-    emoji: '☠️',
-    mode: 'single_game',
-    metric: 'teamkills',
-    caption: 'Команді потрібен капітан. А прийшов он — з гранатами.',
-  },
+  { key: 'tk_total',         emoji: '🤡', mode: 'aggregate',   sort: 'teamkills',    valueFmt: (r: PlayerRow, nf) => nf.format(r.teamkills) },
+  { key: 'tk_victims',       emoji: '😅', mode: 'aggregate',   sort: 'deaths_by_tk', valueFmt: (r: PlayerRow, nf) => nf.format(r.deaths_by_tk ?? 0) },
+  { key: 'worst_kd',         emoji: '📉', mode: 'aggregate',   sort: 'kd_ratio', order: 'asc', min_matches: 100, valueFmt: (r: PlayerRow) => r.kd_ratio ?? '—' },
+  { key: 'most_deaths',      emoji: '🪦', mode: 'aggregate',   sort: 'deaths',       valueFmt: (r: PlayerRow, nf) => nf.format(r.deaths) },
+  { key: 'worst_game_deaths', emoji: '💩', mode: 'single_game', metric: 'deaths' },
+  { key: 'worst_game_tk',    emoji: '☠️', mode: 'single_game', metric: 'teamkills' },
 ]
 
 function PlayerLine({ rank, name, steam_id, value }: { rank: number; name: string; steam_id: string; value: string | number }) {
@@ -93,7 +46,7 @@ function PlayerLine({ rank, name, steam_id, value }: { rank: number; name: strin
   )
 }
 
-function SingleGameLine({ rank, row }: { rank: number; row: SingleGameRow }) {
+function SingleGameLine({ rank, row, nf }: { rank: number; row: SingleGameRow; nf: Intl.NumberFormat }) {
   return (
     <li className="flex items-baseline gap-2 text-sm">
       <span className="text-zinc-500 w-5 text-right">{rank}.</span>
@@ -107,12 +60,14 @@ function SingleGameLine({ rank, row }: { rank: number; row: SingleGameRow }) {
         </a>
       </div>
       <MiniCompareButton steam_id={row.steam_id} name={row.name} />
-      <span className="font-bold text-rose-300 tabular-nums">{row.value.toLocaleString('uk-UA')}</span>
+      <span className="font-bold text-rose-300 tabular-nums">{nf.format(row.value)}</span>
     </li>
   )
 }
 
 function ShameCard({ def }: { def: ShameCardDef }) {
+  const { t, i18n } = useTranslation()
+  const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [rows, setRows] = useState<PlayerRow[] | SingleGameRow[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -133,17 +88,17 @@ function ShameCard({ def }: { def: ShameCardDef }) {
     <div className="bg-gradient-to-br from-zinc-900 to-rose-950/30 border border-rose-900/40 rounded-lg p-4">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-2xl">{def.emoji}</span>
-        <h3 className="font-semibold text-rose-200 text-sm uppercase tracking-wide flex-1">{def.title}</h3>
+        <h3 className="font-semibold text-rose-200 text-sm uppercase tracking-wide flex-1">{t(`shame.cards.${def.key}.title`)}</h3>
       </div>
-      <p className="text-xs text-zinc-500 italic mb-3 leading-snug">{def.caption}</p>
+      <p className="text-xs text-zinc-500 italic mb-3 leading-snug">{t(`shame.cards.${def.key}.caption`)}</p>
       <ol className="space-y-1">
-        {loading && <li className="text-zinc-600 text-xs italic">завантаження…</li>}
-        {!loading && rows.length === 0 && <li className="text-zinc-600 text-xs italic">немає кандидатів</li>}
+        {loading && <li className="text-zinc-600 text-xs italic">{t('common.loading')}</li>}
+        {!loading && rows.length === 0 && <li className="text-zinc-600 text-xs italic">{t('shame.noCandidates')}</li>}
         {!loading && def.mode === 'aggregate' && (rows as PlayerRow[]).map((r, i) => (
-          <PlayerLine key={r.steam_id} rank={i + 1} name={r.name} steam_id={r.steam_id} value={def.valueFmt!(r)} />
+          <PlayerLine key={r.steam_id} rank={i + 1} name={r.name} steam_id={r.steam_id} value={def.valueFmt!(r, nf)} />
         ))}
         {!loading && def.mode === 'single_game' && (rows as SingleGameRow[]).map((r, i) => (
-          <SingleGameLine key={`${r.steam_id}-${i}`} rank={i + 1} row={r} />
+          <SingleGameLine key={`${r.steam_id}-${i}`} rank={i + 1} row={r} nf={nf} />
         ))}
       </ol>
     </div>
@@ -151,13 +106,12 @@ function ShameCard({ def }: { def: ShameCardDef }) {
 }
 
 export default function HallOfShamePage() {
+  const { t } = useTranslation()
   return (
     <div className="max-w-7xl mx-auto p-6">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">💀 Hall of Shame</h1>
-        <p className="text-zinc-400 text-sm">
-          Антиподи лідерборду. Хто стріляє у своїх, гине на ровному місці, і чому ти ніколи не хочеш бути в одному загоні з ними.
-        </p>
+        <h1 className="text-3xl font-bold mb-1">{t('shame.title')}</h1>
+        <p className="text-zinc-400 text-sm">{t('shame.subtitle')}</p>
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {SHAME_CARDS.map((def) => <ShameCard key={def.key} def={def} />)}

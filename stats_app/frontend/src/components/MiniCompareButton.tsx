@@ -7,6 +7,7 @@
  *   - already in list: filled green ✓ on hover, click removes
  *   - list at max (4): muted grey, disabled, with tooltip
  */
+import { useTranslation } from 'react-i18next'
 import { useCompareList } from '../hooks/useCompareList'
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export default function MiniCompareButton({ steam_id, name, size = 'sm' }: Props) {
+  const { t } = useTranslation()
   const { has, add, remove, list, max } = useCompareList()
   const inList = has(steam_id)
   const full = !inList && list.length >= max
@@ -37,19 +39,19 @@ export default function MiniCompareButton({ steam_id, name, size = 'sm' }: Props
     return (
       <button onClick={onClick}
         className={`${baseCls} bg-amber-700/40 border border-amber-600/50 text-amber-200 hover:bg-amber-700/60`}
-        title={`Прибрати ${name} зі списку порівняння`}>✓</button>
+        title={t('miniCompare.remove', { name })}>✓</button>
     )
   }
   if (full) {
     return (
       <button disabled
         className={`${baseCls} bg-zinc-800 border border-zinc-700 text-zinc-600 cursor-not-allowed`}
-        title={`Список порівняння повний (${max}). Прибери когось щоб додати.`}>⚖</button>
+        title={t('miniCompare.full', { max })}>⚖</button>
     )
   }
   return (
     <button onClick={onClick}
       className={`${baseCls} bg-zinc-800 border border-transparent text-zinc-500 hover:text-amber-400 hover:border-amber-700/40`}
-      title={`Додати ${name} до порівняння`}>⚖</button>
+      title={t('miniCompare.add', { name })}>⚖</button>
   )
 }

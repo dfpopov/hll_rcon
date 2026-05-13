@@ -6,9 +6,11 @@
  * for a single-player list.
  */
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useCompareList } from '../hooks/useCompareList'
 
 export default function CompareBar() {
+  const { t } = useTranslation()
   const { list, remove, clear, max } = useCompareList()
   const navigate = useNavigate()
 
@@ -25,10 +27,10 @@ export default function CompareBar() {
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-zinc-900/95 border border-zinc-700
                  rounded-lg shadow-2xl px-4 py-3 flex items-center gap-3 max-w-[95vw] backdrop-blur"
       role="region"
-      aria-label="Список для порівняння"
+      aria-label={t('compareBar.regionLabel')}
     >
       <span className="text-xs text-zinc-400 uppercase tracking-widest hidden sm:inline">
-        ⚖ Порівняння
+        ⚖ {t('compareBar.label')}
       </span>
       <div className="flex items-center gap-1.5 flex-wrap">
         {list.map((p) => (
@@ -40,8 +42,8 @@ export default function CompareBar() {
             <button
               onClick={() => remove(p.steam_id)}
               className="text-zinc-500 hover:text-red-400 leading-none"
-              title="Прибрати"
-              aria-label={`Прибрати ${p.name}`}
+              title={t('compareBar.remove')}
+              aria-label={t('compareBar.removeName', { name: p.name })}
             >✕</button>
           </span>
         ))}
@@ -52,15 +54,15 @@ export default function CompareBar() {
         disabled={list.length < 2}
         className="px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium
                    disabled:opacity-30 disabled:cursor-not-allowed"
-        title={list.length < 2 ? 'Потрібно щонайменше 2 гравця' : 'Перейти до порівняння'}
+        title={list.length < 2 ? t('compareBar.needTwo') : t('compareBar.go')}
       >
-        Порівняти ({list.length})
+        {t('compareBar.compareN', { n: list.length })}
       </button>
       <button
         onClick={clear}
         className="text-xs text-zinc-500 hover:text-zinc-300"
-        title="Очистити весь список"
-      >Очистити</button>
+        title={t('compareBar.clearAll')}
+      >{t('compareBar.clear')}</button>
     </div>
   )
 }

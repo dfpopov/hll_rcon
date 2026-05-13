@@ -9,6 +9,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
 import { scaleLinear } from 'd3-scale'
+import { useTranslation } from 'react-i18next'
 import { fetchCountries, CountryEntry } from '../api/client'
 import CountryFlag from '../components/CountryFlag'
 import { ISO_A2_TO_NUMERIC } from '../components/isoCountryCodes'
@@ -41,6 +42,8 @@ const CRIMEA_GEOJSON = {
 } as const
 
 export default function WorldMapPage() {
+  const { t, i18n } = useTranslation()
+  const numFmt = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [data, setData] = useState<CountryEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [hover, setHover] = useState<{ a2: string; players: number } | null>(null)
@@ -75,18 +78,18 @@ export default function WorldMapPage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">🌍 Гравці зі світу</h1>
+        <h1 className="text-3xl font-bold mb-1">{t('worldMap.title')}</h1>
         <p className="text-zinc-400 text-sm">
-          {totalPlayers.toLocaleString('uk-UA')} гравців з відомою країною • {data.length} країн
+          {t('worldMap.subtitle', { players: numFmt.format(totalPlayers), countries: data.length })}
           {hover && (
             <span className="ml-2 text-amber-400">
-              • Hover: <CountryFlag iso={hover.a2} showCode /> {hover.players.toLocaleString('uk-UA')}
+              • {t('worldMap.hover')}: <CountryFlag iso={hover.a2} showCode /> {numFmt.format(hover.players)}
             </span>
           )}
         </p>
       </header>
 
-      {loading && <div className="text-zinc-400 py-8 text-center">Завантаження…</div>}
+      {loading && <div className="text-zinc-400 py-8 text-center">{t('common.loading')}</div>}
 
       {!loading && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -176,27 +179,27 @@ export default function WorldMapPage() {
             <div className="flex items-center justify-center gap-2 mt-2 text-xs text-zinc-500">
               <span>0</span>
               <div className="h-2 w-48 rounded" style={{ background: 'linear-gradient(to right, #27272a, #f59e0b)' }} />
-              <span>{max.toLocaleString('uk-UA')}</span>
+              <span>{numFmt.format(max)}</span>
             </div>
           </div>
 
           {/* Top countries list — takes 1/3 */}
           <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4">
-            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">Топ країн</h2>
+            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">{t('worldMap.topCountries')}</h2>
             <ol className="space-y-1 text-sm max-h-[480px] overflow-y-auto">
               {data.slice(0, 50).map((c, i) => (
                 <li key={c.country} className="flex items-center gap-2">
                   <span className="text-zinc-500 w-6 text-right tabular-nums">{i + 1}.</span>
                   <CountryFlag iso={c.country} />
                   <span className="text-zinc-300 flex-1">{c.country}</span>
-                  <span className="text-zinc-100 tabular-nums font-medium">{c.players.toLocaleString('uk-UA')}</span>
+                  <span className="text-zinc-100 tabular-nums font-medium">{numFmt.format(c.players)}</span>
                   <span className="text-zinc-500 text-xs tabular-nums w-14 text-right">{c.pct}%</span>
                 </li>
               ))}
             </ol>
             {data.length > 50 && (
               <div className="text-xs text-zinc-600 mt-2 text-center">
-                +{data.length - 50} інших країн
+                {t('worldMap.moreCountries', { count: data.length - 50 })}
               </div>
             )}
           </div>

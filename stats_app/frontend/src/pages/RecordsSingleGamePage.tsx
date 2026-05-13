@@ -1,35 +1,36 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchBestSingleGame, fetchBestSingleGameByClass, SingleGameRow, SingleGameMetric } from '../api/client'
 import MiniCompareButton from '../components/MiniCompareButton'
 import { formatMapName } from '../components/mapNames'
 
-const CARDS: { metric: SingleGameMetric; title: string; valueFmt?: (n: number) => string }[] = [
-  { metric: 'kills',            title: 'Найбільше вбивств за гру' },
-  { metric: 'kills_streak',     title: 'Найдовша серія вбивств' },
-  { metric: 'combat',           title: 'Combat за гру' },
-  { metric: 'support',          title: 'Support за гру' },
-  { metric: 'offense',          title: 'Offense за гру' },
-  { metric: 'defense',          title: 'Defense за гру' },
-  { metric: 'kill_death_ratio', title: 'K/D за гру', valueFmt: (n) => n.toFixed(2) },
-  { metric: 'kills_per_minute', title: 'K/хв за гру', valueFmt: (n) => n.toFixed(2) },
-  { metric: 'teamkills',        title: 'Найгірший TK за гру' },
-  { metric: 'deaths',           title: 'Найгірша гра (deaths)' },
+const CARDS: { metric: SingleGameMetric; valueFmt?: (n: number) => string }[] = [
+  { metric: 'kills' },
+  { metric: 'kills_streak' },
+  { metric: 'combat' },
+  { metric: 'support' },
+  { metric: 'offense' },
+  { metric: 'defense' },
+  { metric: 'kill_death_ratio', valueFmt: (n) => n.toFixed(2) },
+  { metric: 'kills_per_minute', valueFmt: (n) => n.toFixed(2) },
+  { metric: 'teamkills' },
+  { metric: 'deaths' },
 ]
 
 // Per-weapon-class single-game cards. Mirrors HLL Records "MOST KILLS IN ONE
 // GAME (FLARE GUN/MELEE/MINES/...)" — the narrow classes are the meme-worthy
 // ones; generic Rifle/SMG are excluded since they overlap with overall kills.
-const CLASS_CARDS: { weapon_class: string; title: string }[] = [
-  { weapon_class: 'Sniper Rifle', title: 'Sniper за гру' },
-  { weapon_class: 'Machine Gun',  title: 'MG за гру' },
-  { weapon_class: 'Anti-Tank',    title: 'AT за гру' },
-  { weapon_class: 'Tank Gun',     title: 'Танковий бій за гру' },
-  { weapon_class: 'Artillery',    title: 'Артилерія за гру' },
-  { weapon_class: 'Mine',         title: 'Міни за гру' },
-  { weapon_class: 'Explosive',    title: 'Вибухівка за гру' },
-  { weapon_class: 'Flame',        title: 'Вогнемет за гру' },
-  { weapon_class: 'Melee',        title: 'Ближній бій за гру' },
+const CLASS_CARDS: { weapon_class: string; i18nKey: string }[] = [
+  { weapon_class: 'Sniper Rifle', i18nKey: 'sniperRifle' },
+  { weapon_class: 'Machine Gun',  i18nKey: 'machineGun' },
+  { weapon_class: 'Anti-Tank',    i18nKey: 'antiTank' },
+  { weapon_class: 'Tank Gun',     i18nKey: 'tankGun' },
+  { weapon_class: 'Artillery',    i18nKey: 'artillery' },
+  { weapon_class: 'Mine',         i18nKey: 'mine' },
+  { weapon_class: 'Explosive',    i18nKey: 'explosive' },
+  { weapon_class: 'Flame',        i18nKey: 'flame' },
+  { weapon_class: 'Melee',        i18nKey: 'melee' },
 ]
 
 const CRCON_PUBLIC_BASE = 'http://95.111.230.75:7010'
@@ -39,6 +40,8 @@ function SingleGameCard({ title, rows, fmt }: {
   rows: SingleGameRow[]
   fmt?: (n: number) => string
 }) {
+  const { t, i18n } = useTranslation()
+  const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [expanded, setExpanded] = useState(false)
   const visible = expanded ? rows : rows.slice(0, 5)
   return (
@@ -50,7 +53,7 @@ function SingleGameCard({ title, rows, fmt }: {
             onClick={() => setExpanded((e) => !e)}
             className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-0.5 rounded bg-zinc-800/50"
           >
-            {expanded ? '▲ менше' : `▼ ще ${rows.length - 5}`}
+            {expanded ? `▲ ${t('records.showLess')}` : t('records.showMoreN', { n: rows.length - 5 })}
           </button>
         )}
       </div>
@@ -72,23 +75,24 @@ function SingleGameCard({ title, rows, fmt }: {
                 {formatMapName(r.map_name)}
               </a>
               {r.top_weapon && (
-                <span className="text-[10px] text-zinc-600 truncate block" title={`Most used: ${r.top_weapon}`}>
+                <span className="text-[10px] text-zinc-600 truncate block" title={t('records.mostUsed', { weapon: r.top_weapon })}>
                   🔫 {r.top_weapon}
                 </span>
               )}
             </div>
             <span className="font-bold text-zinc-200 tabular-nums">
-              {fmt ? fmt(r.value) : r.value.toLocaleString('uk-UA')}
+              {fmt ? fmt(r.value) : nf.format(r.value)}
             </span>
           </li>
         ))}
-        {rows.length === 0 && <li className="text-zinc-600 text-xs italic">немає даних</li>}
+        {rows.length === 0 && <li className="text-zinc-600 text-xs italic">{t('records.noData')}</li>}
       </ol>
     </div>
   )
 }
 
 export default function RecordsSingleGamePage() {
+  const { t } = useTranslation()
   const [data, setData] = useState<Record<string, SingleGameRow[]>>({})
   const [classData, setClassData] = useState<Record<string, SingleGameRow[]>>({})
   const [loading, setLoading] = useState(true)
@@ -116,29 +120,27 @@ export default function RecordsSingleGamePage() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">Рекорди за один матч</h1>
-        <p className="text-zinc-400 text-sm">
-          Найвищі досягнення в одному матчі за всю історію • Натисни на карту матчу для деталей
-        </p>
+        <h1 className="text-3xl font-bold mb-1">{t('records.singleGame.title')}</h1>
+        <p className="text-zinc-400 text-sm">{t('records.singleGame.subtitle')}</p>
       </header>
 
-      {loading && <div className="text-zinc-400 py-8 text-center">Завантаження…</div>}
+      {loading && <div className="text-zinc-400 py-8 text-center">{t('common.loading')}</div>}
 
       {!loading && (
         <>
           <section className="mb-6">
-            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">Загальні метрики</h2>
+            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">{t('records.singleGame.generalMetrics')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {CARDS.map((c) => (
-                <SingleGameCard key={c.metric} title={c.title} rows={data[c.metric] ?? []} fmt={c.valueFmt} />
+                <SingleGameCard key={c.metric} title={t(`records.singleGame.cards.${c.metric}`)} rows={data[c.metric] ?? []} fmt={c.valueFmt} />
               ))}
             </div>
           </section>
           <section>
-            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">🔫 За класом зброї</h2>
+            <h2 className="text-zinc-300 uppercase text-xs tracking-widest mb-3">{t('records.singleGame.byWeaponClass')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {CLASS_CARDS.map((c) => (
-                <SingleGameCard key={c.weapon_class} title={c.title} rows={classData[c.weapon_class] ?? []} />
+                <SingleGameCard key={c.weapon_class} title={t(`records.singleGame.classes.${c.i18nKey}`)} rows={classData[c.weapon_class] ?? []} />
               ))}
             </div>
           </section>

@@ -59,6 +59,7 @@
     "playtime": "Czas gry",
     "matches": "Mecze",
     "level": "Lvl",
+    "hoursShort": "Godz",
     "sortBy": "Sortuj wg {{column}}"
   },
   "pagination": {
@@ -82,5 +83,116 @@
   },
   "footer": {
     "tagline": "All-time stats from CRCON DB"
+  },
+  "worldMap": {
+    "title": "🌍 Gracze ze świata",
+    "subtitle": "{{players}} graczy ze znanym krajem • {{countries}} krajów",
+    "hover": "Hover",
+    "topCountries": "Top kraje",
+    "moreCountries": "+{{count}} innych krajów"
+  },
+  "shame": {
+    "title": "💀 Hall of Shame",
+    "subtitle": "Antylista. Kto strzela do swoich, ginie bez powodu, i dlaczego nie chcesz mieć ich w drużynie.",
+    "noCandidates": "brak kandydatów",
+    "cards": {
+      "tk_total":          { "title": "Najwięcej TK z całego czasu",     "caption": "Strzelcy z lobby. Zabili więcej swoich niż wrogowie." },
+      "tk_victims":        { "title": "Najwięcej zgonów od TK swoich",   "caption": "Zawsze nie tam stoją. Magnes dla sojuszniczych kul." },
+      "worst_kd":          { "title": "Najgorsze K/D z 100+ meczami",    "caption": "Grali długo, grali stale. Strzelać nigdy się nie nauczyli." },
+      "most_deaths":       { "title": "Najwięcej zgonów z całego czasu", "caption": "Każdy mecz — nowa strona nekrologu." },
+      "worst_game_deaths": { "title": "Najgorszy mecz pod względem zgonów", "caption": "Jeden mecz — jedna katastrofa. 70+ zgonów to wyzwanie." },
+      "worst_game_tk":     { "title": "Najwięcej TK w jednym meczu",     "caption": "Drużyna potrzebowała kapitana. Przyszedł on — z granatami." }
+    }
+  },
+  "achievements": {
+    "title": "Osiągnięcia",
+    "subtitle": "{{count}} osiągnięć • {{total}} graczy w bazie • Posortowane od najrzadszych",
+    "earnedBy": "{{count}} graczy zdobyło",
+    "rarity": "Rzadkość w bazie: {{tier}}",
+    "tiers": {
+      "mythic": "Mythic",
+      "legendary": "Legendary",
+      "rare": "Rare",
+      "uncommon": "Uncommon",
+      "common": "Common"
+    }
+  },
+  "playstyles": {
+    "title": "🎭 Style gry",
+    "subtitle": "{{archetypes}} archetypów • {{classified}} sklasyfikowanych graczy • Karta pokazuje: główne / wszystkie pasujące",
+    "primaryOverTotal": "główne / wszystkie pasujące",
+    "primaryPct": "{{pct}}% głównych",
+    "topPlayers": "Top gracze",
+    "samplePlayerTitle": "{{kills}} kills, {{matches}} meczów",
+    "backToAll": "← Wszystkie style",
+    "detail": {
+      "total": "{{count}} graczy z tym stylem",
+      "split": "w tym {{primary}} jako główny, {{secondary}} jako drugorzędny",
+      "secondaryBadge": "też",
+      "secondaryTooltip": "Dla tego gracza styl jest drugorzędny",
+      "noPlayers": "Brak graczy"
+    }
+  },
+  "matchTitles": {
+    "title": "🏷 Tytuły meczów",
+    "subtitle": "{{count}} wariantów — przyznawane automatycznie w tabeli „Ostatnie mecze\", gdy mecz spełnia jeden z warunków poniżej. Kolejność: katastrofy → bóg-tier → wolumen → support → memy.",
+    "categories": {
+      "disasters": "Katastrofy",
+      "godRatios": "Bóg-tier ratios",
+      "volume": "Wolumen",
+      "support": "Support / Defense",
+      "memes": "Memy"
+    }
+  },
+  "compareBar": {
+    "regionLabel": "Lista porównania",
+    "label": "Porównanie",
+    "remove": "Usuń",
+    "removeName": "Usuń {{name}}",
+    "needTwo": "Potrzeba co najmniej 2 graczy",
+    "go": "Przejdź do porównania",
+    "compareN": "Porównaj ({{n}})",
+    "clearAll": "Wyczyść wszystko",
+    "clear": "Wyczyść"
+  },
+  "miniCompare": {
+    "remove": "Usuń {{name}} z listy porównania",
+    "full": "Lista porównania pełna ({{max}}). Usuń kogoś, by dodać.",
+    "add": "Dodaj {{name}} do porównania"
+  },
+  "records": {
+    "showLess": "mniej",
+    "showMoreN": "▼ jeszcze {{n}}",
+    "mostUsed": "Najczęściej: {{weapon}}",
+    "noData": "brak danych",
+    "singleGame": {
+      "title": "Rekordy w jednym meczu",
+      "subtitle": "Najwyższe osiągnięcia w jednym meczu w całej historii • Kliknij mapę, by zobaczyć detale",
+      "generalMetrics": "Metryki ogólne",
+      "byWeaponClass": "🔫 Wg klasy broni",
+      "cards": {
+        "kills":            "Najwięcej kills w meczu",
+        "kills_streak":     "Najdłuższa seria kills",
+        "combat":           "Combat w meczu",
+        "support":          "Support w meczu",
+        "offense":          "Offense w meczu",
+        "defense":          "Defense w meczu",
+        "kill_death_ratio": "K/D w meczu",
+        "kills_per_minute": "K/min w meczu",
+        "teamkills":        "Najgorsze TK w meczu",
+        "deaths":           "Najgorszy mecz (zgony)"
+      },
+      "classes": {
+        "sniperRifle": "Sniper w meczu",
+        "machineGun":  "MG w meczu",
+        "antiTank":    "AT w meczu",
+        "tankGun":     "Czołg w meczu",
+        "artillery":   "Artyleria w meczu",
+        "mine":        "Miny w meczu",
+        "explosive":   "Wybuchowe w meczu",
+        "flame":       "Miotacz w meczu",
+        "melee":       "Wręcz w meczu"
+      }
+    }
   }
 }

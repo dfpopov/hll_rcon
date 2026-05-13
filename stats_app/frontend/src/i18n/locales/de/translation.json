@@ -59,6 +59,7 @@
     "playtime": "Spielzeit",
     "matches": "Spiele",
     "level": "Lvl",
+    "hoursShort": "Std",
     "sortBy": "Sortieren nach {{column}}"
   },
   "pagination": {
@@ -82,5 +83,116 @@
   },
   "footer": {
     "tagline": "All-time stats from CRCON DB"
+  },
+  "worldMap": {
+    "title": "🌍 Spieler aus aller Welt",
+    "subtitle": "{{players}} Spieler mit bekanntem Land • {{countries}} Länder",
+    "hover": "Hover",
+    "topCountries": "Top-Länder",
+    "moreCountries": "+{{count}} weitere Länder"
+  },
+  "shame": {
+    "title": "💀 Hall of Shame",
+    "subtitle": "Anti-Bestenliste. Wer auf Eigene schießt, planlos stirbt und warum man sie nicht im Trupp will.",
+    "noCandidates": "keine Kandidaten",
+    "cards": {
+      "tk_total":          { "title": "Meiste TK aller Zeiten",          "caption": "Schießen schon im Lobby. Mehr Eigene als Feinde erwischt." },
+      "tk_victims":        { "title": "Meiste Tode durch eigene TK",     "caption": "Stehen immer am falschen Platz. Magnet für Verbündetenkugeln." },
+      "worst_kd":          { "title": "Schlechtestes K/D mit 100+ Spielen", "caption": "Lange gespielt, konstant gespielt. Schießen nie gelernt." },
+      "most_deaths":       { "title": "Meiste Tode aller Zeiten",        "caption": "Jedes Spiel — eine neue Nachrufzeile." },
+      "worst_game_deaths": { "title": "Schlimmstes Spiel nach Toden",    "caption": "Ein Spiel — eine Katastrophe. 70+ Tode ist eine Leistung." },
+      "worst_game_tk":     { "title": "Meiste TK in einem Spiel",        "caption": "Das Team brauchte einen Anführer. Es kam einer — mit Granaten." }
+    }
+  },
+  "achievements": {
+    "title": "Erfolge",
+    "subtitle": "{{count}} Erfolge • {{total}} Spieler in DB • Sortiert nach Seltenheit",
+    "earnedBy": "{{count}} Spieler erhielten",
+    "rarity": "Seltenheit in DB: {{tier}}",
+    "tiers": {
+      "mythic": "Mythic",
+      "legendary": "Legendary",
+      "rare": "Rare",
+      "uncommon": "Uncommon",
+      "common": "Common"
+    }
+  },
+  "playstyles": {
+    "title": "🎭 Spielstile",
+    "subtitle": "{{archetypes}} Archetypen • {{classified}} klassifizierte Spieler • Karte zeigt: primär / alle passenden",
+    "primaryOverTotal": "primär / alle passenden",
+    "primaryPct": "{{pct}}% primär",
+    "topPlayers": "Top-Spieler",
+    "samplePlayerTitle": "{{kills}} Kills, {{matches}} Spiele",
+    "backToAll": "← Alle Stile",
+    "detail": {
+      "total": "{{count}} Spieler mit diesem Stil",
+      "split": "davon {{primary}} primär, {{secondary}} sekundär",
+      "secondaryBadge": "auch",
+      "secondaryTooltip": "Für diesen Spieler ist der Stil sekundär",
+      "noPlayers": "Keine Spieler"
+    }
+  },
+  "matchTitles": {
+    "title": "🏷 Match-Titel",
+    "subtitle": "{{count}} Varianten — werden automatisch in der Tabelle „Letzte Spiele\" zugewiesen, wenn ein Spiel eine der Bedingungen erfüllt. Prüfung: Katastrophen → Gott-Tier → Volumen → Support → Memes.",
+    "categories": {
+      "disasters": "Katastrophen",
+      "godRatios": "Gott-Tier Ratios",
+      "volume": "Volumen",
+      "support": "Support / Defense",
+      "memes": "Memes"
+    }
+  },
+  "compareBar": {
+    "regionLabel": "Vergleichsliste",
+    "label": "Vergleich",
+    "remove": "Entfernen",
+    "removeName": "{{name}} entfernen",
+    "needTwo": "Mindestens 2 Spieler nötig",
+    "go": "Zum Vergleich",
+    "compareN": "Vergleichen ({{n}})",
+    "clearAll": "Alle entfernen",
+    "clear": "Leeren"
+  },
+  "miniCompare": {
+    "remove": "{{name}} aus Vergleich entfernen",
+    "full": "Vergleichsliste voll ({{max}}). Jemanden entfernen zum Hinzufügen.",
+    "add": "{{name}} zum Vergleich hinzufügen"
+  },
+  "records": {
+    "showLess": "weniger",
+    "showMoreN": "▼ {{n}} mehr",
+    "mostUsed": "Meistgenutzt: {{weapon}}",
+    "noData": "keine Daten",
+    "singleGame": {
+      "title": "Einzelspiel-Rekorde",
+      "subtitle": "Höchste Einzelspiel-Leistungen aller Zeiten • Karte für Match-Details anklicken",
+      "generalMetrics": "Allgemeine Metriken",
+      "byWeaponClass": "🔫 Nach Waffenklasse",
+      "cards": {
+        "kills":            "Meiste Kills pro Spiel",
+        "kills_streak":     "Längste Kill-Serie",
+        "combat":           "Combat pro Spiel",
+        "support":          "Support pro Spiel",
+        "offense":          "Offense pro Spiel",
+        "defense":          "Defense pro Spiel",
+        "kill_death_ratio": "K/D pro Spiel",
+        "kills_per_minute": "K/Min pro Spiel",
+        "teamkills":        "Schlimmste TK pro Spiel",
+        "deaths":           "Schlimmstes Spiel (Tode)"
+      },
+      "classes": {
+        "sniperRifle": "Sniper pro Spiel",
+        "machineGun":  "MG pro Spiel",
+        "antiTank":    "AT pro Spiel",
+        "tankGun":     "Panzer pro Spiel",
+        "artillery":   "Artillerie pro Spiel",
+        "mine":        "Minen pro Spiel",
+        "explosive":   "Sprengstoff pro Spiel",
+        "flame":       "Flammenwerfer pro Spiel",
+        "melee":       "Nahkampf pro Spiel"
+      }
+    }
   }
 }

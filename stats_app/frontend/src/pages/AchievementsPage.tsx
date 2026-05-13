@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { fetchAchievementStats, AchievementStat } from '../api/client'
 
 const TIER_STYLES: Record<AchievementStat['tier'], string> = {
@@ -11,15 +12,17 @@ const TIER_STYLES: Record<AchievementStat['tier'], string> = {
   mythic:    'bg-gradient-to-r from-rose-900 to-violet-900 border-fuchsia-500/60 text-white',
 }
 
-function rarityLabel(pct: number): string {
-  if (pct < 0.1) return 'Mythic'
-  if (pct < 1) return 'Legendary'
-  if (pct < 5) return 'Rare'
-  if (pct < 20) return 'Uncommon'
-  return 'Common'
+function rarityBucket(pct: number): 'mythic' | 'legendary' | 'rare' | 'uncommon' | 'common' {
+  if (pct < 0.1) return 'mythic'
+  if (pct < 1) return 'legendary'
+  if (pct < 5) return 'rare'
+  if (pct < 20) return 'uncommon'
+  return 'common'
 }
 
 export default function AchievementsPage() {
+  const { t, i18n } = useTranslation()
+  const nf = new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language || 'en')
   const [items, setItems] = useState<AchievementStat[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -37,13 +40,13 @@ export default function AchievementsPage() {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">Досягнення</h1>
+        <h1 className="text-3xl font-bold mb-1">{t('achievements.title')}</h1>
         <p className="text-zinc-400 text-sm">
-          {items.length} досягнень • {total.toLocaleString('uk-UA')} гравців у базі • Сортовано від найрідкіснішого
+          {t('achievements.subtitle', { count: items.length, total: nf.format(total) })}
         </p>
       </header>
 
-      {loading && <div className="text-zinc-400 py-8 text-center">Завантаження…</div>}
+      {loading && <div className="text-zinc-400 py-8 text-center">{t('common.loading')}</div>}
 
       {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -55,13 +58,16 @@ export default function AchievementsPage() {
             >
               <div className="flex items-baseline gap-2 mb-1">
                 <span className="text-2xl">{a.icon}</span>
+                {/* Achievement title + description stay Ukrainian by editorial
+                    decision (Tier 2 in I18N_PLAN.md). The chrome around
+                    them translates. */}
                 <h3 className="font-semibold flex-1">{a.title}</h3>
                 <span className="text-xs opacity-70 uppercase">{a.tier}</span>
               </div>
               <p className="text-xs opacity-80 mb-2 leading-snug">{a.description}</p>
               <div className="flex items-baseline justify-between text-sm">
                 <span className="opacity-80">
-                  {a.earned_count.toLocaleString('uk-UA')} гравців отримали
+                  {t('achievements.earnedBy', { count: nf.format(a.earned_count) })}
                 </span>
                 <span className="font-bold tabular-nums">{a.percentage}%</span>
               </div>
@@ -69,7 +75,7 @@ export default function AchievementsPage() {
                 <div className="bg-white/70 h-full" style={{ width: `${Math.min(100, a.percentage)}%` }} />
               </div>
               <div className="mt-2 text-xs opacity-60 italic">
-                Рідкість у базі: {rarityLabel(a.percentage)}
+                {t('achievements.rarity', { tier: t(`achievements.tiers.${rarityBucket(a.percentage)}`) })}
               </div>
             </Link>
           ))}

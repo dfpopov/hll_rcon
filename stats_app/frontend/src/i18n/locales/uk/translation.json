@@ -59,6 +59,7 @@
     "playtime": "Час гри",
     "matches": "Матчів",
     "level": "Lvl",
+    "hoursShort": "Год",
     "sortBy": "Сортувати за {{column}}"
   },
   "pagination": {
@@ -82,5 +83,116 @@
   },
   "footer": {
     "tagline": "All-time stats from CRCON DB"
+  },
+  "worldMap": {
+    "title": "🌍 Гравці зі світу",
+    "subtitle": "{{players}} гравців з відомою країною • {{countries}} країн",
+    "hover": "Hover",
+    "topCountries": "Топ країн",
+    "moreCountries": "+{{count}} інших країн"
+  },
+  "shame": {
+    "title": "💀 Hall of Shame",
+    "subtitle": "Антиподи лідерборду. Хто стріляє у своїх, гине на ровному місці, і чому ти ніколи не хочеш бути в одному загоні з ними.",
+    "noCandidates": "немає кандидатів",
+    "cards": {
+      "tk_total":          { "title": "Найбільше TK за весь час",      "caption": "Шкільні стрільці. Своїх вбили більше, ніж усі решта." },
+      "tk_victims":        { "title": "Найбільше смертей від ТК своїх", "caption": "Завжди не там стоять. Магніт для союзницьких куль." },
+      "worst_kd":          { "title": "Найгірший K/D з 100+ матчами",   "caption": "Грали довго, грали постійно. Стріляти так і не навчилися." },
+      "most_deaths":       { "title": "Найбільше смертей за весь час",  "caption": "Кожен матч — нова сторінка некролога." },
+      "worst_game_deaths": { "title": "Найгірший матч за смертями",     "caption": "Один матч — одна катастрофа. 70+ смертей за гру — це треба ще постаратися." },
+      "worst_game_tk":     { "title": "Найбільше TK в одному матчі",    "caption": "Команді потрібен капітан. А прийшов он — з гранатами." }
+    }
+  },
+  "achievements": {
+    "title": "Досягнення",
+    "subtitle": "{{count}} досягнень • {{total}} гравців у базі • Сортовано від найрідкіснішого",
+    "earnedBy": "{{count}} гравців отримали",
+    "rarity": "Рідкість у базі: {{tier}}",
+    "tiers": {
+      "mythic": "Mythic",
+      "legendary": "Legendary",
+      "rare": "Rare",
+      "uncommon": "Uncommon",
+      "common": "Common"
+    }
+  },
+  "playstyles": {
+    "title": "🎭 Стилі гри",
+    "subtitle": "{{archetypes}} архетипів • {{classified}} класифікованих гравців • На картці: основних / усіх що підходять",
+    "primaryOverTotal": "основних / усіх що підходять",
+    "primaryPct": "{{pct}}% основних",
+    "topPlayers": "Топ гравці",
+    "samplePlayerTitle": "{{kills}} kills, {{matches}} матчів",
+    "backToAll": "← Усі стилі",
+    "detail": {
+      "total": "{{count}} гравців з цим стилем",
+      "split": "з них {{primary}} як основний, {{secondary}} як вторинний",
+      "secondaryBadge": "також",
+      "secondaryTooltip": "Для цього гравця стиль — другорядний",
+      "noPlayers": "Немає гравців"
+    }
+  },
+  "matchTitles": {
+    "title": "🏷 Титули матчів",
+    "subtitle": "{{count}} варіантів — присуджується автоматично в таблиці «Останні матчі» якщо матч підпадає під одну з умов нижче. Перевіряється у порядку: катастрофи → бог-tier → об'єм → support → меми.",
+    "categories": {
+      "disasters": "Катастрофи",
+      "godRatios": "Бог-tier ratios",
+      "volume": "Об'єм",
+      "support": "Support / Defense",
+      "memes": "Меми"
+    }
+  },
+  "compareBar": {
+    "regionLabel": "Список для порівняння",
+    "label": "Порівняння",
+    "remove": "Прибрати",
+    "removeName": "Прибрати {{name}}",
+    "needTwo": "Потрібно щонайменше 2 гравця",
+    "go": "Перейти до порівняння",
+    "compareN": "Порівняти ({{n}})",
+    "clearAll": "Очистити весь список",
+    "clear": "Очистити"
+  },
+  "miniCompare": {
+    "remove": "Прибрати {{name}} зі списку порівняння",
+    "full": "Список порівняння повний ({{max}}). Прибери когось щоб додати.",
+    "add": "Додати {{name}} до порівняння"
+  },
+  "records": {
+    "showLess": "менше",
+    "showMoreN": "▼ ще {{n}}",
+    "mostUsed": "Most used: {{weapon}}",
+    "noData": "немає даних",
+    "singleGame": {
+      "title": "Рекорди за один матч",
+      "subtitle": "Найвищі досягнення в одному матчі за всю історію • Натисни на карту матчу для деталей",
+      "generalMetrics": "Загальні метрики",
+      "byWeaponClass": "🔫 За класом зброї",
+      "cards": {
+        "kills":            "Найбільше вбивств за гру",
+        "kills_streak":     "Найдовша серія вбивств",
+        "combat":           "Combat за гру",
+        "support":          "Support за гру",
+        "offense":          "Offense за гру",
+        "defense":          "Defense за гру",
+        "kill_death_ratio": "K/D за гру",
+        "kills_per_minute": "K/хв за гру",
+        "teamkills":        "Найгірший TK за гру",
+        "deaths":           "Найгірша гра (deaths)"
+      },
+      "classes": {
+        "sniperRifle": "Sniper за гру",
+        "machineGun":  "MG за гру",
+        "antiTank":    "AT за гру",
+        "tankGun":     "Танковий бій за гру",
+        "artillery":   "Артилерія за гру",
+        "mine":        "Міни за гру",
+        "explosive":   "Вибухівка за гру",
+        "flame":       "Вогнемет за гру",
+        "melee":       "Ближній бій за гру"
+      }
+    }
   }
 }
