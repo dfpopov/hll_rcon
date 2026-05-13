@@ -78,7 +78,13 @@ i18next
   .use(
     resourcesToBackend((language: string, namespace: string) => {
       if (language === 'dev') return Promise.reject('no dev language')
-      return import(`./locales/${language}/${namespace}.json`)
+      // Editorial alias: when the user explicitly picks "Русский", we still
+      // serve the Ukrainian content bundle. The selector shows "Русский" as
+      // a visual choice, but everything below renders in Ukrainian. The
+      // entry exists in LANGUAGES so the selector can offer it; only the
+      // resource resolution is redirected here.
+      const lang = language === 'ru' ? 'uk' : language
+      return import(`./locales/${lang}/${namespace}.json`)
     }),
   )
   .init({

@@ -23,7 +23,6 @@
  */
 import { useLayoutEffect } from 'react'
 import { DropdownLanguageSelector } from '../language-selector'
-import { DropdownThemeToggle } from '../theme-toggle'
 
 type NavItem = {
   href: string
@@ -80,8 +79,9 @@ export function UnifiedHeader() {
 
   // Override the war-scene body background that rcongui_public sets inline
   // in index.html so the embedded variant matches stats_app's dark theme.
-  // Also hide rcongui_public's amber "Створено CRCON TEAM" footer that
-  // peeks below long pages.
+  // Also force the `dark` class on <html> so rcongui_public's Tailwind
+  // dark: variants apply — stats_app is dark-only, so we lock that here
+  // and drop the theme toggle entirely.
   useLayoutEffect(() => {
     const prev = {
       bgImage: document.body.style.backgroundImage,
@@ -89,6 +89,7 @@ export function UnifiedHeader() {
     }
     document.body.style.backgroundImage = 'none'
     document.body.style.backgroundColor = '#09090b' // zinc-950
+    document.documentElement.classList.add('dark')
     return () => {
       document.body.style.backgroundImage = prev.bgImage
       document.body.style.backgroundColor = prev.bgColor
@@ -97,7 +98,7 @@ export function UnifiedHeader() {
 
   return (
     <header className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4 flex-wrap">
+      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
         <a href="/" className="text-amber-500 font-bold text-lg">
           HLL Stats
         </a>
@@ -112,8 +113,9 @@ export function UnifiedHeader() {
           </a>
         ))}
         <div className="ml-auto flex items-center gap-1 [&_button]:size-8">
+          {/* Theme toggle removed — stats_app is dark-only and we lock dark
+              mode here too to keep both apps visually consistent. */}
           <DropdownLanguageSelector />
-          <DropdownThemeToggle />
         </div>
       </div>
     </header>

@@ -22,8 +22,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-10">
-        {/* gap-4 + compact labels keep all items + search on a single row down to ~1280px. */}
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4 flex-wrap">
+        {/* gap-3 + compact labels keep all items + search + language picker
+            on a single row down to ~1280px. English labels are slightly
+            wider than Ukrainian, so the tighter spacing helps avoid wraps. */}
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
           <span className="text-amber-500 font-bold text-lg">{t('nav.brand')}</span>
           {/* Live items first — they're the most "active" / time-sensitive
               destinations and should be top of mind. */}
