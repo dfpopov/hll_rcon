@@ -23,6 +23,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to="/compare" className={navClass}>Порівняння</NavLink>
           <NavLink to="/hall-of-shame" className={navClass}>💀 Hall of Shame</NavLink>
           <NavLink to="/server/countries" className={navClass}>🌍 Карта</NavLink>
+          {/* Embedded rcongui_public (live game + match history) — uses a
+              plain <a> because it's served by nginx outside React Router. */}
+          <a href="/live/" className="text-sm text-zinc-300 hover:text-amber-400 transition-colors">
+            🟢 Зараз грає
+          </a>
+          <a href="/live/games" className="text-sm text-zinc-300 hover:text-amber-400 transition-colors">
+            📜 Матчі
+          </a>
           <NavSearch />
         </div>
       </nav>

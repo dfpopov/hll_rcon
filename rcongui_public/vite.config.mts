@@ -7,8 +7,14 @@ import path from 'path'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
+  // Base path for hosting under a subdirectory. Default `/` for the standalone
+  // build served by frontend_1 on port 7010. Set to `/live/` when this app is
+  // embedded inside the stats_app container at port 7012 — see
+  // stats_app/Dockerfile and stats_app/nginx.conf.
+  const base = process.env.VITE_BASE_URL || env.VITE_BASE_URL || '/'
+
   return {
-    base: '/',
+    base,
     define: {
       'process.env.REACT_APP_API_URL': JSON.stringify(env.REACT_APP_API_URL || '/api'),
     },

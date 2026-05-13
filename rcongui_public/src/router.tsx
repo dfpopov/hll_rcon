@@ -72,5 +72,9 @@ export const routerObjects: RouteObject[] = [
 ]
 
 export function createRouter(): ReturnType<typeof createBrowserRouter> {
-  return createBrowserRouter(routerObjects)
+  // Strip trailing slash so basename is e.g. '/live' (not '/live/').
+  // Vite injects BASE_URL from the `base` setting; default '/' → undefined basename.
+  const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '')
+  const basename = baseUrl || undefined
+  return createBrowserRouter(routerObjects, { basename })
 }

@@ -131,10 +131,18 @@ services:
       common:
       server1:
 
-  # All-time stats web app (FastAPI + React)
-  # http://<host>:7012/  → see stats_app/PLAN.md
+  # All-time stats web app (FastAPI + React).
+  # http://<host>:7012/        → all-time stats UI (this app)
+  # http://<host>:7012/live/   → embedded copy of rcongui_public (live game,
+  #                              match history). Built a second time from the
+  #                              same source with base=/live/. See
+  #                              stats_app/Dockerfile + stats_app/nginx.conf.
+  # Build context is the repo root so we can COPY rcongui_public/ alongside
+  # stats_app/.
   stats_app:
-    build: ./stats_app
+    build:
+      context: .
+      dockerfile: stats_app/Dockerfile
     image: hll_stats_app:latest
     restart: unless-stopped
     ports:
