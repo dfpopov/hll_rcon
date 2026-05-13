@@ -34,12 +34,24 @@ import { useTranslation } from 'react-i18next'
 //
 // Language sync still works through localStorage["i18nextLng"] which both
 // SPAs read on init.
+// Same set rcongui_public ships with, in the order it uses upstream.
+// stats_app's LanguageSelector mirrors this list verbatim. Russian is
+// kept as a visible choice but stats_app aliases ru → uk content.
 const UNIFIED_LANGS = [
-  { code: 'uk', name: 'Українська' },
-  { code: 'en', name: 'English' },
-  { code: 'de', name: 'Deutsch' },
-  { code: 'ru', name: 'Русский' },
-  { code: 'pl', name: 'Polski' },
+  { code: 'uk',      name: 'Українська' },
+  { code: 'en',      name: 'English' },
+  { code: 'de',      name: 'Deutsch' },
+  { code: 'ru',      name: 'Русский' },
+  { code: 'pl',      name: 'Polski' },
+  { code: 'fr',      name: 'Français' },
+  { code: 'es',      name: 'Español' },
+  { code: 'it',      name: 'Italiano' },
+  { code: 'pt',      name: 'Português' },
+  { code: 'cs',      name: 'Čeština' },
+  { code: 'zh-Hans', name: '简体中文' },
+  { code: 'zh-Hant', name: '繁體中文' },
+  { code: 'ja',      name: '日本語' },
+  { code: 'ko',      name: '한국어' },
 ] as const
 
 function InlineLanguageSelector() {

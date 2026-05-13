@@ -14,9 +14,15 @@ import { useTranslation } from 'react-i18next'
 import { LANGUAGES, type Language } from '../i18n/config'
 
 // Languages with a translation.json shipped under src/i18n/locales/<code>/.
-// Others fall back to English via i18next's fallbackLng. Add more by
-// dropping a JSON file and appending the code here.
-const TRANSLATED: Language[] = ['uk', 'en', 'de', 'ru', 'pl']
+// Matches the set rcongui_public ships with so both apps offer the same
+// menu. Russian is in the list per editorial decision (community member
+// allowed to pick) but i18n/config.ts aliases the resource path ru → uk
+// — picking "Русский" displays Ukrainian content.
+const TRANSLATED: Language[] = [
+  'uk', 'en', 'de', 'ru', 'pl',
+  'fr', 'es', 'it', 'pt', 'cs',
+  'zh-Hans', 'zh-Hant', 'ja', 'ko',
+]
 
 function nativeName(code: string): string {
   // Intl.DisplayNames returns the language name in the target locale itself,
