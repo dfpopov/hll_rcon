@@ -121,7 +121,10 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: '/live/',               label: '🟢 Зараз',   title: 'Поточний матч',            match: 'liveCurrent' },
   { href: '/live/games',          label: '📜 Матчі',   title: 'Історія матчів',           match: 'liveGames' },
-  { href: '/',                    label: 'Лідерборд',  match: 'exact' },
+  // Leaderboard moved off `/` — `/` is now the live current-match page
+  // (nginx redirects / → /live/). /leaderboard is the canonical url for
+  // the all-time top-players grid.
+  { href: '/leaderboard',         label: 'Лідерборд',  match: 'prefix' },
   { href: '/records/all-time',    label: '★ Весь час', title: 'Рекорди за весь час',     match: 'prefix' },
   { href: '/records/single-game', label: '⚡ 1 матч',   title: 'Рекорди в одному матчі',   match: 'prefix' },
   { href: '/achievements',        label: 'Досягнення', match: 'prefix' },
@@ -179,7 +182,8 @@ export function UnifiedHeader() {
   return (
     <header className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
-        <a href="/" className="text-amber-500 font-bold text-lg">
+        {/* Brand → / which nginx redirects to /live/. */}
+        <a href="/" className="text-amber-500 font-bold text-lg hover:text-amber-400 transition-colors">
           HLL Stats
         </a>
         {NAV.map((item) => (

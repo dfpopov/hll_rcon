@@ -17,7 +17,15 @@ export default function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        {/* `/` is reserved by the nginx layer for a redirect to `/live/`
+            (the current-match page) — see stats_app/nginx.conf. That redirect
+            happens at the HTTP level so React Router never sees a real
+            request for `/`. The route below is kept so direct in-app
+            navigation via React Router (back button after a redirect, an
+            old saved tab, …) still lands on the leaderboard instead of a
+            blank page. */}
+        <Route path="/" element={<Navigate to="/leaderboard" replace />} />
+        <Route path="/leaderboard" element={<HomePage />} />
         <Route path="/records" element={<Navigate to="/records/all-time" replace />} />
         <Route path="/records/all-time" element={<RecordsAllTimePage />} />
         <Route path="/records/single-game" element={<RecordsSingleGamePage />} />

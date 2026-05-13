@@ -231,7 +231,7 @@ export default function PlayerDetailPage() {
         <div className="bg-red-900/30 border border-red-700 text-red-200 p-4 rounded mb-4">
           {error ?? t('player.notFound')}
         </div>
-        <Link to="/" className="text-amber-400 hover:underline">{t('player.backToLeaderboard')}</Link>
+        <Link to="/leaderboard" className="text-amber-400 hover:underline">{t('player.backToLeaderboard')}</Link>
       </div>
     )
   }

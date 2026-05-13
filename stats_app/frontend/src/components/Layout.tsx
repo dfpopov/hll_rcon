@@ -26,12 +26,15 @@ export default function Layout({ children }: { children: ReactNode }) {
             on a single row down to ~1280px. English labels are slightly
             wider than Ukrainian, so the tighter spacing helps avoid wraps. */}
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
-          <span className="text-amber-500 font-bold text-lg">{t('nav.brand')}</span>
+          {/* Brand links to / which nginx redirects to /live/ (the home of
+              the experience now). Plain <a> because that route is owned by
+              the embedded rcongui_public, not React Router. */}
+          <a href="/" className="text-amber-500 font-bold text-lg hover:text-amber-400 transition-colors">{t('nav.brand')}</a>
           {/* Live items first — they're the most "active" / time-sensitive
               destinations and should be top of mind. */}
           <a href="/live/" className={liveLinkClass} title={t('nav.liveCurrentTitle')}>{t('nav.liveCurrent')}</a>
           <a href="/live/games" className={liveLinkClass} title={t('nav.liveGamesTitle')}>{t('nav.liveGames')}</a>
-          <NavLink to="/" className={navClass} end>{t('nav.leaderboard')}</NavLink>
+          <NavLink to="/leaderboard" className={navClass}>{t('nav.leaderboard')}</NavLink>
           <NavLink to="/records/all-time" className={navClass} title={t('nav.recordsAllTimeTitle')}>{t('nav.recordsAllTime')}</NavLink>
           <NavLink to="/records/single-game" className={navClass} title={t('nav.recordsSingleGameTitle')}>{t('nav.recordsSingleGame')}</NavLink>
           <NavLink to="/achievements" className={navClass}>{t('nav.achievements')}</NavLink>
