@@ -609,10 +609,18 @@ def get_player_ranking(
     score_func,
     display: int = 3,
     details: bool = False,
-    vip_winners: int = 0
+    vip_winners: int = 0,
+    score_key: str = "",
 ) -> list:
     """
     Extracts, ranks, and optionally triggers VIP rewards.
+
+    `score_key` is the raw config string (e.g. "kills", "combat",
+    "player_kd") and is only consulted to suppress the trailing
+    " : score" when the score itself is already implied by the inline
+    "N/M KD:X" triple — i.e. when ranking by kills. Other stats still
+    print the score after the name so users see the value they're
+    being ranked by.
     """
     # Get data (initial "result" branch can be missing)
     result = get_team_view_output.get("result", get_team_view_output)
@@ -641,7 +649,7 @@ def get_player_ranking(
                         c_k = cmd.get("kills", 0)
                         c_d = cmd.get("deaths", 0)
                         c_kd = _fmt_kd(c_k, c_d)
-                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:16]} K:{c_k} D:{c_d} K/D:{c_kd}"
+                        name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}) {name[:16]} {_fmt_kdk(c_k, c_d)}"
 
                     # Add the formatted entry to the global list
                     players_stats.append({
@@ -676,7 +684,15 @@ def get_player_ranking(
                             # [:30] avoids line returns
                             name = p["name"][:28]
                             if details:
-                                name = f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/{s_name.capitalize()}) {name[:16]}"  # full squad name
+                                # Include K/D info inline like the commander branch — user wants
+                                # "name 18/3 KD:6.0" everywhere instead of the bare score the
+                                # rank line used to show after `:`.
+                                p_k = p.get("kills", 0)
+                                p_d = p.get("deaths", 0)
+                                name = (
+                                    f"({TRANSL[side+'_short'][valid_config.lang].capitalize()}/"
+                                    f"{s_name.capitalize()}) {name[:16]} {_fmt_kdk(p_k, p_d)}"
+                                )
 
                             # Add the formatted entry to the global list
                             players_stats.append({
@@ -727,12 +743,19 @@ def get_player_ranking(
 
     # Final output list
     formatted_list = []
+    # Ranking by kills? The inline "N/M KD:X" triple in `name` already
+    # carries the kills value, so the trailing ": score" would just repeat
+    # it. Skip the suffix for kills-style rankings only.
+    suppress_trailing = score_key.lower() in {"kills", "deaths"}
     for p in players_stats[:display]:
         score_val = f"{p['score']:.1f}" if isinstance(p['score'], float) else str(p['score'])
 
         # Add the ★ at the end of the line if this player_id is in the 'winners_ids' list
         star = " ★" if p['player_id'] in winners_ids else ""
-        formatted_list.append(f"{p['name']} : {score_val}{star}")
+        if suppress_trailing:
+            formatted_list.append(f"{p['name']}{star}")
+        else:
+            formatted_list.append(f"{p['name']} : {score_val}{star}")
 
     return formatted_list
 
@@ -833,6 +856,13 @@ def _fmt_kd(k: int, d: int) -> str:
     return "—"
 
 
+def _fmt_kdk(k: int, d: int) -> str:
+    """Compact "K/D KD:X" — replaces the verbose "K:N D:M K/D:X" so a line
+    like `(Союз/Charlie) jartug  18/3 KD:6.0` reads in one glance instead
+    of three separate label/value pairs. User-requested shortening."""
+    return f"{k}/{d} KD:{_fmt_kd(k, d)}"
+
+
 def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
     """
     Per-side, per-role squad breakdown showing EVERY squad member with K/D/KD.
@@ -904,8 +934,8 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                 avg_d = sq_d / n if n > 0 else 0
                 side_lines.append(
                     f"{role_cont} {squad_branch} Загін {sq_name.capitalize()}"
-                    f" [{n} в загоні] — всього K:{sq_k} D:{sq_d} K/D:{sq_kd}"
-                    f" (avg K:{avg_k:.1f} D:{avg_d:.1f})"
+                    f" [{n} в загоні] — всього {_fmt_kdk(sq_k, sq_d)}"
+                    f" (avg {avg_k:.1f}/{avg_d:.1f})"
                 )
 
                 # Show only members above kills threshold — squad header still
@@ -920,7 +950,7 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                     p_d = player.get("deaths", 0)
                     p_kd = _fmt_kd(p_k, p_d)
                     side_lines.append(
-                        f"{role_cont} {squad_cont}  · {p_name}  K:{p_k} D:{p_d} K/D:{p_kd}"
+                        f"{role_cont} {squad_cont}  · {p_name}  {_fmt_kdk(p_k, p_d)}"
                     )
 
         blocks.append("\n".join(side_lines))
@@ -967,7 +997,7 @@ def generate_full_report(rcon, get_team_view_output, stats_to_display, is_match_
                 vip_winners = r.get("vip_winners", 0) if is_match_end and category_key == "players" else 0
 
                 if category_key == "players":
-                    data = fetch_func(rcon, server_status, get_team_view_output, observed_unit_type, SCORE_FUNCTIONS[r["score"]], r.get("display", 3), r.get("details", True), vip_winners)
+                    data = fetch_func(rcon, server_status, get_team_view_output, observed_unit_type, SCORE_FUNCTIONS[r["score"]], r.get("display", 3), r.get("details", True), vip_winners, score_key=r["score"])
                 else:
                     data = fetch_func(get_team_view_output, observed_unit_type, SCORE_FUNCTIONS[r["score"]], r.get("details", True))
 
@@ -1004,6 +1034,16 @@ def generate_full_report(rcon, get_team_view_output, stats_to_display, is_match_
                 clean_key = raw_score_key.removeprefix("player_").removeprefix("squad_")
                 translations = TRANSL.get(clean_key)
                 stat_label = translations[valid_config.lang].capitalize() if translations else clean_key.capitalize()
+                # For the kills stat the player lines now carry the full
+                # "N/M KD:X" triple, so the header is annotated to explain
+                # what those three numbers mean instead of just "Kills".
+                if clean_key == "kills":
+                    deaths_translations = TRANSL.get("deaths")
+                    deaths_label = (
+                        deaths_translations[valid_config.lang].capitalize()
+                        if deaths_translations else "Deaths"
+                    )
+                    stat_label = f"{stat_label}/{deaths_label} KD:"
 
                 category_lines.append(f"{unit_prefix}{stat_branch} {stat_label}")
 
