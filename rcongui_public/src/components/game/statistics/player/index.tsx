@@ -58,13 +58,16 @@ export default function PlayerGameDetail({
           </div>
           <div className="flex flex-row justify-center items-center gap-1">
             {/* Stats_app profile link — opens /player/{steam_id} on the host
-                stats_app at /. Only meaningful for Steam players; Xbox IDs
-                aren't tracked in our player DB. */}
+                stats_app. Only meaningful for Steam players; Xbox IDs
+                aren't tracked in our player DB.
+                Visually amplified (amber fill, soft glow, brand colour) so
+                players notice the new feature and click through. */}
             {isSteamPlayer(player) && (
               <Button size={'icon'} variant={'outline'} asChild
-                title="HLL Stats — all-time profile of this player">
+                title="HLL Stats — all-time profile of this player"
+                className="bg-amber-500 hover:bg-amber-400 border-amber-400 text-zinc-950 shadow-md shadow-amber-500/40 hover:shadow-amber-400/60">
                 <a href={`/player/${player.player_id}`}>
-                  <BarChart3 size={18} />
+                  <BarChart3 size={18} strokeWidth={2.5} />
                 </a>
               </Button>
             )}
