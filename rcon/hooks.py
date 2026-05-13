@@ -13,6 +13,7 @@ from discord_webhook import DiscordEmbed
 import rcon.steam_utils as steam_utils
 import custom_tools.live_topstats as live_topstats
 import custom_tools.all_time_stats as all_time_stats
+import custom_tools.kick_ru_on_connect as kick_ru_on_connect
 from discord.utils import escape_markdown
 from rcon.arguments import max_arg_index, replace_params
 from rcon.blacklist import (
@@ -1042,6 +1043,12 @@ def livetopstats_onmatchend(rcon: Rcon, struct_log: StructuredLogLineWithMetaDat
 @on_connected()
 def alltimestats_on_connected(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
     all_time_stats.all_time_stats_on_connected(rcon, struct_log)
+
+
+@on_connected()
+def kick_ru_on_connected_hook(rcon: Rcon, struct_log: StructuredLogLineWithMetaData):
+    """Kick players whose Steam profile reports country=RU. See custom_tools/kick_ru_on_connect.py."""
+    kick_ru_on_connect.kick_ru_on_connected(rcon, struct_log)
 
 
 @on_chat
