@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Más TK en una partida",             "caption": "La escuadra necesitaba un líder. Vino él — con granadas." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Todos los logros",
+    "summary": "{{earned}} de {{total}} jugadores ({{pct}}%) obtuvieron este logro"
+  },
   "achievements": {
     "title": "Logros",
     "subtitle": "{{count}} logros • {{total}} jugadores en BD • Ordenado por rareza",

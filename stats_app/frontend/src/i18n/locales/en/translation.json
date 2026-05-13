@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Most TK in a single match",       "caption": "The squad needed a leader. They got him — with grenades." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← All achievements",
+    "summary": "{{earned}} of {{total}} players ({{pct}}%) earned this achievement"
+  },
   "achievements": {
     "title": "Achievements",
     "subtitle": "{{count}} achievements • {{total}} players in DB • Sorted by rarity",

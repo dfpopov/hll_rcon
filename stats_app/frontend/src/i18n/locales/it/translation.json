@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Più TK in un match",                "caption": "La squadra voleva un leader. È arrivato lui — con le granate." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Tutti gli obiettivi",
+    "summary": "{{earned}} su {{total}} giocatori ({{pct}}%) hanno ottenuto questo obiettivo"
+  },
   "achievements": {
     "title": "Obiettivi",
     "subtitle": "{{count}} obiettivi • {{total}} giocatori nel DB • Ordinati per rarità",

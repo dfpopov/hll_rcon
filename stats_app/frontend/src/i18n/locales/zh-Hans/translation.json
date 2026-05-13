@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "单场最多 TK",          "caption": "小队需要领袖。他来了 — 带着手榴弹。" }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← 所有成就",
+    "summary": "{{earned}} / {{total}} 名玩家 ({{pct}}%) 获得了此成就"
+  },
   "achievements": {
     "title": "成就",
     "subtitle": "{{count}} 项成就 • 数据库 {{total}} 名玩家 • 按稀有度排序",

@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Mais TK em uma partida",            "caption": "O esquadrão queria um líder. Veio ele — com granadas." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Todas as conquistas",
+    "summary": "{{earned}} de {{total}} jogadores ({{pct}}%) obtiveram esta conquista"
+  },
   "achievements": {
     "title": "Conquistas",
     "subtitle": "{{count}} conquistas • {{total}} jogadores no DB • Ordenado por raridade",

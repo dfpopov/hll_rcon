@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Plus de TK en un match",          "caption": "L'escouade voulait un chef. Il est venu — avec des grenades." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Tous les succès",
+    "summary": "{{earned}} sur {{total}} joueurs ({{pct}}%) ont obtenu ce succès"
+  },
   "achievements": {
     "title": "Succès",
     "subtitle": "{{count}} succès • {{total}} joueurs dans la BDD • Triés par rareté",

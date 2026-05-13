@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Meiste TK in einem Spiel",        "caption": "Das Team brauchte einen Anführer. Es kam einer — mit Granaten." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Alle Erfolge",
+    "summary": "{{earned}} von {{total}} Spielern ({{pct}}%) haben diesen Erfolg erhalten"
+  },
   "achievements": {
     "title": "Erfolge",
     "subtitle": "{{count}} Erfolge • {{total}} Spieler in DB • Sortiert nach Seltenheit",

@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Nejvíce TK v jednom zápase",        "caption": "Družstvo chtělo vůdce. Přišel — s granáty." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Všechny úspěchy",
+    "summary": "{{earned}} z {{total}} hráčů ({{pct}}%) získalo tento úspěch"
+  },
   "achievements": {
     "title": "Úspěchy",
     "subtitle": "{{count}} úspěchů • {{total}} hráčů v DB • Seřazeno dle vzácnosti",

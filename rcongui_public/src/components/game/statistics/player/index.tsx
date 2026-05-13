@@ -57,20 +57,18 @@ export default function PlayerGameDetail({
             </Button>
           </div>
           <div className="flex flex-row justify-center items-center gap-1">
-            {/* Stats_app profile link — opens /player/{steam_id} on the host
-                stats_app. Only meaningful for Steam players; Xbox IDs
-                aren't tracked in our player DB.
+            {/* Stats_app profile link — opens /player/{player_id} on the host
+                stats_app. Available for ALL players (Steam and Xbox alike) —
+                our stats DB keys off player_id regardless of platform.
                 Visually amplified (amber fill, soft glow, brand colour) so
                 players notice the new feature and click through. */}
-            {isSteamPlayer(player) && (
-              <Button size={'icon'} variant={'outline'} asChild
-                title="HLL Stats — all-time profile of this player"
-                className="bg-amber-500 hover:bg-amber-400 border-amber-400 text-zinc-950 shadow-md shadow-amber-500/40 hover:shadow-amber-400/60">
-                <a href={`/player/${player.player_id}`}>
-                  <BarChart3 size={18} strokeWidth={2.5} />
-                </a>
-              </Button>
-            )}
+            <Button size={'icon'} variant={'outline'} asChild
+              title="HLL Stats — all-time profile of this player"
+              className="bg-amber-500 hover:bg-amber-400 border-amber-400 text-zinc-950 shadow-md shadow-amber-500/40 hover:shadow-amber-400/60">
+              <a href={`/player/${player.player_id}`}>
+                <BarChart3 size={18} strokeWidth={2.5} />
+              </a>
+            </Button>
             <Button size={'icon'} variant={'outline'} asChild>
               {isSteamPlayer(player) ? (
                 <a href={getSteamProfileUrl(player.player_id)} target="_blank" rel="noreferrer">

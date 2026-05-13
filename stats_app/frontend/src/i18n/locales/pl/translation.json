@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "Najwięcej TK w jednym meczu",     "caption": "Drużyna potrzebowała kapitana. Przyszedł on — z granatami." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← Wszystkie osiągnięcia",
+    "summary": "{{earned}} z {{total}} graczy ({{pct}}%) zdobyło to osiągnięcie"
+  },
   "achievements": {
     "title": "Osiągnięcia",
     "subtitle": "{{count}} osiągnięć • {{total}} graczy w bazie • Posortowane od najrzadszych",

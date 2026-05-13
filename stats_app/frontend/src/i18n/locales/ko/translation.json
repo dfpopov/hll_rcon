@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "1경기 최다 TK",          "caption": "분대는 리더를 원했다. 그가 왔다 — 수류탄과 함께." }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← 모든 업적",
+    "summary": "{{total}} 명 중 {{earned}} 명 ({{pct}}%) 이 업적 획득"
+  },
   "achievements": {
     "title": "업적",
     "subtitle": "{{count}} 업적 • DB 내 {{total}} 명 • 희귀도순 정렬",

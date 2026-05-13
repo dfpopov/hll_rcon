@@ -104,6 +104,10 @@
       "worst_game_tk":     { "title": "1試合最多 TK",           "caption": "分隊はリーダーを欲しがった。来たのは彼 — グレネード付き。" }
     }
   },
+  "achievementDetail": {
+    "backToAll": "← 全実績",
+    "summary": "{{total}} 名中 {{earned}} 名 ({{pct}}%) がこの実績を獲得"
+  },
   "achievements": {
     "title": "実績",
     "subtitle": "{{count}} 実績 • DB内 {{total}} 名 • レア度順",
