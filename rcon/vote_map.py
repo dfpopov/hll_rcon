@@ -733,7 +733,14 @@ class VoteMap:
                 return name
             index = max(idx, index)
 
-        return history[index]
+        # When every candidate map was found in history, return the most
+        # recently-played one. history[index] is a raw string from
+        # MapsHistory — parse it back to a Layer so callers (apply_results
+        # → set_map_rotation) get a consistent type. Returning a bare
+        # string here was an upstream bug that crashed apply_results with
+        # `AttributeError: 'str' object has no attribute 'id'` whenever
+        # zero votes were cast and least_played_* fell into this branch.
+        return maps.parse_layer(history[index])
 
     def pick_default_next_map(self):
         selection = self.get_selection()
@@ -798,6 +805,12 @@ class VoteMap:
             logger.info(f"Winning map {next_map=}")
 
         rcon = get_rcon()
+        # Defensive: pick_default_next_map / pick_least_played_map historically
+        # returned either a Layer or a bare string depending on branch (see
+        # the parse_layer fix in pick_least_played_map above). Coerce here so
+        # any future call site that slips a string can't crash set_map_rotation.
+        if isinstance(next_map, str):
+            next_map = maps.parse_layer(next_map)
         # Apply rotation safely
         rcon.set_map_rotation([next_map.id])
 
