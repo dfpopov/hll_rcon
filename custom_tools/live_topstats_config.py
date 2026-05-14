@@ -66,13 +66,21 @@ STATS_TO_DISPLAY = {
             {"score": "kills", "display": 5, "details": True, "vip_winners": 3},                       # top-5 by raw kills, VIP for top-3
         ],
         "armor": [
-            # add any stat using the templates above
+            # Top-1 tanker by raw kills — labeled "Танкіст" in the output
+            # via PLAYER_CATEGORY_LABEL_OVERRIDE in live_topstats.py
+            # (because squad-type header "Бронетехніка" reads odd for a
+            # single-player highlight, same idea as the commander block).
+            {"score": "kills", "display": 1, "details": True, "vip_winners": 0},
         ],
         "artillery": [
             # add any stat using the templates above
         ],
         "recon": [
-            # add any stat using the templates above
+            # Top-1 sniper by raw kills — labeled "Снайпер" in the output
+            # via PLAYER_CATEGORY_LABEL_OVERRIDE. Recon squads have 2
+            # members (spotter + sniper); the kill leader is almost
+            # always the sniper, so a single top-1 line is enough.
+            {"score": "kills", "display": 1, "details": True, "vip_winners": 0},
         ],
     },
     "squads": {

@@ -841,6 +841,15 @@ _SKIPPED_SQUAD_NAMES = {"unassigned", "command", "commander", "none", ""}
 # (TOP ZAGONI player rows). Squad header totals/averages still count ALL members.
 MIN_KILLS_INFANTRY = 5
 
+# When ranking individual players (not squads), replace the squad-type
+# header ("armor" → "Бронетехніка") with a singular role-flavored one
+# ("Танкіст" / "Снайпер") via a different TRANSL key. Squad rankings still
+# use the default plural type header. Keys must exist in TRANSL.
+PLAYER_CATEGORY_LABEL_OVERRIDE = {
+    "armor": "tankcommander",   # → "Танкіст" (UA) / "Tank commander" (EN) / ...
+    "recon": "sniper",          # → "Снайпер"  / "Sniper"           / ...
+}
+
 
 def _fmt_kd(k: int, d: int) -> str:
     """K/D formatting with sensible fallbacks:
@@ -1019,7 +1028,14 @@ def generate_full_report(rcon, get_team_view_output, stats_to_display, is_match_
 
             # Units ("Infantry", "Armor", etc.)
             unit_branch = "└" if is_last_cat else "├"
-            unit_name = TRANSL.get(observed_unit_type.lower(), [observed_unit_type])[valid_config.lang].capitalize()
+            # For PLAYER rankings we prefer a singular role-flavored header
+            # ("Танкіст" / "Снайпер") over the squad-type plural ("Бронетехніка"
+            # / "Розвідка"). Squad rankings keep the default plural which fits
+            # the unit context better.
+            label_key = observed_unit_type.lower()
+            if category_key == "players":
+                label_key = PLAYER_CATEGORY_LABEL_OVERRIDE.get(label_key, label_key)
+            unit_name = TRANSL.get(label_key, [observed_unit_type])[valid_config.lang].capitalize()
             category_lines.append(f"{unit_branch} {unit_name}")
 
             # Stats ("Combat + Support", etc.)
