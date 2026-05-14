@@ -37,6 +37,9 @@ TRANSL = {
     "antitank": ["antitank", "antichar", "Panzerabwehr", "antitanque", "przeciwpancerny", "antitanque", "протитанковий", "反坦克手"],
     "engineer": ["engineer", "ingénieur", "Pionier", "ingeniero", "inżynier", "engenheiro", "інженер", "工兵"],
     "tankcommander": ["tank commander", "commandant de char", "Panzerkommandant", "comandante de tanque", "dowódca czołgu", "comandante de tanque", "командир танка", "坦克指挥官"],
+    # Short colloquial label used in the topstats squad-section header
+    # (avoids the formal "командир танка" — players just say "танкіст").
+    "tanker": ["tanker", "tankiste", "Panzerfahrer", "tanquista", "czołgista", "tanquista", "танкіст", "坦克兵"],
     "crewman": ["crewman", "équipier", "Besatzungsmitglied", "tripulante", "członek załogi", "tripulante", "член екіпажу", "乘员"],
     "artilleryobserver": ["artillery observer", "observateur d'artillerie", "Artilleriebeobachter", "observador de artillería", "obserwator artylerii", "observador de artilharia", "артилерійський спостерігач", "炮兵观察员"],
     "operator": ["artillery operator", "opérateur d'artillerie", "Artilleriebediener", "operador de artillería", "operator artylerii", "operador de artilharia", "оператор артилерії", "炮兵操作员"],

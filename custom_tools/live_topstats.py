@@ -846,8 +846,9 @@ MIN_KILLS_INFANTRY = 5
 # ("Танкіст" / "Снайпер") via a different TRANSL key. Squad rankings still
 # use the default plural type header. Keys must exist in TRANSL.
 PLAYER_CATEGORY_LABEL_OVERRIDE = {
-    "armor": "tankcommander",   # → "Танкіст" (UA) / "Tank commander" (EN) / ...
-    "recon": "sniper",          # → "Снайпер"  / "Sniper"           / ...
+    "armor": "tanker",   # → "Танкіст" (UA) / "Tanker" (EN) / ... — short
+                         # colloquial form, not the formal "командир танка"
+    "recon": "sniper",   # → "Снайпер"  / "Sniper"
 }
 
 
@@ -891,10 +892,16 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
         ("allies", TRANSL.get("allies_short", ["all"] * 8)[lang]),
         ("axis", TRANSL.get("axis_short", ["axi"] * 8)[lang]),
     ]
+    # Reuse the PLAYER_CATEGORY_LABEL_OVERRIDE mapping so the squad-section
+    # role labels read the same as the (now-removed) single-player sections did:
+    #   armor → "Танкіст" (was "Бронетехніка")
+    #   recon → "Снайпер" (was "Розвідка")
+    # User feedback: the squad-type plural sounded technical/cold; the role
+    # noun matches how players actually refer to these specialists in chat.
     role_order = [
         ("infantry", TRANSL["infantry"][lang].capitalize()),
-        # armor + recon removed per user request to fit Discord embed (4096 char limit)
-        # — restore by uncommenting if Discord description has room.
+        ("armor", TRANSL[PLAYER_CATEGORY_LABEL_OVERRIDE["armor"]][lang].capitalize()),
+        ("recon", TRANSL[PLAYER_CATEGORY_LABEL_OVERRIDE["recon"]][lang].capitalize()),
     ]
 
     blocks = []
@@ -921,9 +928,11 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
                 )
                 # Show only top-1 squad per role (was top-3) — user wants compact view
                 role_squads = role_squads[:1]
-                roles_present.append((role_display, role_squads))
+                # role_key is kept so the per-member loop can decide whether
+                # to apply the MIN_KILLS_INFANTRY filter (infantry only).
+                roles_present.append((role_key, role_display, role_squads))
 
-        for role_idx, (role_display, role_squads) in enumerate(roles_present):
+        for role_idx, (role_key, role_display, role_squads) in enumerate(roles_present):
             is_last_role = role_idx == len(roles_present) - 1
             role_branch = "└" if is_last_role else "├"
             role_cont = " " if is_last_role else "│"
@@ -932,28 +941,57 @@ def generate_squads_breakdown(get_team_view_output: dict, lang: int) -> str:
             for sq_idx, (sq_name, sq_info) in enumerate(role_squads):
                 is_last_squad = sq_idx == len(role_squads) - 1
                 squad_branch = "└" if is_last_squad else "├"
+                squad_cont = " " if is_last_squad else "│"
 
                 players = sq_info.get("players") or []
                 sq_k = sum(p.get("kills", 0) for p in players)
                 sq_d = sum(p.get("deaths", 0) for p in players)
                 sq_kd = _fmt_kd(sq_k, sq_d)
 
+                # Recon special case: a recon squad has 2 members (sniper +
+                # spotter) but the spotter rarely kills anything. User wants
+                # ONE sniper per side, so we skip the "Загін …" / "Всього …"
+                # scaffolding entirely and render the top-killer as a single
+                # bullet under the "Снайпер" role header. Same idea as the
+                # commander block (one player, no squad-level numbers).
+                if role_key == "recon":
+                    sniper = max(players, key=lambda p: p.get("kills", 0)) if players else None
+                    if sniper is not None:
+                        p_name = (sniper.get("name") or "?")[:16]
+                        p_k = sniper.get("kills", 0)
+                        p_d = sniper.get("deaths", 0)
+                        side_lines.append(
+                            f"{role_cont} {squad_branch} {p_name}  {_fmt_kdk(p_k, p_d)}"
+                        )
+                    continue
+
                 n = len(players)
                 avg_k = sq_k / n if n > 0 else 0
                 avg_d = sq_d / n if n > 0 else 0
+                # Two-line squad header (per user feedback: easier to read
+                # than the long single line we had before):
+                #   Загін Baker [6] (avg K:26.7 D:27.8)
+                #     Всього K:160 D:167 KD:1.0
                 side_lines.append(
                     f"{role_cont} {squad_branch} Загін {sq_name.capitalize()}"
-                    f" [{n} в загоні] — всього {_fmt_kdk(sq_k, sq_d)}"
-                    f" (avg {avg_k:.1f}/{avg_d:.1f})"
+                    f" [{n}] (avg K:{avg_k:.1f} D:{avg_d:.1f})"
+                )
+                side_lines.append(
+                    f"{role_cont} {squad_cont}    Всього K:{sq_k} D:{sq_d} KD:{sq_kd}"
                 )
 
                 # Show only members above kills threshold — squad header still
                 # reflects ALL members (sq_k, sq_d, n).
+                # For armor crews (tiny squads where every role matters —
+                # driver in a tank) we show every member, even if they have
+                # 0 kills. The MIN_KILLS_INFANTRY filter is only useful for
+                # full infantry squads where rear support roles often farm
+                # 1-2 kills and clutter the output.
                 players_sorted = sorted(players, key=lambda p: p.get("kills", 0), reverse=True)
-                squad_cont = " " if is_last_squad else "│"
+                apply_min_kills = role_key == "infantry"
                 for player in players_sorted:
                     p_k = player.get("kills", 0)
-                    if p_k <= MIN_KILLS_INFANTRY:
+                    if apply_min_kills and p_k <= MIN_KILLS_INFANTRY:
                         continue
                     p_name = (player.get("name") or "?")[:16]
                     p_d = player.get("deaths", 0)

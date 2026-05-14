@@ -46,7 +46,12 @@ CHAT_COMMAND = ["!top"]
 STATS_TO_DISPLAY = {
     "players": {
         "armycommander": [
-            {"score": "player_teamplay", "display": 2, "details": True, "vip_winners": 1},             # combat + support * SUPPORT_BONUS
+            # Switched from player_teamplay → combat per user request:
+            # the "Бій + підтримка" label + "Бонус підтримки x1.5" note
+            # were jargon. `combat` is the raw HLL combat score (kills +
+            # assists weighted by HLL itself) and renders as "Бій" —
+            # accurate, one word, no multiplier explanation needed.
+            {"score": "combat", "display": 2, "details": True, "vip_winners": 1},
         ],
         "infantry": [
             # {"score": "combat", "display": 3, "details": True, "vip_winners": 0},
@@ -66,21 +71,19 @@ STATS_TO_DISPLAY = {
             {"score": "kills", "display": 5, "details": True, "vip_winners": 3},                       # top-5 by raw kills, VIP for top-3
         ],
         "armor": [
-            # Top-1 tanker by raw kills — labeled "Танкіст" in the output
-            # via PLAYER_CATEGORY_LABEL_OVERRIDE in live_topstats.py
-            # (because squad-type header "Бронетехніка" reads odd for a
-            # single-player highlight, same idea as the commander block).
-            {"score": "kills", "display": 1, "details": True, "vip_winners": 0},
+            # Single-player tanker highlight removed — replaced by the
+            # full per-side tank-crew breakdown in generate_squads_breakdown
+            # (see role_order in live_topstats.py). User feedback: showing
+            # the whole crew with all kills/deaths reads better than picking
+            # one MVP, since tank kills are a team effort.
         ],
         "artillery": [
             # add any stat using the templates above
         ],
         "recon": [
-            # Top-1 sniper by raw kills — labeled "Снайпер" in the output
-            # via PLAYER_CATEGORY_LABEL_OVERRIDE. Recon squads have 2
-            # members (spotter + sniper); the kill leader is almost
-            # always the sniper, so a single top-1 line is enough.
-            {"score": "kills", "display": 1, "details": True, "vip_winners": 0},
+            # Single-player sniper highlight removed — replaced by the
+            # full per-side recon-squad breakdown (one squad per side =
+            # two top snipers, exactly as user requested).
         ],
     },
     "squads": {
@@ -99,20 +102,22 @@ STATS_TO_DISPLAY = {
             # {"score": "squad_team_kills", "display": 2},
             # {"score": "squad_vehicle_kills", "display": 2},
             # {"score": "squad_vehicles_destroyed", "display": 2},
-            {"score": "squad_teamplay", "display": 2},
+            # squad_teamplay removed per user request — also auto-suppresses
+            # the "Бонус підтримки x1.5" note in the report (bonus_notes
+            # only adds it when teamplay scores are active).
             {"score": "squad_offdef", "display": 2},
             # {"score": "squad_kd", "display": 2},
             # {"score": "squad_kpm", "display": 2},
         ],
         "armor": [
-            {"score": "squad_teamplay", "display": 2},
+            # squad_teamplay removed (see infantry note above).
             {"score": "squad_vehicles_destroyed", "display": 2},
         ],
         "artillery": [
-            {"score": "squad_teamplay", "display": 2}
+            # squad_teamplay removed (see infantry note above).
         ],
         "recon": [
-            {"score": "squad_teamplay", "display": 2}
+            # squad_teamplay removed (see infantry note above).
         ]
     }
 }
