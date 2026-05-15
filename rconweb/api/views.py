@@ -80,7 +80,14 @@ def set_temp_msg(request, func, name):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_version(request):
-    res = run(["git", "describe", "--tags"], stdout=PIPE, stderr=PIPE)
+    # --exclude='backup/*' so internal safety-checkpoint tags
+    # (backup/before-*-YYYYMMDD-HHMMSS) don't leak into the public
+    # version string. See also: rcon/settings.py TAG_VERSION.
+    res = run(
+        ["git", "describe", "--tags", "--exclude=backup/*"],
+        stdout=PIPE,
+        stderr=PIPE,
+    )
     return api_response(res.stdout.decode(), failed=False, command="get_version")
 
 
