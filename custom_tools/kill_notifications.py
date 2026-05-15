@@ -56,7 +56,8 @@ _CMD_ON = "!kn on"
 _CMD_STATUS = "!kn"
 
 # Default save_message=False so the popup doesn't clutter the admin log.
-_MESSAGE_FOOTER = "\n(вимкнути: !kn off)"
+# Footer lists all 3 toggle commands in one compact line.
+_MESSAGE_FOOTER = "\n!kn off / on / стан"
 
 
 def _redis() -> redis.StrictRedis:
@@ -98,11 +99,10 @@ def _is_on_cooldown(player_id: str) -> bool:
 
 @on_kill
 def _notify_killer(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
-    """Send the killer a popup with the victim name + weapon."""
+    """Send the killer a one-line popup with the victim's name + toggle hint."""
     killer_id = log.get("player_id_1")
     victim_name = log.get("player_name_2")
     victim_id = log.get("player_id_2")
-    weapon = log.get("weapon") or "-"
 
     if not killer_id or not victim_name:
         return
@@ -113,9 +113,11 @@ def _notify_killer(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
     if _is_on_cooldown(killer_id):
         return  # multi-kill burst collapsed — wait for cooldown to expire
 
-    # Trim name to keep the popup compact (in-game admin overlay is narrow)
+    # Compact format: victim name on one line, then the toggle-commands
+    # hint footer. Weapon intentionally omitted (per user feedback —
+    # keeps the popup small and unobtrusive).
     short_name = victim_name[:24]
-    message = f"+1: {short_name}\n{weapon}{_MESSAGE_FOOTER}"
+    message = f"+1: {short_name}{_MESSAGE_FOOTER}"
 
     try:
         rcon.message_player(
@@ -173,6 +175,43 @@ def _toggle_via_chat(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
         )
     except Exception as e:
         logger.debug("kill_notifications: !kn reply failed for %s: %s", player_id, e)
+
+
+@on_chat
+def _augment_lk_with_hint(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
+    """When a player types CRCON's built-in `!lk` (or alias `!vc`) and
+    they're currently OPTED OUT of auto-notifications, append a small
+    hint pointing them at `!kn on` so they discover the auto mode.
+
+    Runs as a separate @on_chat handler so we DON'T disturb CRCON's
+    own `!lk` reply ("you killed X with Y") — both popups will show:
+    one from CRCON with the kill info, one from us with the hint.
+
+    Skipped when the player is already opted-IN (default state): they're
+    already getting auto-notifications, the hint would be redundant.
+    """
+    text = (log.get("sub_content") or "").strip().lower()
+    if text not in ("!lk", "!vc"):
+        return
+    player_id = log.get("player_id_1")
+    if not player_id:
+        return
+    if not _is_disabled(player_id):
+        return  # already opted-in, no need to advertise
+
+    hint = (
+        "Хочеш бачити це автоматично після кожного вбивства?\n"
+        "Команда: !kn on"
+    )
+    try:
+        rcon.message_player(
+            player_id=player_id,
+            message=hint,
+            by="kill_notifications",
+            save_message=False,
+        )
+    except Exception as e:
+        logger.debug("kill_notifications: !lk hint failed for %s: %s", player_id, e)
 
 
 logger.info(
