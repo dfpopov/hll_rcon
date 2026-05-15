@@ -13,6 +13,9 @@ import {
   LinearProgress,
   Divider,
   Alert,
+  Tabs,
+  Tab,
+  Chip,
 } from "@mui/material";
 import RestoreIcon from "@mui/icons-material/Restore";
 import SaveIcon from "@mui/icons-material/Save";
@@ -184,6 +187,11 @@ function VotemapSeedingPage() {
   const isAnyPending =
     isSavingWarfare || isSavingOffensive || isResetting || isSavingConfig;
 
+  // Sub-tab between warfare and offensive pickers — only one visible
+  // at a time so each picker has full width and isn't lost below a long
+  // scroll. Default to warfare (the bigger list, what admins edit more).
+  const [listTab, setListTab] = useState(0);
+
   return (
     <Stack spacing={2} sx={{ position: "relative" }}>
       {isAnyPending && (
@@ -253,63 +261,104 @@ function VotemapSeedingPage() {
 
       <Divider />
 
-      {/* ── Warfare list builder ──────────────────────────────────── */}
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Seeding warfare whitelist
-          <Typography component="span" sx={{ ml: 1 }} color="text.secondary">
-            ({selectedWarfare.length} selected)
-          </Typography>
-        </Typography>
-        <MapListBuilder
-          maps={warfareMaps}
-          selectedMaps={selectedWarfare}
-          onSave={(ids) => saveWarfare(ids)}
-          isSaving={isSavingWarfare}
-          isSaveDisabled={isSavingWarfare}
-          exclusive={true}
-          slots={{
-            SelectedMapList: MapWhitelistList,
-            MapListItem: MapBuilderListItem,
-          }}
-          actions={
-            <Tooltip title="Reset both lists to the curated 7+7 defaults">
-              <IconButton onClick={() => resetWhitelist()} size="small" color="warning">
-                <RestoreIcon />
-              </IconButton>
-            </Tooltip>
-          }
-        />
-      </Paper>
-
-      <Divider />
-
-      {/* ── Offensive list builder ────────────────────────────────── */}
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Seeding offensive whitelist
-          <Typography component="span" sx={{ ml: 1 }} color="text.secondary">
-            ({selectedOffensive.length} selected)
-          </Typography>
-        </Typography>
-        <Box sx={{ mb: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            The dedup wrapper guarantees the chosen offensive's base map
-            won't duplicate any warfare slot in the same vote.
-          </Typography>
+      {/* ── Sub-tabs: Warfare ↔ Offensive ─────────────────────────── */}
+      {/* Only one list visible at a time — each picker gets full width
+          (filter sidebar + available pool + selected list), and switching
+          is one click instead of a long scroll. */}
+      <Paper sx={{ p: 0 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider", px: 2 }}>
+          <Tabs
+            value={listTab}
+            onChange={(_, v) => setListTab(v)}
+            aria-label="seeding list type"
+          >
+            <Tab
+              label={
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <span>Warfare</span>
+                  <Chip
+                    size="small"
+                    label={selectedWarfare.length}
+                    color={listTab === 0 ? "primary" : "default"}
+                  />
+                </Stack>
+              }
+            />
+            <Tab
+              label={
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <span>Offensive</span>
+                  <Chip
+                    size="small"
+                    label={selectedOffensive.length}
+                    color={listTab === 1 ? "primary" : "default"}
+                  />
+                </Stack>
+              }
+            />
+            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Tooltip title="Reset both warfare + offensive lists to the curated 7+7 defaults">
+                <IconButton
+                  onClick={() => resetWhitelist()}
+                  size="small"
+                  color="warning"
+                >
+                  <RestoreIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Tabs>
         </Box>
-        <MapListBuilder
-          maps={offensiveMaps}
-          selectedMaps={selectedOffensive}
-          onSave={(ids) => saveOffensive(ids)}
-          isSaving={isSavingOffensive}
-          isSaveDisabled={isSavingOffensive}
-          exclusive={true}
-          slots={{
-            SelectedMapList: MapWhitelistList,
-            MapListItem: MapBuilderListItem,
-          }}
-        />
+
+        <Box sx={{ p: 2 }}>
+          {listTab === 0 && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Warfare layers available during seeding. Votemap picks{" "}
+                <b>num_warfare_options</b> (see Settings tab) random items
+                from this list.
+              </Typography>
+              <MapListBuilder
+                key="warfare"
+                maps={warfareMaps}
+                selectedMaps={selectedWarfare}
+                onSave={(ids) => saveWarfare(ids)}
+                isSaving={isSavingWarfare}
+                isSaveDisabled={isSavingWarfare}
+                exclusive={true}
+                slots={{
+                  SelectedMapList: MapWhitelistList,
+                  MapListItem: MapBuilderListItem,
+                }}
+              />
+            </Box>
+          )}
+
+          {listTab === 1 && (
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Offensive layers available during seeding. Votemap picks{" "}
+                <b>num_offensive_options</b> from this list. The dedup
+                wrapper ensures the chosen offensive's base map won't
+                duplicate any warfare slot in the same vote.
+              </Typography>
+              <MapListBuilder
+                key="offensive"
+                maps={offensiveMaps}
+                selectedMaps={selectedOffensive}
+                onSave={(ids) => saveOffensive(ids)}
+                isSaving={isSavingOffensive}
+                isSaveDisabled={isSavingOffensive}
+                exclusive={true}
+                slots={{
+                  SelectedMapList: MapWhitelistList,
+                  MapListItem: MapBuilderListItem,
+                }}
+              />
+            </Box>
+          )}
+        </Box>
       </Paper>
     </Stack>
   );
