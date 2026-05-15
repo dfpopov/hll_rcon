@@ -31,5 +31,6 @@ if not os.getenv("HLL_MAINTENANCE_CONTAINER") and not os.getenv(
         steam,
         vac_game_bans,
         vote_map,
+        votemap_seeding,
         webhooks,
     )

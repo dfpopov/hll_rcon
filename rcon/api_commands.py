@@ -75,6 +75,7 @@ from rcon.user_config.steam import SteamUserConfig
 from rcon.user_config.utils import BaseUserConfig, validate_user_config
 from rcon.user_config.vac_game_bans import VacGameBansUserConfig
 from rcon.user_config.vote_map import VoteMapUserConfig
+from rcon.user_config.votemap_seeding import VotemapSeedingUserConfig
 from rcon.user_config.watch_killrate import WatchKillRateUserConfig
 from rcon.user_config.webhooks import (
     AdminPingWebhooksUserConfig,
@@ -748,6 +749,93 @@ class RconAPI(Rcon):
             self.reset_votemap_state()
 
         return True
+
+    # ── Votemap seeding whitelist (custom, see custom_tools/votemap_seeding.py) ──
+
+    def get_votemap_seeding_whitelist(self) -> dict[str, list[str]]:
+        """Returns {warfare: [...], offensive: [...]} from VotemapSeedingUserConfig.
+        Two lists rather than one because the UI edits them separately
+        (warfare picker + offensive picker)."""
+        cfg = VotemapSeedingUserConfig.load_from_db()
+        return {
+            "warfare": list(cfg.warfare_layer_ids),
+            "offensive": list(cfg.offensive_layer_ids),
+        }
+
+    def set_votemap_seeding_whitelist_warfare(self, map_names: Iterable[str]):
+        """Replace the warfare layer-id list. Other config fields preserved."""
+        cfg = VotemapSeedingUserConfig.load_from_db()
+        VotemapSeedingUserConfig.save_to_db({
+            "enabled": cfg.enabled,
+            "player_threshold": cfg.player_threshold,
+            "seeding_hour_start": cfg.seeding_hour_start,
+            "seeding_hour_end": cfg.seeding_hour_end,
+            "warfare_layer_ids": list(map_names),
+            "offensive_layer_ids": list(cfg.offensive_layer_ids),
+        })
+
+    def set_votemap_seeding_whitelist_offensive(self, map_names: Iterable[str]):
+        """Replace the offensive layer-id list. Other config fields preserved."""
+        cfg = VotemapSeedingUserConfig.load_from_db()
+        VotemapSeedingUserConfig.save_to_db({
+            "enabled": cfg.enabled,
+            "player_threshold": cfg.player_threshold,
+            "seeding_hour_start": cfg.seeding_hour_start,
+            "seeding_hour_end": cfg.seeding_hour_end,
+            "warfare_layer_ids": list(cfg.warfare_layer_ids),
+            "offensive_layer_ids": list(map_names),
+        })
+
+    def reset_votemap_seeding_whitelist(self):
+        """Reset both warfare + offensive lists to module defaults (the curated 7+7)."""
+        from rcon.user_config.votemap_seeding import (
+            DEFAULT_WARFARE_LAYER_IDS,
+            DEFAULT_OFFENSIVE_LAYER_IDS,
+        )
+        cfg = VotemapSeedingUserConfig.load_from_db()
+        VotemapSeedingUserConfig.save_to_db({
+            "enabled": cfg.enabled,
+            "player_threshold": cfg.player_threshold,
+            "seeding_hour_start": cfg.seeding_hour_start,
+            "seeding_hour_end": cfg.seeding_hour_end,
+            "warfare_layer_ids": list(DEFAULT_WARFARE_LAYER_IDS),
+            "offensive_layer_ids": list(DEFAULT_OFFENSIVE_LAYER_IDS),
+        })
+
+    def get_votemap_seeding_config(self) -> VotemapSeedingUserConfig:
+        return VotemapSeedingUserConfig.load_from_db()
+
+    def validate_votemap_seeding_config(
+        self,
+        by: str,
+        config: dict[str, Any] | BaseUserConfig | None = None,
+        reset_to_default: bool = False,
+        **kwargs,
+    ) -> bool:
+        return self._validate_user_config(
+            by=by,
+            command_name=inspect.currentframe().f_code.co_name,  # type: ignore
+            model=VotemapSeedingUserConfig,
+            data=config or kwargs,
+            dry_run=True,
+            reset_to_default=reset_to_default,
+        )
+
+    def set_votemap_seeding_config(
+        self,
+        by: str,
+        config: dict[str, Any] | BaseUserConfig | None = None,
+        reset_to_default: bool = False,
+        **kwargs,
+    ) -> bool:
+        return self._validate_user_config(
+            by=by,
+            command_name=inspect.currentframe().f_code.co_name,  # type: ignore
+            model=VotemapSeedingUserConfig,
+            data=config or kwargs,
+            dry_run=False,
+            reset_to_default=reset_to_default,
+        )
 
     def get_auto_broadcasts_config(self) -> AutoBroadcastUserConfig:
         return AutoBroadcastUserConfig.load_from_db()

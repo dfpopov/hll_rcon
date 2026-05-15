@@ -64,6 +64,8 @@ import VotemapBuilder from "./pages/settings/maps/votemap/builder"
 import { loader as votemapBuilderLoader } from "./pages/settings/maps/votemap/builder/loader"
 import VotemapSettings from "./pages/settings/maps/votemap/settings"
 import { loader as votemapSettingsLoader } from "./pages/settings/maps/votemap/settings/loader"
+import VotemapSeeding from "./pages/settings/maps/votemap/seeding"
+import { loader as votemapSeedingLoader } from "./pages/settings/maps/votemap/seeding/loader"
 import MapObjectives from "./pages/settings/maps/objectives";
 import MapObjectivesError from "./pages/settings/maps/objectives/error";
 import { loader as mapObjectivesLoader } from "./pages/settings/maps/objectives/loader"
@@ -363,7 +365,13 @@ const router = createBrowserRouter([
                                 path: 'whitelist',
                                 element: <VotemapBuilder />,
                                 loader: votemapBuilderLoader,
-                            },{
+                            },
+                            {
+                                path: 'seeding',
+                                element: <VotemapSeeding />,
+                                loader: votemapSeedingLoader,
+                            },
+                            {
                                 path: 'settings',
                                 element: <VotemapSettings />,
                                 loader: votemapSettingsLoader,

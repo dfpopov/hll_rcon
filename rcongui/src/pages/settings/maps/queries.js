@@ -11,6 +11,8 @@ export const mapsManagerQueryKeys = {
   votemapStatus: [{ queryIdentifier: "get_votemap_status" }],
   voteMapConfig: [{ queryIdentifier: "get_votemap_config" }],
   votemapWhitelist: [{ queryIdentifier: "get_votemap_whitelist" }],
+  votemapSeedingWhitelist: [{ queryIdentifier: "get_votemap_seeding_whitelist" }],
+  votemapSeedingConfig: [{ queryIdentifier: "get_votemap_seeding_config" }],
   objectives: [{ queryIdentifier: "get_objective_rows" }],
 };
 
@@ -67,6 +69,19 @@ export const mapsManagerQueryOptions = {
     queryOptions({
       queryKey: mapsManagerQueryKeys.votemapWhitelist,
       queryFn: cmd.GET_VOTEMAP_WHITELIST,
+    }),
+
+  // Returns { warfare: [...], offensive: [...] } from VotemapSeedingUserConfig
+  votemapSeedingWhitelist: () =>
+    queryOptions({
+      queryKey: mapsManagerQueryKeys.votemapSeedingWhitelist,
+      queryFn: cmd.GET_VOTEMAP_SEEDING_WHITELIST,
+    }),
+
+  votemapSeedingConfig: () =>
+    queryOptions({
+      queryKey: mapsManagerQueryKeys.votemapSeedingConfig,
+      queryFn: cmd.GET_VOTEMAP_SEEDING_CONFIG,
     }),
 
   objectives: () =>
@@ -136,5 +151,26 @@ export const mapsManagerMutationOptions = {
   setWhitelist: {
     mutationFn: (whitelist) =>
       cmd.SET_VOTEMAP_WHITELIST({ payload: { map_names: whitelist }, throwRouteError: false }),
+  },
+
+  // ── Seeding whitelist mutations ───────────────────────────────────
+  setSeedingWhitelistWarfare: {
+    mutationFn: (mapNames) =>
+      cmd.SET_VOTEMAP_SEEDING_WHITELIST_WARFARE({ payload: { map_names: mapNames }, throwRouteError: false }),
+  },
+
+  setSeedingWhitelistOffensive: {
+    mutationFn: (mapNames) =>
+      cmd.SET_VOTEMAP_SEEDING_WHITELIST_OFFENSIVE({ payload: { map_names: mapNames }, throwRouteError: false }),
+  },
+
+  resetSeedingWhitelist: {
+    mutationFn: () =>
+      cmd.RESET_VOTEMAP_SEEDING_WHITELIST({ throwRouteError: false }),
+  },
+
+  setSeedingConfig: {
+    mutationFn: (config) =>
+      cmd.SET_VOTEMAP_SEEDING_CONFIG({ payload: config, throwRouteError: false }),
   },
 };

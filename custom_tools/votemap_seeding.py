@@ -40,70 +40,50 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from rcon.maps import parse_layer
+from rcon.user_config.votemap_seeding import VotemapSeedingUserConfig
 from rcon.vote_map import VoteMap
 
 logger = logging.getLogger(__name__)
 
-# Layer ids of the 7 seeding-friendly warfare-day maps. These are the
-# layer IDs from rcon/maps.py LAYERS dict — not base map ids. Each
-# resolves to one specific (map, mode=warfare, environment=day) Layer.
-SEEDING_LAYER_IDS: tuple[str, ...] = (
-    "kharkov_warfare",
-    "carentan_warfare",
-    "kursk_warfare",
-    "omahabeach_warfare",
-    "stmereeglise_warfare",
-    "stmariedumont_warfare",
-    "utahbeach_warfare",
-)
-
-# Offensive variants of the same base maps. One per map, picking the
-# canonical attacker side (US for D-Day campaigns, RUS for Kharkov 1943
-# counter-attack, GER for Operation Citadel at Kursk).
+# All seeding parameters now live in Redis via VotemapSeedingUserConfig
+# (rcon/user_config/votemap_seeding.py) and are editable through the
+# rcongui Settings UI. See that module for defaults + descriptions.
 #
-# Note CRCON layer-id naming is inconsistent: most maps use the full
-# `<map>_offensive_<side>` form, but Stmariedumont uses the abbreviated
-# `stmariedumont_off_<side>`. Both forms verified against rcon.maps.LAYERS.
-#
-# These attacker-side picks were validated against admin_analytics:
-#   carentan_offensive_us     → 277 player·matches, 37.9% return rate (#1)
-#   kharkov_offensive_rus     → 892 PM, 29.5% return rate
-#   omahabeach_offensive_us   → 603 PM (largest D-Day off sample)
-#   utahbeach_offensive_us    → 470 PM, 33% return, 41% long-play
-#   kursk_offensive_ger       → 136 PM (only kursk off variant with data)
-#   stmereeglise_offensive_us → canonical D-Day paratroopers, low historic
-#                               play count in offensive mode
-#   stmariedumont_off_us      → canonical (506th PIR), low historic count
-SEEDING_OFFENSIVE_LAYER_IDS: tuple[str, ...] = (
-    "carentan_offensive_us",
-    "kharkov_offensive_rus",
-    "kursk_offensive_ger",
-    "omahabeach_offensive_us",
-    "stmariedumont_off_us",       # note: short '_off_' naming (CRCON quirk)
-    "stmereeglise_offensive_us",
-    "utahbeach_offensive_us",
-)
-
-# Below this player count the seeding pool kicks in regardless of time
-# (49 → seeding, 50 → prime). Hard cutoff per user request — no buffer.
+# Backwards-compat constant aliases so external code that imported these
+# names continues to work; the *live* values come from _config().
+SEEDING_LAYER_IDS: tuple[str, ...] = ()           # populated lazily, see _config
+SEEDING_OFFENSIVE_LAYER_IDS: tuple[str, ...] = ()
 PLAYER_THRESHOLD: int = 50
-
-# Kyiv-local hour range (24-h clock) during which seeding is enforced
-# regardless of pop. Spans midnight, so checked with `hour >= 23 or hour < 6`.
-SEEDING_HOUR_START: int = 23   # inclusive
-SEEDING_HOUR_END: int   = 6    # exclusive
+SEEDING_HOUR_START: int = 23
+SEEDING_HOUR_END: int = 6
 
 _TZ = ZoneInfo("Europe/Kyiv")
 
 
-def _kyiv_hour_in_seeding_window() -> bool:
-    """True when current Kyiv local hour is in [23, 6)."""
+def _config() -> VotemapSeedingUserConfig:
+    """Load the live config from Redis on each call. The Redis lookup is
+    cheap (~ms) and the call frequency is bounded by votemap selection
+    events (every map change), so we don't bother caching."""
+    return VotemapSeedingUserConfig.load_from_db()
+
+
+def _kyiv_hour_in_seeding_window(cfg: VotemapSeedingUserConfig) -> bool:
+    """True when current Kyiv local hour is in [start, end).
+
+    The window can wrap across midnight when start > end (e.g. 23..6
+    means 23:00–05:59). When start == end, the time gate is effectively
+    disabled (returns False always — only player-count gating applies)."""
     hour = datetime.now(_TZ).hour
-    return hour >= SEEDING_HOUR_START or hour < SEEDING_HOUR_END
+    start, end = cfg.seeding_hour_start, cfg.seeding_hour_end
+    if start == end:
+        return False
+    if start < end:
+        return start <= hour < end
+    return hour >= start or hour < end
 
 
-def _player_count_in_seeding_window(rcon) -> bool:
-    """True when current player count is below PLAYER_THRESHOLD.
+def _player_count_in_seeding_window(rcon, cfg: VotemapSeedingUserConfig) -> bool:
+    """True when current player count is below cfg.player_threshold.
 
     Defensive on rcon failures — treat unknown as seeding (safer to
     over-restrict than to ship players a Driel during a 30-player
@@ -114,28 +94,30 @@ def _player_count_in_seeding_window(rcon) -> bool:
     except Exception:
         logger.warning("votemap_seeding: get_slots failed, assuming seeding")
         return True
-    return players < PLAYER_THRESHOLD
+    return players < cfg.player_threshold
 
 
 def is_seeding_now(rcon) -> bool:
     """Single source of truth for the seeding-window predicate.
 
-    Returns True when EITHER pop < 50 OR Kyiv hour ∈ [23, 6).
-    See module docstring for rationale.
+    Returns True when EITHER pop < threshold OR Kyiv hour is in the
+    configured window. If `enabled=False` always returns False, so the
+    admin's full whitelist is used at all times.
     """
-    return _player_count_in_seeding_window(rcon) or _kyiv_hour_in_seeding_window()
+    cfg = _config()
+    if not cfg.enabled:
+        return False
+    return _player_count_in_seeding_window(rcon, cfg) or _kyiv_hour_in_seeding_window(cfg)
 
 
 def _seeding_whitelist() -> set:
-    """Resolve all seeding layer ids (warfares + offensives) to Layer
-    objects. Misconfigured ids (e.g. game patch removes a map) are
-    dropped with a warning rather than crashing votemap generation.
-
-    Returns the combined set so votemap's natural picking can satisfy
-    both num_warfare_options and num_offensive_options from a single
-    whitelist."""
+    """Resolve all seeding layer ids (warfares + offensives) from the
+    live config to Layer objects. Misconfigured ids (e.g. game patch
+    removes a map, or admin typo) are dropped with a warning rather
+    than crashing votemap generation."""
+    cfg = _config()
     out = set()
-    for layer_id in SEEDING_LAYER_IDS + SEEDING_OFFENSIVE_LAYER_IDS:
+    for layer_id in list(cfg.warfare_layer_ids) + list(cfg.offensive_layer_ids):
         try:
             out.add(parse_layer(layer_id))
         except Exception as e:
@@ -202,19 +184,23 @@ def _patched_gen_selection(self):
         return
 
     warfares   = [m for m in selection if "warfare"   in m.id.lower()]
-    offensives = [m for m in selection if "offensive" in m.id.lower()]
+    offensives = [m for m in selection if "_off" in m.id.lower() or "offensive" in m.id.lower()]
+    # Note: matches both '_offensive_' and '_off_' (CRCON layer naming
+    # is inconsistent — Stmariedumont uses the short form).
     if not (warfares and offensives):
         return
 
     war_base_maps = {m.map.id for m in warfares}
+    cfg = _config()
 
     fixed = []
     swapped = False
     for m in selection:
-        if "offensive" in m.id.lower() and m.map.id in war_base_maps:
+        is_offensive = "_off" in m.id.lower() or "offensive" in m.id.lower()
+        if is_offensive and m.map.id in war_base_maps:
             # Find an alternative offensive whose base map isn't already in warfares
             candidates = []
-            for oid in SEEDING_OFFENSIVE_LAYER_IDS:
+            for oid in cfg.offensive_layer_ids:
                 try:
                     cand = parse_layer(oid)
                 except Exception:
@@ -251,8 +237,19 @@ def _patched_gen_selection(self):
 VoteMap.gen_selection = _patched_gen_selection  # type: ignore[method-assign]
 
 
-logger.info(
-    "votemap_seeding: patched (threshold=%d, hours=[%d,%d), %d seeding warfares + %d offensives, dedup ON)",
-    PLAYER_THRESHOLD, SEEDING_HOUR_START, SEEDING_HOUR_END,
-    len(SEEDING_LAYER_IDS), len(SEEDING_OFFENSIVE_LAYER_IDS),
-)
+# Log effective config at startup for ops visibility (numbers come from
+# the Redis-backed UserConfig, not module constants).
+try:
+    _startup_cfg = _config()
+    logger.info(
+        "votemap_seeding: patched (enabled=%s, threshold=%d, hours=[%d,%d), "
+        "%d warfare layers + %d offensive layers, dedup ON)",
+        _startup_cfg.enabled,
+        _startup_cfg.player_threshold,
+        _startup_cfg.seeding_hour_start,
+        _startup_cfg.seeding_hour_end,
+        len(_startup_cfg.warfare_layer_ids),
+        len(_startup_cfg.offensive_layer_ids),
+    )
+except Exception as _e:
+    logger.warning("votemap_seeding: could not log startup config: %s", _e)
