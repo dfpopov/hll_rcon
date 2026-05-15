@@ -1,8 +1,18 @@
 """Dynamic-whitelist gate for votemap during seeding hours / low pop.
 
 Editorial policy: votes during seeding should be limited to a curated
-set of 7 starter-friendly warfare-day maps so the server reliably
-fills. Outside that window, the admin's full whitelist applies.
+set of starter-friendly maps so the server reliably fills:
+
+  • 7 warfare-day maps (the base "always playable" set)
+  • 6 offensive variants of those same maps (one offensive per base map
+    where HLL has an offensive variant; Stmariedumont has none).
+
+Combined with the admin's vote settings (num_warfare_options=4,
+num_offensive_options=1), the player sees: 4 warfare from the 7 +
+1 offensive from the 6, total 5 vote options during seeding.
+
+Outside that window, the admin's full whitelist (26 maps incl. Foy,
+Hurtgen, Driel, etc.) applies and votemap picks freely from it.
 
 Seeding window is active when EITHER:
   • current player count < 50  (gradient-of-fillness threshold), OR
@@ -25,6 +35,7 @@ installed at supervisor / backend startup, in time for any
 from __future__ import annotations
 
 import logging
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -44,6 +55,29 @@ SEEDING_LAYER_IDS: tuple[str, ...] = (
     "stmereeglise_warfare",
     "stmariedumont_warfare",
     "utahbeach_warfare",
+)
+
+# Offensive variants of the same base maps. One per map, picking the
+# canonical attacker side (US for D-Day, RUS for Kharkov 1943 counter-
+# attack, GER for Operation Citadel at Kursk). Stmariedumont has no
+# offensive variant in HLL, so the list has 6 entries for 7 base maps —
+# fine, votemap picks num_offensive_options=1 from whatever is available.
+#
+# These attacker-side picks were validated against admin_analytics:
+#   carentan_offensive_us  → 277 player·matches, 37.9% return rate (#1)
+#   kharkov_offensive_rus  → 892 player·matches, 29.5% return rate
+#   omahabeach_offensive_us → 603 PM (largest D-Day off sample)
+#   utahbeach_offensive_us → 470 PM, 33% return, 41% long-play
+#   kursk_offensive_ger    → 136 PM (only kursk off variant with data)
+#   stmereeglise_offensive_us → no historical data on US side but
+#                               canonical for D-Day paratroopers
+SEEDING_OFFENSIVE_LAYER_IDS: tuple[str, ...] = (
+    "carentan_offensive_us",
+    "kharkov_offensive_rus",
+    "kursk_offensive_ger",
+    "omahabeach_offensive_us",
+    "stmereeglise_offensive_us",
+    "utahbeach_offensive_us",
 )
 
 # Below this player count the seeding pool kicks in regardless of time
@@ -89,11 +123,15 @@ def is_seeding_now(rcon) -> bool:
 
 
 def _seeding_whitelist() -> set:
-    """Resolve the 7 layer ids to Layer objects. Misconfigured ids
-    (e.g. game patch removes a map) are dropped with a warning rather
-    than crashing votemap generation."""
+    """Resolve all seeding layer ids (warfares + offensives) to Layer
+    objects. Misconfigured ids (e.g. game patch removes a map) are
+    dropped with a warning rather than crashing votemap generation.
+
+    Returns the combined set so votemap's natural picking can satisfy
+    both num_warfare_options and num_offensive_options from a single
+    whitelist."""
     out = set()
-    for layer_id in SEEDING_LAYER_IDS:
+    for layer_id in SEEDING_LAYER_IDS + SEEDING_OFFENSIVE_LAYER_IDS:
         try:
             out.add(parse_layer(layer_id))
         except Exception as e:
@@ -130,7 +168,87 @@ def _patched_get_map_whitelist(self) -> set:
 
 VoteMap.get_map_whitelist = _patched_get_map_whitelist  # type: ignore[method-assign]
 
+
+# ─── Dedup wrapper around gen_selection ─────────────────────────────────────
+# During seeding our whitelist is narrow (7 warfares + 6 offensives sharing
+# base maps). With num_warfare=4 and num_offensive=1, the natural picker
+# overlaps the offensive with one of the 4 warfares ~56% of the time
+# (same base map appears twice in the vote). User wants the vote to always
+# show 5 distinct base maps — so we post-process the selection: if the
+# offensive's base map is among the warfares, swap in a different offensive
+# from our seeding-offensive pool that doesn't overlap.
+#
+# Only applied during seeding. Outside seeding, the admin's full whitelist
+# is in use and any overlap is what the admin configured.
+
+_original_gen_selection = VoteMap.gen_selection
+VoteMap._gen_selection_unpatched = _original_gen_selection  # type: ignore[attr-defined]
+
+
+def _patched_gen_selection(self):
+    """Generate selection, then (only during seeding) ensure the offensive's
+    base map is not duplicated in the warfare picks."""
+    _original_gen_selection(self)
+
+    if not is_seeding_now(self.rcon):
+        return  # outside seeding, admin's intent stands
+
+    selection = self.get_selection()
+    if not selection:
+        return
+
+    warfares   = [m for m in selection if "warfare"   in m.id.lower()]
+    offensives = [m for m in selection if "offensive" in m.id.lower()]
+    if not (warfares and offensives):
+        return
+
+    war_base_maps = {m.map.id for m in warfares}
+
+    fixed = []
+    swapped = False
+    for m in selection:
+        if "offensive" in m.id.lower() and m.map.id in war_base_maps:
+            # Find an alternative offensive whose base map isn't already in warfares
+            candidates = []
+            for oid in SEEDING_OFFENSIVE_LAYER_IDS:
+                try:
+                    cand = parse_layer(oid)
+                except Exception:
+                    continue
+                if cand.map.id in war_base_maps:
+                    continue
+                if cand.id == m.id:
+                    continue
+                # Also make sure not already in current fixed list
+                if any(cand.id == f.id for f in fixed):
+                    continue
+                candidates.append(cand)
+            if candidates:
+                replacement = random.choice(candidates)
+                logger.info(
+                    "votemap_seeding: deduped offensive %s → %s (warfares: %s)",
+                    m.id, replacement.id, sorted(war_base_maps),
+                )
+                fixed.append(replacement)
+                swapped = True
+                continue
+            else:
+                # No clean alternative — fall back to original (very rare)
+                logger.warning(
+                    "votemap_seeding: no clean offensive alternative; keeping %s",
+                    m.id,
+                )
+        fixed.append(m)
+
+    if swapped:
+        self.set_selection(selection=fixed)
+
+
+VoteMap.gen_selection = _patched_gen_selection  # type: ignore[method-assign]
+
+
 logger.info(
-    "votemap_seeding: VoteMap.get_map_whitelist patched (threshold=%d, hours=[%d,%d))",
+    "votemap_seeding: patched (threshold=%d, hours=[%d,%d), %d seeding warfares + %d offensives, dedup ON)",
     PLAYER_THRESHOLD, SEEDING_HOUR_START, SEEDING_HOUR_END,
+    len(SEEDING_LAYER_IDS), len(SEEDING_OFFENSIVE_LAYER_IDS),
 )
