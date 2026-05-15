@@ -1,0 +1,27 @@
+# compose.override.yaml — auto-loaded by 'docker compose' (along with compose.yaml).
+# Adds 'build:' to backend_1 + supervisor_1 + bot1 so 'docker compose build'
+# rebuilds them from local source instead of pulling Marech's upstream image.
+#
+# Without this, custom Python in rcon/, custom_tools/, rconweb/ etc. is
+# replaced by upstream Marech code at next auto-update (daily 04:00 via
+# /root/update_crcon.sh on prod). Custom changes would silently vanish.
+#
+# Frontend already has 'build:' in compose.yaml's x-frontend, so it's
+# not overridden here.
+#
+# Apply on prod: place this file at /root/hll_rcon_tool/compose.override.yaml.
+# Docker Compose auto-discovers files matching compose.override.{yml,yaml}.
+
+services:
+  backend_1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+  supervisor_1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+  bot1:
+    build:
+      context: .
+      dockerfile: Dockerfile-bot
