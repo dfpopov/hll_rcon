@@ -12,6 +12,7 @@ import rcon.steam_utils as steam_utils
 import custom_tools.live_topstats as live_topstats
 import custom_tools.all_time_stats as all_time_stats
 import custom_tools.kick_ru_on_connect as kick_ru_on_connect
+import custom_tools.kill_notifications as _kill_notifications  # noqa: F401
 from discord.utils import escape_markdown
 from rcon.arguments import max_arg_index, replace_params
 from rcon.blacklist import (
