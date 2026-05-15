@@ -15,9 +15,9 @@ Burst aggregation: when the first kill of a burst arrives we arm a
 timer for AGGREGATION_WINDOW_SECONDS. Any kills the same player makes
 within that window are counted but DON'T trigger their own popup;
 when the timer fires we send ONE popup with the total count and the
-first victim's name. So a 3-kill spree → 1 popup with "+3: <name>
-ще +2 — лише перше імʼя :D". This both keeps the UI calm and limits
-RCON load on busy 100-player matches.
+first victim's name. So a 3-kill spree → 1 popup with
+"+3: <first_name> (ще +2)". Keeps the UI calm and limits RCON load
+on busy 100-player matches.
 
 Wiring: imported for side effect in `rcon/hooks.py` so the @on_kill /
 @on_chat handlers register at backend / supervisor startup.
@@ -113,13 +113,10 @@ def _flush_burst(rcon: Rcon, killer_id: str) -> None:
     if n == 1:
         message = f"+1: {first}{_MESSAGE_FOOTER}"
     else:
-        # "Більше 1 вбивства за <window>s — показано лише першу жертву"
+        # Burst aggregated into one popup. Keep neutral & short:
+        # "+N: <first_victim> (ще +N-1)" on one line, footer below.
         extra = n - 1
-        message = (
-            f"+{n}: {first}\n"
-            f"ще +{extra} — лише перше імʼя :D"
-            f"{_MESSAGE_FOOTER}"
-        )
+        message = f"+{n}: {first} (ще +{extra}){_MESSAGE_FOOTER}"
 
     try:
         rcon.message_player(
