@@ -23,11 +23,20 @@ try:
         RconServerSettingsUserConfig = None
 
     try:
+        # Exclude internal safety-checkpoint tags ('backup/before-*-YYYYMMDD-HHMMSS')
+        # so the public version string stays clean. Otherwise git describe
+        # walks all tags and surfaces these admin-internal markers.
         TAG_VERSION = (
-            run(["git", "describe", "--tags"], stdout=PIPE, stderr=PIPE)
+            run(
+                ["git", "describe", "--tags", "--exclude=backup/*"],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
             .stdout.decode()
             .strip()
         )
+        if not TAG_VERSION:
+            TAG_VERSION = "unknown"
     except Exception:
         TAG_VERSION = "unknown"
 

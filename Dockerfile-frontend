@@ -12,7 +12,7 @@ ENV REACT_APP_API_URL=/api/
 COPY .git/ .git/
 COPY assets/images/ /code/public
 COPY assets/rcongui/ /code/public
-RUN git describe --tags > /code/tag_version && rm -rf .git
+RUN git describe --tags --exclude='backup/*' > /code/tag_version && rm -rf .git
 RUN npx browserslist@latest --update-db
 RUN npm run build
 RUN mv /code/dist /www

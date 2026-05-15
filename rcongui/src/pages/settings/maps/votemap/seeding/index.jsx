@@ -222,7 +222,20 @@ function VotemapSeedingPage() {
         <Typography variant="h6" gutterBottom>
           Seeding window settings
         </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems="center">
+        {/* alignItems="flex-start" so all field LABELS sit on the same
+            horizontal baseline; the TextFields have helperText below
+            (some explicit ' ' to keep heights uniform) so they all
+            occupy the same vertical box. The Switch and Button get an
+            explicit mt to land at the input-line level. */}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          alignItems="flex-start"
+          sx={{
+            "& .MuiFormControlLabel-root": { mt: 1 },
+            "& .MuiButton-root": { mt: 1 },
+          }}
+        >
           <FormControlLabel
             control={
               <Switch
@@ -248,6 +261,8 @@ function VotemapSeedingPage() {
             inputProps={{ min: 0, max: 23 }}
             value={formHourStart}
             onChange={(e) => setFormHourStart(e.target.value)}
+            helperText=" "
+            sx={{ minWidth: 140 }}
           />
           <TextField
             label="Hour end (Kyiv)"
@@ -257,6 +272,7 @@ function VotemapSeedingPage() {
             value={formHourEnd}
             onChange={(e) => setFormHourEnd(e.target.value)}
             helperText={`Window: ${formHourStart}:00 – ${formHourEnd}:00 (wraps midnight if start > end)`}
+            sx={{ minWidth: 280 }}
           />
           <Button
             variant="contained"

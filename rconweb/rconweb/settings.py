@@ -24,11 +24,19 @@ from sentry_sdk.integrations.logging import LoggingIntegration
 from rcon.user_config.rcon_server_settings import RconServerSettingsUserConfig
 
 try:
+    # Exclude internal safety-checkpoint tags ('backup/before-*-YYYYMMDD-HHMMSS')
+    # so the public version string stays clean.
     TAG_VERSION = (
-        run(["git", "describe", "--tags"], stdout=PIPE, stderr=PIPE)
+        run(
+            ["git", "describe", "--tags", "--exclude=backup/*"],
+            stdout=PIPE,
+            stderr=PIPE,
+        )
         .stdout.decode()
         .strip()
     )
+    if not TAG_VERSION:
+        TAG_VERSION = "unknown"
 except Exception:
     TAG_VERSION = "unknown"
 

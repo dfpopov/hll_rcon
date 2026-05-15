@@ -283,16 +283,34 @@ def _enforce_prime_golden_min(self, selection: list) -> tuple[list, bool]:
 
     sel_ids = {m.id.lower() for m in selection}
 
+    # Respect admin's prime whitelist: only inject golden maps that are
+    # ALSO in admin's prime list. If admin removed e.g. carentan_warfare
+    # from prime but kept it in seeding-golden, we MUST NOT force it back
+    # into prime votes — that would violate admin intent.
+    try:
+        admin_whitelist_ids = {
+            m.id.lower() for m in self._get_map_whitelist_unpatched()
+        }
+    except Exception:
+        admin_whitelist_ids = None  # fall back to no filter on rare failure
+
     # Candidate golden layers not already in selection
     candidates = []
     for gid in cfg.warfare_layer_ids:
         if gid.lower() in sel_ids:
             continue
+        if admin_whitelist_ids is not None and gid.lower() not in admin_whitelist_ids:
+            continue  # admin excluded this golden map from prime
         try:
             candidates.append(parse_layer(gid))
         except Exception as e:
             logger.warning("votemap_seeding: golden layer %r unparseable: %s", gid, e)
     if not candidates:
+        # No golden maps available to inject — leave selection alone
+        logger.info(
+            "votemap_seeding: no golden warfare candidates in admin prime "
+            "whitelist; skipping golden-min enforcement"
+        )
         return selection, False
 
     last_played = _last_played_index()
