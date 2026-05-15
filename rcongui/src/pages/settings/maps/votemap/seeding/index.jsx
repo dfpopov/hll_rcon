@@ -62,14 +62,24 @@ function VotemapSeedingPage() {
   // CRCON's `maps` includes warfare, offensive (long form), offensive
   // (short '_off_' form for Stmariedumont), and skirmish layers. We
   // split by id substring — keeps the picker focused on relevant variants.
+  //
+  // Also restrict to day/rain environments for seeding: the seeding window
+  // is when the server is empty or late at night, and asymmetric/dark
+  // layers (dusk, night, dawn, overcast) make a bad first impression on
+  // the friend group that's just logging in to start the server.
+  const SEEDING_WEATHERS = new Set(["day", "rain"]);
+  const isSeedingFriendlyEnv = (m) =>
+    SEEDING_WEATHERS.has(String(m.environment || "day").toLowerCase());
   const warfareMaps = useMemo(
-    () => maps.filter((m) => /warfare/i.test(m.id)),
+    () => maps.filter((m) => /warfare/i.test(m.id) && isSeedingFriendlyEnv(m)),
     [maps]
   );
   const offensiveMaps = useMemo(
     () =>
       maps.filter(
-        (m) => /offensive/i.test(m.id) || /_off_/i.test(m.id)
+        (m) =>
+          (/offensive/i.test(m.id) || /_off_/i.test(m.id)) &&
+          isSeedingFriendlyEnv(m)
       ),
     [maps]
   );

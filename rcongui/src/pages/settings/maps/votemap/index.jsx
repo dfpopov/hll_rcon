@@ -10,7 +10,7 @@ function VotemapPage() {
   const location = useLocation();
   const tabs = [
     { label: "Status", href: "/settings/maps/votemap" },
-    { label: "Map Whitelist", href: "/settings/maps/votemap/whitelist" },
+    { label: "Prime Whitelist", href: "/settings/maps/votemap/whitelist" },
     { label: "Seeding Whitelist", href: "/settings/maps/votemap/seeding" },
     { label: "Settings", href: "/settings/maps/votemap/settings" },
   ];

@@ -679,7 +679,19 @@ class RconAPI(Rcon):
     def get_votemap_whitelist(self) -> list[str]:
         v = VoteMap()
 
-        return [str(map) for map in v.get_map_whitelist()]
+        # Bypass the seeding patch (custom_tools/votemap_seeding.py) so the
+        # admin UI always sees the actual stored prime-time whitelist, not
+        # the narrowed seeding-window view. Without this the admin sees
+        # only 14 maps during seeding and any edits get persisted on top of
+        # the narrowed list — silently losing the prime whitelist contents.
+        # The seeding-window narrowing still applies inside vote_map.py's
+        # selection logic; only the admin-facing API is unpatched.
+        try:
+            raw = v._get_map_whitelist_unpatched()  # type: ignore[attr-defined]
+        except AttributeError:
+            # custom_tools/votemap_seeding.py not installed → fall back
+            raw = v.get_map_whitelist()
+        return [str(map) for map in raw]
 
     def add_map_to_votemap_whitelist(self, map_name: str):
         v = VoteMap()
