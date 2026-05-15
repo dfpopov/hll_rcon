@@ -62,9 +62,9 @@ _CMD_OFF = "!kn off"
 _CMD_ON = "!kn on"
 _CMD_STATUS = "!kn"
 
-# Default save_message=False so the popup doesn't clutter the admin log.
-# Footer lists all 3 toggle commands in one compact line.
-_MESSAGE_FOOTER = "\n!kn off / on / стан"
+# Auto-popup footer: player is by definition opted-IN here, so the only
+# relevant suggestion is how to turn it off. Keeps the popup minimal.
+_MESSAGE_FOOTER = "\n!kn off — вимкнути сповіщення"
 
 
 def _redis() -> redis.StrictRedis:
@@ -185,19 +185,20 @@ def _toggle_via_chat(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
         _set_disabled(player_id, True)
         reply = (
             "Сповіщення про вбивства ВИМКНУТО.\n"
-            "Повернути: !kn on"
+            "!kn on — бачити автоматично\n"
+            "!lk — подивитися останнє вбивство вручну"
         )
     elif text == _CMD_ON:
         _set_disabled(player_id, False)
         reply = (
             "Сповіщення про вбивства УВІМКНЕНО.\n"
-            "Вимкнути: !kn off"
+            "!kn off — вимкнути"
         )
     elif text == _CMD_STATUS:
         state = "вимкнено" if _is_disabled(player_id) else "увімкнено"
         reply = (
             f"Сповіщення про вбивства: {state}.\n"
-            "!kn on / !kn off — змінити"
+            "!kn on — увімкнути / !kn off — вимкнути"
         )
     else:
         # `!kn something_else` — ignore silently so users typing unrelated
