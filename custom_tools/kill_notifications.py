@@ -11,9 +11,13 @@ taken by CRCON's built-in "last killed by you" command, so a toggle on
 Opt-out state lives in Redis (no DB schema needed) under
 `kill_notif:disabled:<player_id>` — presence means opted out.
 
-Rate limit: at most one popup per killer per RATE_LIMIT_SECONDS.
-Prevents both UI spam (top fragger getting 5 popups in 1 second) and
-RCON-channel pressure on a busy 100-player server.
+Burst aggregation: when the first kill of a burst arrives we arm a
+timer for AGGREGATION_WINDOW_SECONDS. Any kills the same player makes
+within that window are counted but DON'T trigger their own popup;
+when the timer fires we send ONE popup with the total count and the
+first victim's name. So a 3-kill spree → 1 popup with "+3: <name>
+ще +2 — лише перше імʼя :D". This both keeps the UI calm and limits
+RCON load on busy 100-player matches.
 
 Wiring: imported for side effect in `rcon/hooks.py` so the @on_kill /
 @on_chat handlers register at backend / supervisor startup.
@@ -29,6 +33,8 @@ Editorial notes:
 from __future__ import annotations
 
 import logging
+import threading
+from typing import Optional
 
 import redis
 
@@ -40,12 +46,13 @@ from rcon.types import StructuredLogLineWithMetaData
 logger = logging.getLogger(__name__)
 
 _REDIS_KEY_PREFIX = "kill_notif:disabled:"
-_REDIS_COOLDOWN_PREFIX = "kill_notif:cooldown:"
 
-# At most one popup per killer in this many seconds. Multi-kill bursts
-# collapse into a single notification (showing only the FIRST victim in
-# the window — keeps the in-game UI calm and limits RCON load).
-RATE_LIMIT_SECONDS = 3
+# Aggregation window: when the first kill arrives we start a timer for
+# this many seconds. Any kills the same player makes within that window
+# are counted but DON'T trigger their own popup; when the timer fires we
+# send one popup mentioning the count. So a 3-kill spree → 1 popup with
+# "+3: <first_name> ще +2 — лише перше імʼя :D".
+AGGREGATION_WINDOW_SECONDS = 1.0
 
 # Chat commands. Match the whole sub_content (case-insensitive).
 # We use `!kn` because `!lk` is already a CRCON built-in (shows last
@@ -82,24 +89,58 @@ def _set_disabled(player_id: str, disabled: bool) -> None:
         _redis().delete(key)
 
 
-def _is_on_cooldown(player_id: str) -> bool:
-    """True if the killer already got a popup within RATE_LIMIT_SECONDS.
+# ── Burst aggregation state ────────────────────────────────────────────
+# Process-local: keyed by killer player_id, holds the first victim name
+# captured for this burst and a running kill count. A threading.Timer is
+# armed when the burst starts and fires _flush_burst when AGGREGATION_
+# WINDOW_SECONDS elapses, sending one combined popup. State is in-memory
+# (not Redis) because the timer thread must run in the same process that
+# observed the kills.
+_pending_lock = threading.Lock()
+_pending: dict[str, dict] = {}
 
-    We use SET NX with EX semantics — atomic test-and-set: if the cooldown
-    key wasn't there, set it (return False = can send); if it was there,
-    don't set (return True = skip)."""
+
+def _flush_burst(rcon: Rcon, killer_id: str) -> None:
+    """Timer callback — assemble and send the aggregated popup."""
+    with _pending_lock:
+        data = _pending.pop(killer_id, None)
+    if not data:
+        return
+
+    n: int = data["count"]
+    first: str = (data["first_victim"] or "?")[:24]
+
+    if n == 1:
+        message = f"+1: {first}{_MESSAGE_FOOTER}"
+    else:
+        # "Більше 1 вбивства за <window>s — показано лише першу жертву"
+        extra = n - 1
+        message = (
+            f"+{n}: {first}\n"
+            f"ще +{extra} — лише перше імʼя :D"
+            f"{_MESSAGE_FOOTER}"
+        )
+
     try:
-        key = _REDIS_COOLDOWN_PREFIX + player_id
-        # SET key 1 NX EX <seconds> — returns True if key was set, None if it existed
-        was_set = _redis().set(key, "1", nx=True, ex=RATE_LIMIT_SECONDS)
-        return not bool(was_set)
-    except Exception:
-        return False  # on Redis hiccup, allow the send
+        rcon.message_player(
+            player_id=killer_id,
+            message=message,
+            by="kill_notifications",
+            save_message=False,
+        )
+    except Exception as e:
+        logger.debug("kill_notifications: flush send failed for %s: %s", killer_id, e)
 
 
 @on_kill
 def _notify_killer(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
-    """Send the killer a one-line popup with the victim's name + toggle hint."""
+    """Aggregate kills within AGGREGATION_WINDOW into a single popup.
+
+    First kill starts a burst: record victim name, set count=1, arm a
+    timer. Subsequent kills by the same killer within the window just
+    bump the count; no popup yet. When the timer fires, _flush_burst
+    sends one popup mentioning how many kills happened — but only the
+    first victim's name is shown (others omitted to keep popup small)."""
     killer_id = log.get("player_id_1")
     victim_name = log.get("player_name_2")
     victim_id = log.get("player_id_2")
@@ -110,26 +151,26 @@ def _notify_killer(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
         return  # suicide — no popup
     if _is_disabled(killer_id):
         return
-    if _is_on_cooldown(killer_id):
-        return  # multi-kill burst collapsed — wait for cooldown to expire
 
-    # Compact format: victim name on one line, then the toggle-commands
-    # hint footer. Weapon intentionally omitted (per user feedback —
-    # keeps the popup small and unobtrusive).
-    short_name = victim_name[:24]
-    message = f"+1: {short_name}{_MESSAGE_FOOTER}"
+    with _pending_lock:
+        if killer_id in _pending:
+            # Burst already collecting — just bump the count
+            _pending[killer_id]["count"] += 1
+            return
 
-    try:
-        rcon.message_player(
-            player_id=killer_id,
-            message=message,
-            by="kill_notifications",
-            save_message=False,
+        # New burst — arm timer (will call _flush_burst after window)
+        timer = threading.Timer(
+            AGGREGATION_WINDOW_SECONDS,
+            _flush_burst,
+            args=(rcon, killer_id),
         )
-    except Exception as e:
-        # Don't spam logs — server can hiccup on individual sends; the
-        # next kill will retry. Only debug-level on routine failures.
-        logger.debug("kill_notifications: send failed for %s: %s", killer_id, e)
+        timer.daemon = True
+        _pending[killer_id] = {
+            "first_victim": victim_name,
+            "count": 1,
+            "timer": timer,
+        }
+        timer.start()
 
 
 @on_chat
@@ -216,6 +257,6 @@ def _augment_lk_with_hint(rcon: Rcon, log: StructuredLogLineWithMetaData) -> Non
 
 logger.info(
     "kill_notifications: registered @on_kill + @on_chat handlers "
-    "(default ON, opt-out via !kn off, rate-limit %ds)",
-    RATE_LIMIT_SECONDS,
+    "(default ON, opt-out via !kn off, aggregation window %.1fs)",
+    AGGREGATION_WINDOW_SECONDS,
 )
