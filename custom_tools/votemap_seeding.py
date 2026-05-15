@@ -4,8 +4,8 @@ Editorial policy: votes during seeding should be limited to a curated
 set of starter-friendly maps so the server reliably fills:
 
   • 7 warfare-day maps (the base "always playable" set)
-  • 6 offensive variants of those same maps (one offensive per base map
-    where HLL has an offensive variant; Stmariedumont has none).
+  • 7 offensive variants of those same maps (one offensive per base map,
+    canonical attacker side).
 
 Combined with the admin's vote settings (num_warfare_options=4,
 num_offensive_options=1), the player sees: 4 warfare from the 7 +
@@ -58,24 +58,28 @@ SEEDING_LAYER_IDS: tuple[str, ...] = (
 )
 
 # Offensive variants of the same base maps. One per map, picking the
-# canonical attacker side (US for D-Day, RUS for Kharkov 1943 counter-
-# attack, GER for Operation Citadel at Kursk). Stmariedumont has no
-# offensive variant in HLL, so the list has 6 entries for 7 base maps —
-# fine, votemap picks num_offensive_options=1 from whatever is available.
+# canonical attacker side (US for D-Day campaigns, RUS for Kharkov 1943
+# counter-attack, GER for Operation Citadel at Kursk).
+#
+# Note CRCON layer-id naming is inconsistent: most maps use the full
+# `<map>_offensive_<side>` form, but Stmariedumont uses the abbreviated
+# `stmariedumont_off_<side>`. Both forms verified against rcon.maps.LAYERS.
 #
 # These attacker-side picks were validated against admin_analytics:
-#   carentan_offensive_us  → 277 player·matches, 37.9% return rate (#1)
-#   kharkov_offensive_rus  → 892 player·matches, 29.5% return rate
-#   omahabeach_offensive_us → 603 PM (largest D-Day off sample)
-#   utahbeach_offensive_us → 470 PM, 33% return, 41% long-play
-#   kursk_offensive_ger    → 136 PM (only kursk off variant with data)
-#   stmereeglise_offensive_us → no historical data on US side but
-#                               canonical for D-Day paratroopers
+#   carentan_offensive_us     → 277 player·matches, 37.9% return rate (#1)
+#   kharkov_offensive_rus     → 892 PM, 29.5% return rate
+#   omahabeach_offensive_us   → 603 PM (largest D-Day off sample)
+#   utahbeach_offensive_us    → 470 PM, 33% return, 41% long-play
+#   kursk_offensive_ger       → 136 PM (only kursk off variant with data)
+#   stmereeglise_offensive_us → canonical D-Day paratroopers, low historic
+#                               play count in offensive mode
+#   stmariedumont_off_us      → canonical (506th PIR), low historic count
 SEEDING_OFFENSIVE_LAYER_IDS: tuple[str, ...] = (
     "carentan_offensive_us",
     "kharkov_offensive_rus",
     "kursk_offensive_ger",
     "omahabeach_offensive_us",
+    "stmariedumont_off_us",       # note: short '_off_' naming (CRCON quirk)
     "stmereeglise_offensive_us",
     "utahbeach_offensive_us",
 )
