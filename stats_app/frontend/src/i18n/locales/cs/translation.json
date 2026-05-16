@@ -96,12 +96,30 @@
     "subtitle": "Anti-žebříček. Specialisté na přátelskou palbu, veteráni zírající do podlahy, a proč je nikdy nechcete v družstvu.",
     "noCandidates": "žádní kandidáti",
     "cards": {
-      "tk_total":          { "title": "Nejvíce TK všech dob",            "caption": "Lobby střelci. Zabili víc spojenců než nepřítel." },
-      "tk_victims":        { "title": "Nejvíce smrtí od TK spojence",      "caption": "Vždy na špatném místě. Magnet na spojenecké kulky." },
-      "worst_kd":          { "title": "Nejhorší K/D se 100+ zápasy",       "caption": "Hráli hodně. Hráli pravidelně. Střílet se nenaučili." },
-      "most_deaths":       { "title": "Nejvíce smrtí všech dob",           "caption": "Každý zápas — nová stránka nekrologie." },
-      "worst_game_deaths": { "title": "Nejhorší zápas v počtu smrtí",      "caption": "Jeden zápas — jedna katastrofa. 70+ smrtí vyžaduje úsilí." },
-      "worst_game_tk":     { "title": "Nejvíce TK v jednom zápase",        "caption": "Družstvo chtělo vůdce. Přišel — s granáty." }
+      "tk_total": {
+        "title": "Nejvíce TK všech dob",
+        "caption": "Lobby střelci. Zabili víc spojenců než nepřítel."
+      },
+      "tk_victims": {
+        "title": "Nejvíce smrtí od TK spojence",
+        "caption": "Vždy na špatném místě. Magnet na spojenecké kulky."
+      },
+      "worst_kd": {
+        "title": "Nejhorší K/D se 100+ zápasy",
+        "caption": "Hráli hodně. Hráli pravidelně. Střílet se nenaučili."
+      },
+      "most_deaths": {
+        "title": "Nejvíce smrtí všech dob",
+        "caption": "Každý zápas — nová stránka nekrologie."
+      },
+      "worst_game_deaths": {
+        "title": "Nejhorší zápas v počtu smrtí",
+        "caption": "Jeden zápas — jedna katastrofa. 70+ smrtí vyžaduje úsilí."
+      },
+      "worst_game_tk": {
+        "title": "Nejvíce TK v jednom zápase",
+        "caption": "Družstvo chtělo vůdce. Přišel — s granáty."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "God-tier poměry",
       "volume": "Objem",
       "support": "Support / Defense",
-      "memes": "Memy"
+      "memes": "Memy",
+      "intensity": "Intenzita"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "Top podle třídy zbraně",
       "hours": "{{h}} h",
       "cards": {
-        "kills":     "Nejvíce kills",
-        "playtime":  "Nejvíce času hry",
-        "combat":    "Combat (efektivita)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 zápasů)",
-        "kpm":       "KPM (≥30 zápasů)",
+        "kills": "Nejvíce kills",
+        "playtime": "Nejvíce času hry",
+        "combat": "Combat (efektivita)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 zápasů)",
+        "kpm": "KPM (≥30 zápasů)",
         "teamkills": "Team kills (anti-top)",
-        "matches":   "Nejvíce zápasů"
+        "matches": "Nejvíce zápasů"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "Obecné metriky",
       "byWeaponClass": "🔫 Podle třídy zbraně",
       "cards": {
-        "kills":            "Nejvíce kills za zápas",
-        "kills_streak":     "Nejdelší série kills",
-        "combat":           "Combat za zápas",
-        "support":          "Support za zápas",
-        "offense":          "Offense za zápas",
-        "defense":          "Defense za zápas",
+        "kills": "Nejvíce kills za zápas",
+        "kills_streak": "Nejdelší série kills",
+        "combat": "Combat za zápas",
+        "support": "Support za zápas",
+        "offense": "Offense za zápas",
+        "defense": "Defense za zápas",
         "kill_death_ratio": "K/D za zápas",
         "kills_per_minute": "K/min za zápas",
-        "teamkills":        "Nejhorší TK za zápas",
-        "deaths":           "Nejhorší zápas (smrti)"
+        "teamkills": "Nejhorší TK za zápas",
+        "deaths": "Nejhorší zápas (smrti)"
       },
       "classes": {
         "sniperRifle": "Sniper za zápas",
-        "machineGun":  "MG za zápas",
-        "antiTank":    "AT za zápas",
-        "tankGun":     "Tankový boj za zápas",
-        "artillery":   "Dělostřelectvo za zápas",
-        "mine":        "Miny za zápas",
-        "explosive":   "Výbušniny za zápas",
-        "flame":       "Plamenomet za zápas",
-        "melee":       "Boj nablízko za zápas"
+        "machineGun": "MG za zápas",
+        "antiTank": "AT za zápas",
+        "tankGun": "Tankový boj za zápas",
+        "artillery": "Dělostřelectvo za zápas",
+        "mine": "Miny za zápas",
+        "explosive": "Výbušniny za zápas",
+        "flame": "Plamenomet za zápas",
+        "melee": "Boj nablízko za zápas"
       }
     }
   }

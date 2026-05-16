@@ -96,12 +96,30 @@
     "subtitle": "반-리더보드. 아군 사격 전문가, 바닥만 보는 베테랑, 그리고 절대 분대에 두고 싶지 않은 이유.",
     "noCandidates": "후보 없음",
     "cards": {
-      "tk_total":          { "title": "전체 기간 최다 TK",     "caption": "로비 사수. 아군을 적보다 많이 죽였다." },
-      "tk_victims":        { "title": "아군 TK로 인한 최다 사망", "caption": "항상 잘못된 곳에 서 있다. 아군 총알 자석." },
-      "worst_kd":          { "title": "100+ 경기 최악의 K/D",   "caption": "많이 했다. 꾸준히 했다. 사격은 배우지 못했다." },
-      "most_deaths":       { "title": "전체 기간 최다 사망",     "caption": "매 경기 — 부고의 새 페이지." },
-      "worst_game_deaths": { "title": "1경기 최악의 사망",       "caption": "한 경기 — 한 재난. 70+ 사망은 노력이 필요." },
-      "worst_game_tk":     { "title": "1경기 최다 TK",          "caption": "분대는 리더를 원했다. 그가 왔다 — 수류탄과 함께." }
+      "tk_total": {
+        "title": "전체 기간 최다 TK",
+        "caption": "로비 사수. 아군을 적보다 많이 죽였다."
+      },
+      "tk_victims": {
+        "title": "아군 TK로 인한 최다 사망",
+        "caption": "항상 잘못된 곳에 서 있다. 아군 총알 자석."
+      },
+      "worst_kd": {
+        "title": "100+ 경기 최악의 K/D",
+        "caption": "많이 했다. 꾸준히 했다. 사격은 배우지 못했다."
+      },
+      "most_deaths": {
+        "title": "전체 기간 최다 사망",
+        "caption": "매 경기 — 부고의 새 페이지."
+      },
+      "worst_game_deaths": {
+        "title": "1경기 최악의 사망",
+        "caption": "한 경기 — 한 재난. 70+ 사망은 노력이 필요."
+      },
+      "worst_game_tk": {
+        "title": "1경기 최다 TK",
+        "caption": "분대는 리더를 원했다. 그가 왔다 — 수류탄과 함께."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "신급 비율",
       "volume": "수량",
       "support": "Support / Defense",
-      "memes": "밈"
+      "memes": "밈",
+      "intensity": "강도"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "무기 종류별 톱",
       "hours": "{{h}} 시간",
       "cards": {
-        "kills":     "최다 킬",
-        "playtime":  "최장 플레이 시간",
-        "combat":    "Combat (효율)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 경기)",
-        "kpm":       "KPM (≥30 경기)",
+        "kills": "최다 킬",
+        "playtime": "최장 플레이 시간",
+        "combat": "Combat (효율)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 경기)",
+        "kpm": "KPM (≥30 경기)",
         "teamkills": "Team kills (반-톱)",
-        "matches":   "최다 경기"
+        "matches": "최다 경기"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "일반 지표",
       "byWeaponClass": "🔫 무기 종류별",
       "cards": {
-        "kills":            "1경기 최다 킬",
-        "kills_streak":     "최장 킬 연속",
-        "combat":           "1경기 Combat",
-        "support":          "1경기 Support",
-        "offense":          "1경기 Offense",
-        "defense":          "1경기 Defense",
+        "kills": "1경기 최다 킬",
+        "kills_streak": "최장 킬 연속",
+        "combat": "1경기 Combat",
+        "support": "1경기 Support",
+        "offense": "1경기 Offense",
+        "defense": "1경기 Defense",
         "kill_death_ratio": "1경기 K/D",
         "kills_per_minute": "1경기 K/분",
-        "teamkills":        "1경기 최악 TK",
-        "deaths":           "최악 경기 (데스)"
+        "teamkills": "1경기 최악 TK",
+        "deaths": "최악 경기 (데스)"
       },
       "classes": {
         "sniperRifle": "1경기 Sniper",
-        "machineGun":  "1경기 MG",
-        "antiTank":    "1경기 AT",
-        "tankGun":     "1경기 전차전",
-        "artillery":   "1경기 포병",
-        "mine":        "1경기 지뢰",
-        "explosive":   "1경기 폭발물",
-        "flame":       "1경기 화염방사기",
-        "melee":       "1경기 근접"
+        "machineGun": "1경기 MG",
+        "antiTank": "1경기 AT",
+        "tankGun": "1경기 전차전",
+        "artillery": "1경기 포병",
+        "mine": "1경기 지뢰",
+        "explosive": "1경기 폭발물",
+        "flame": "1경기 화염방사기",
+        "melee": "1경기 근접"
       }
     }
   }

@@ -8,10 +8,18 @@ import { MATCH_TITLES } from '../components/PlayerMemes'
 import { useMetaLabel } from '../i18n/metaLabel'
 
 // Loose visual buckets — labels translated via `matchTitles.categories.*`.
+// Every id in MATCH_TITLES must appear in exactly one bucket below or it
+// silently disappears from this page (the source-of-truth count check is
+// in the subtitle uses MATCH_TITLES.length, so a missing id would also
+// make the displayed total mismatch).
 const CATEGORIES: { id: string; ids: string[]; emoji: string }[] = [
   { id: 'disasters',   emoji: '💀', ids: ['spectator', 'safari', 'sacrificial_m', 'dark_hour', 'bloodbath'] },
   { id: 'godRatios',   emoji: '👑', ids: ['sniper_ghost', 'perfect', 'eagle_eye'] },
   { id: 'volume',      emoji: '🔥', ids: ['terror', 'massacre', 'god_of_war', 'untouchable', 'cold_blooded', 'duelist'] },
+  // High-engagement / paced play — distinct vibe from raw kill volume:
+  // "intensity" maps high-effort styles (long brawls, fast killings,
+  // sustained MG, perfect ratio at scale).
+  { id: 'intensity',   emoji: '⚡', ids: ['training', 'frenzy', 'merciless', 'speedrun', 'machine_gunner'] },
   { id: 'support',     emoji: '🛡', ids: ['invisible_helper', 'quiet_victory', 'wall_m'] },
   { id: 'memes',       emoji: '🎲', ids: ['mirror', 'zen'] },
 ]

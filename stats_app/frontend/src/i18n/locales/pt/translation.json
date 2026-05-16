@@ -96,12 +96,30 @@
     "subtitle": "Anti-classificação. Os especialistas em fogo amigo, veteranos que olham para o chão, e por que você nunca quer eles no seu esquadrão.",
     "noCandidates": "sem candidatos",
     "cards": {
-      "tk_total":          { "title": "Mais TK de todos os tempos",       "caption": "Atiradores do lobby. Mataram mais aliados que o inimigo." },
-      "tk_victims":        { "title": "Mais mortes por TK amigo",          "caption": "Sempre no lugar errado. Ímã de balas aliadas." },
-      "worst_kd":          { "title": "Pior K/D com 100+ partidas",        "caption": "Jogaram muito, constantemente. Nunca aprenderam a atirar." },
-      "most_deaths":       { "title": "Mais mortes de todos os tempos",    "caption": "Cada partida — uma nova página do obituário." },
-      "worst_game_deaths": { "title": "Pior partida por mortes",           "caption": "Uma partida — um desastre. 70+ mortes exige esforço." },
-      "worst_game_tk":     { "title": "Mais TK em uma partida",            "caption": "O esquadrão queria um líder. Veio ele — com granadas." }
+      "tk_total": {
+        "title": "Mais TK de todos os tempos",
+        "caption": "Atiradores do lobby. Mataram mais aliados que o inimigo."
+      },
+      "tk_victims": {
+        "title": "Mais mortes por TK amigo",
+        "caption": "Sempre no lugar errado. Ímã de balas aliadas."
+      },
+      "worst_kd": {
+        "title": "Pior K/D com 100+ partidas",
+        "caption": "Jogaram muito, constantemente. Nunca aprenderam a atirar."
+      },
+      "most_deaths": {
+        "title": "Mais mortes de todos os tempos",
+        "caption": "Cada partida — uma nova página do obituário."
+      },
+      "worst_game_deaths": {
+        "title": "Pior partida por mortes",
+        "caption": "Uma partida — um desastre. 70+ mortes exige esforço."
+      },
+      "worst_game_tk": {
+        "title": "Mais TK em uma partida",
+        "caption": "O esquadrão queria um líder. Veio ele — com granadas."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "Rácios divinos",
       "volume": "Volume",
       "support": "Support / Defense",
-      "memes": "Memes"
+      "memes": "Memes",
+      "intensity": "Intensidade"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "Top por classe de arma",
       "hours": "{{h}} h",
       "cards": {
-        "kills":     "Mais kills",
-        "playtime":  "Mais tempo de jogo",
-        "combat":    "Combat (eficácia)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 partidas)",
-        "kpm":       "KPM (≥30 partidas)",
+        "kills": "Mais kills",
+        "playtime": "Mais tempo de jogo",
+        "combat": "Combat (eficácia)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 partidas)",
+        "kpm": "KPM (≥30 partidas)",
         "teamkills": "Team kills (anti-top)",
-        "matches":   "Mais partidas"
+        "matches": "Mais partidas"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "Métricas gerais",
       "byWeaponClass": "🔫 Por classe de arma",
       "cards": {
-        "kills":            "Mais kills por partida",
-        "kills_streak":     "Série de kills mais longa",
-        "combat":           "Combat por partida",
-        "support":          "Support por partida",
-        "offense":          "Offense por partida",
-        "defense":          "Defense por partida",
+        "kills": "Mais kills por partida",
+        "kills_streak": "Série de kills mais longa",
+        "combat": "Combat por partida",
+        "support": "Support por partida",
+        "offense": "Offense por partida",
+        "defense": "Defense por partida",
         "kill_death_ratio": "K/D por partida",
         "kills_per_minute": "K/min por partida",
-        "teamkills":        "Pior TK por partida",
-        "deaths":           "Pior partida (mortes)"
+        "teamkills": "Pior TK por partida",
+        "deaths": "Pior partida (mortes)"
       },
       "classes": {
         "sniperRifle": "Sniper por partida",
-        "machineGun":  "MG por partida",
-        "antiTank":    "AT por partida",
-        "tankGun":     "Combate de tanque por partida",
-        "artillery":   "Artilharia por partida",
-        "mine":        "Minas por partida",
-        "explosive":   "Explosivos por partida",
-        "flame":       "Lança-chamas por partida",
-        "melee":       "Corpo a corpo por partida"
+        "machineGun": "MG por partida",
+        "antiTank": "AT por partida",
+        "tankGun": "Combate de tanque por partida",
+        "artillery": "Artilharia por partida",
+        "mine": "Minas por partida",
+        "explosive": "Explosivos por partida",
+        "flame": "Lança-chamas por partida",
+        "melee": "Corpo a corpo por partida"
       }
     }
   }

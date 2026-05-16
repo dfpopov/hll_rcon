@@ -96,12 +96,30 @@
     "subtitle": "反排行榜。误伤专家、看地板的老兵,以及你绝不想让他们进入你小队的原因。",
     "noCandidates": "无候选人",
     "cards": {
-      "tk_total":          { "title": "全时段最多 TK",       "caption": "大厅枪手。杀死的队友比敌人还多。" },
-      "tk_victims":        { "title": "最多死于队友 TK",     "caption": "总是站错位置。盟军子弹的磁铁。" },
-      "worst_kd":          { "title": "100+ 场最差 K/D",     "caption": "玩了很多,经常玩。从未学会射击。" },
-      "most_deaths":       { "title": "全时段最多死亡",       "caption": "每场比赛 — 讣告新的一页。" },
-      "worst_game_deaths": { "title": "单场最差死亡数",       "caption": "一场比赛 — 一场灾难。一场 70+ 死亡需要努力。" },
-      "worst_game_tk":     { "title": "单场最多 TK",          "caption": "小队需要领袖。他来了 — 带着手榴弹。" }
+      "tk_total": {
+        "title": "全时段最多 TK",
+        "caption": "大厅枪手。杀死的队友比敌人还多。"
+      },
+      "tk_victims": {
+        "title": "最多死于队友 TK",
+        "caption": "总是站错位置。盟军子弹的磁铁。"
+      },
+      "worst_kd": {
+        "title": "100+ 场最差 K/D",
+        "caption": "玩了很多,经常玩。从未学会射击。"
+      },
+      "most_deaths": {
+        "title": "全时段最多死亡",
+        "caption": "每场比赛 — 讣告新的一页。"
+      },
+      "worst_game_deaths": {
+        "title": "单场最差死亡数",
+        "caption": "一场比赛 — 一场灾难。一场 70+ 死亡需要努力。"
+      },
+      "worst_game_tk": {
+        "title": "单场最多 TK",
+        "caption": "小队需要领袖。他来了 — 带着手榴弹。"
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "神级比率",
       "volume": "数量",
       "support": "Support / Defense",
-      "memes": "梗"
+      "memes": "梗",
+      "intensity": "强度"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "按武器类型排名",
       "hours": "{{h}} 小时",
       "cards": {
-        "kills":     "最多击杀",
-        "playtime":  "最多游戏时长",
-        "combat":    "Combat (效率)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 场)",
-        "kpm":       "KPM (≥30 场)",
+        "kills": "最多击杀",
+        "playtime": "最多游戏时长",
+        "combat": "Combat (效率)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 场)",
+        "kpm": "KPM (≥30 场)",
         "teamkills": "Team kills (反向榜)",
-        "matches":   "最多比赛"
+        "matches": "最多比赛"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "通用指标",
       "byWeaponClass": "🔫 按武器类型",
       "cards": {
-        "kills":            "单场最多击杀",
-        "kills_streak":     "最长击杀连击",
-        "combat":           "单场 Combat",
-        "support":          "单场 Support",
-        "offense":          "单场 Offense",
-        "defense":          "单场 Defense",
+        "kills": "单场最多击杀",
+        "kills_streak": "最长击杀连击",
+        "combat": "单场 Combat",
+        "support": "单场 Support",
+        "offense": "单场 Offense",
+        "defense": "单场 Defense",
         "kill_death_ratio": "单场 K/D",
         "kills_per_minute": "单场 K/分钟",
-        "teamkills":        "单场最差 TK",
-        "deaths":           "最差比赛 (死亡)"
+        "teamkills": "单场最差 TK",
+        "deaths": "最差比赛 (死亡)"
       },
       "classes": {
         "sniperRifle": "单场 Sniper",
-        "machineGun":  "单场 MG",
-        "antiTank":    "单场 AT",
-        "tankGun":     "单场坦克战",
-        "artillery":   "单场炮兵",
-        "mine":        "单场地雷",
-        "explosive":   "单场爆炸物",
-        "flame":       "单场火焰喷射器",
-        "melee":       "单场近战"
+        "machineGun": "单场 MG",
+        "antiTank": "单场 AT",
+        "tankGun": "单场坦克战",
+        "artillery": "单场炮兵",
+        "mine": "单场地雷",
+        "explosive": "单场爆炸物",
+        "flame": "单场火焰喷射器",
+        "melee": "单场近战"
       }
     }
   }

@@ -96,12 +96,30 @@
     "subtitle": "Antylista. Kto strzela do swoich, ginie bez powodu, i dlaczego nie chcesz mieć ich w drużynie.",
     "noCandidates": "brak kandydatów",
     "cards": {
-      "tk_total":          { "title": "Najwięcej TK z całego czasu",     "caption": "Strzelcy z lobby. Zabili więcej swoich niż wrogowie." },
-      "tk_victims":        { "title": "Najwięcej zgonów od TK swoich",   "caption": "Zawsze nie tam stoją. Magnes dla sojuszniczych kul." },
-      "worst_kd":          { "title": "Najgorsze K/D z 100+ meczami",    "caption": "Grali długo, grali stale. Strzelać nigdy się nie nauczyli." },
-      "most_deaths":       { "title": "Najwięcej zgonów z całego czasu", "caption": "Każdy mecz — nowa strona nekrologu." },
-      "worst_game_deaths": { "title": "Najgorszy mecz pod względem zgonów", "caption": "Jeden mecz — jedna katastrofa. 70+ zgonów to wyzwanie." },
-      "worst_game_tk":     { "title": "Najwięcej TK w jednym meczu",     "caption": "Drużyna potrzebowała kapitana. Przyszedł on — z granatami." }
+      "tk_total": {
+        "title": "Najwięcej TK z całego czasu",
+        "caption": "Strzelcy z lobby. Zabili więcej swoich niż wrogowie."
+      },
+      "tk_victims": {
+        "title": "Najwięcej zgonów od TK swoich",
+        "caption": "Zawsze nie tam stoją. Magnes dla sojuszniczych kul."
+      },
+      "worst_kd": {
+        "title": "Najgorsze K/D z 100+ meczami",
+        "caption": "Grali długo, grali stale. Strzelać nigdy się nie nauczyli."
+      },
+      "most_deaths": {
+        "title": "Najwięcej zgonów z całego czasu",
+        "caption": "Każdy mecz — nowa strona nekrologu."
+      },
+      "worst_game_deaths": {
+        "title": "Najgorszy mecz pod względem zgonów",
+        "caption": "Jeden mecz — jedna katastrofa. 70+ zgonów to wyzwanie."
+      },
+      "worst_game_tk": {
+        "title": "Najwięcej TK w jednym meczu",
+        "caption": "Drużyna potrzebowała kapitana. Przyszedł on — z granatami."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "Bóg-tier ratios",
       "volume": "Wolumen",
       "support": "Support / Defense",
-      "memes": "Memy"
+      "memes": "Memy",
+      "intensity": "Intensywność"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "Top wg klasy broni",
       "hours": "{{h}} godz",
       "cards": {
-        "kills":     "Najwięcej kills",
-        "playtime":  "Najwięcej czasu gry",
-        "combat":    "Combat (skuteczność)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 meczów)",
-        "kpm":       "KPM (≥30 meczów)",
+        "kills": "Najwięcej kills",
+        "playtime": "Najwięcej czasu gry",
+        "combat": "Combat (skuteczność)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 meczów)",
+        "kpm": "KPM (≥30 meczów)",
         "teamkills": "Team kills (anty-top)",
-        "matches":   "Najwięcej meczów"
+        "matches": "Najwięcej meczów"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "Metryki ogólne",
       "byWeaponClass": "🔫 Wg klasy broni",
       "cards": {
-        "kills":            "Najwięcej kills w meczu",
-        "kills_streak":     "Najdłuższa seria kills",
-        "combat":           "Combat w meczu",
-        "support":          "Support w meczu",
-        "offense":          "Offense w meczu",
-        "defense":          "Defense w meczu",
+        "kills": "Najwięcej kills w meczu",
+        "kills_streak": "Najdłuższa seria kills",
+        "combat": "Combat w meczu",
+        "support": "Support w meczu",
+        "offense": "Offense w meczu",
+        "defense": "Defense w meczu",
         "kill_death_ratio": "K/D w meczu",
         "kills_per_minute": "K/min w meczu",
-        "teamkills":        "Najgorsze TK w meczu",
-        "deaths":           "Najgorszy mecz (zgony)"
+        "teamkills": "Najgorsze TK w meczu",
+        "deaths": "Najgorszy mecz (zgony)"
       },
       "classes": {
         "sniperRifle": "Sniper w meczu",
-        "machineGun":  "MG w meczu",
-        "antiTank":    "AT w meczu",
-        "tankGun":     "Czołg w meczu",
-        "artillery":   "Artyleria w meczu",
-        "mine":        "Miny w meczu",
-        "explosive":   "Wybuchowe w meczu",
-        "flame":       "Miotacz w meczu",
-        "melee":       "Wręcz w meczu"
+        "machineGun": "MG w meczu",
+        "antiTank": "AT w meczu",
+        "tankGun": "Czołg w meczu",
+        "artillery": "Artyleria w meczu",
+        "mine": "Miny w meczu",
+        "explosive": "Wybuchowe w meczu",
+        "flame": "Miotacz w meczu",
+        "melee": "Wręcz w meczu"
       }
     }
   }

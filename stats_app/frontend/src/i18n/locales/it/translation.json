@@ -96,12 +96,30 @@
     "subtitle": "Anti-classifica. Gli esperti di fuoco amico, i veterani che fissano il pavimento, e il motivo per cui non li vuoi mai nella tua squadra.",
     "noCandidates": "nessun candidato",
     "cards": {
-      "tk_total":          { "title": "Più TK di tutti i tempi",          "caption": "Tiratori della lobby. Hanno ucciso più alleati del nemico." },
-      "tk_victims":        { "title": "Più morti per TK amico",            "caption": "Sempre nel posto sbagliato. Magnete per pallottole alleate." },
-      "worst_kd":          { "title": "Peggior K/D con 100+ match",        "caption": "Hanno giocato molto, costantemente. Non hanno mai imparato a sparare." },
-      "most_deaths":       { "title": "Più morti di tutti i tempi",        "caption": "Ogni match — una nuova pagina del necrologio." },
-      "worst_game_deaths": { "title": "Peggior match per morti",           "caption": "Un match — un disastro. 70+ morti richiede impegno." },
-      "worst_game_tk":     { "title": "Più TK in un match",                "caption": "La squadra voleva un leader. È arrivato lui — con le granate." }
+      "tk_total": {
+        "title": "Più TK di tutti i tempi",
+        "caption": "Tiratori della lobby. Hanno ucciso più alleati del nemico."
+      },
+      "tk_victims": {
+        "title": "Più morti per TK amico",
+        "caption": "Sempre nel posto sbagliato. Magnete per pallottole alleate."
+      },
+      "worst_kd": {
+        "title": "Peggior K/D con 100+ match",
+        "caption": "Hanno giocato molto, costantemente. Non hanno mai imparato a sparare."
+      },
+      "most_deaths": {
+        "title": "Più morti di tutti i tempi",
+        "caption": "Ogni match — una nuova pagina del necrologio."
+      },
+      "worst_game_deaths": {
+        "title": "Peggior match per morti",
+        "caption": "Un match — un disastro. 70+ morti richiede impegno."
+      },
+      "worst_game_tk": {
+        "title": "Più TK in un match",
+        "caption": "La squadra voleva un leader. È arrivato lui — con le granate."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "Rapporti divini",
       "volume": "Volume",
       "support": "Support / Defense",
-      "memes": "Meme"
+      "memes": "Meme",
+      "intensity": "Intensità"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "Top per classe arma",
       "hours": "{{h}} h",
       "cards": {
-        "kills":     "Più kills",
-        "playtime":  "Più tempo di gioco",
-        "combat":    "Combat (efficacia)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 match)",
-        "kpm":       "KPM (≥30 match)",
+        "kills": "Più kills",
+        "playtime": "Più tempo di gioco",
+        "combat": "Combat (efficacia)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 match)",
+        "kpm": "KPM (≥30 match)",
         "teamkills": "Team kills (anti-top)",
-        "matches":   "Più match"
+        "matches": "Più match"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "Metriche generali",
       "byWeaponClass": "🔫 Per classe arma",
       "cards": {
-        "kills":            "Più kills per match",
-        "kills_streak":     "Serie di kills più lunga",
-        "combat":           "Combat per match",
-        "support":          "Support per match",
-        "offense":          "Offense per match",
-        "defense":          "Defense per match",
+        "kills": "Più kills per match",
+        "kills_streak": "Serie di kills più lunga",
+        "combat": "Combat per match",
+        "support": "Support per match",
+        "offense": "Offense per match",
+        "defense": "Defense per match",
         "kill_death_ratio": "K/D per match",
         "kills_per_minute": "K/min per match",
-        "teamkills":        "Peggior TK per match",
-        "deaths":           "Peggior match (morti)"
+        "teamkills": "Peggior TK per match",
+        "deaths": "Peggior match (morti)"
       },
       "classes": {
         "sniperRifle": "Sniper per match",
-        "machineGun":  "MG per match",
-        "antiTank":    "AT per match",
-        "tankGun":     "Combattimento carri per match",
-        "artillery":   "Artiglieria per match",
-        "mine":        "Mine per match",
-        "explosive":   "Esplosivi per match",
-        "flame":       "Lanciafiamme per match",
-        "melee":       "Corpo a corpo per match"
+        "machineGun": "MG per match",
+        "antiTank": "AT per match",
+        "tankGun": "Combattimento carri per match",
+        "artillery": "Artiglieria per match",
+        "mine": "Mine per match",
+        "explosive": "Esplosivi per match",
+        "flame": "Lanciafiamme per match",
+        "melee": "Corpo a corpo per match"
       }
     }
   }

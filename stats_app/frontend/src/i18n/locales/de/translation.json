@@ -96,12 +96,30 @@
     "subtitle": "Anti-Bestenliste. Wer auf Eigene schießt, planlos stirbt und warum man sie nicht im Trupp will.",
     "noCandidates": "keine Kandidaten",
     "cards": {
-      "tk_total":          { "title": "Meiste TK aller Zeiten",          "caption": "Schießen schon im Lobby. Mehr Eigene als Feinde erwischt." },
-      "tk_victims":        { "title": "Meiste Tode durch eigene TK",     "caption": "Stehen immer am falschen Platz. Magnet für Verbündetenkugeln." },
-      "worst_kd":          { "title": "Schlechtestes K/D mit 100+ Spielen", "caption": "Lange gespielt, konstant gespielt. Schießen nie gelernt." },
-      "most_deaths":       { "title": "Meiste Tode aller Zeiten",        "caption": "Jedes Spiel — eine neue Nachrufzeile." },
-      "worst_game_deaths": { "title": "Schlimmstes Spiel nach Toden",    "caption": "Ein Spiel — eine Katastrophe. 70+ Tode ist eine Leistung." },
-      "worst_game_tk":     { "title": "Meiste TK in einem Spiel",        "caption": "Das Team brauchte einen Anführer. Es kam einer — mit Granaten." }
+      "tk_total": {
+        "title": "Meiste TK aller Zeiten",
+        "caption": "Schießen schon im Lobby. Mehr Eigene als Feinde erwischt."
+      },
+      "tk_victims": {
+        "title": "Meiste Tode durch eigene TK",
+        "caption": "Stehen immer am falschen Platz. Magnet für Verbündetenkugeln."
+      },
+      "worst_kd": {
+        "title": "Schlechtestes K/D mit 100+ Spielen",
+        "caption": "Lange gespielt, konstant gespielt. Schießen nie gelernt."
+      },
+      "most_deaths": {
+        "title": "Meiste Tode aller Zeiten",
+        "caption": "Jedes Spiel — eine neue Nachrufzeile."
+      },
+      "worst_game_deaths": {
+        "title": "Schlimmstes Spiel nach Toden",
+        "caption": "Ein Spiel — eine Katastrophe. 70+ Tode ist eine Leistung."
+      },
+      "worst_game_tk": {
+        "title": "Meiste TK in einem Spiel",
+        "caption": "Das Team brauchte einen Anführer. Es kam einer — mit Granaten."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "Gott-Tier Ratios",
       "volume": "Volumen",
       "support": "Support / Defense",
-      "memes": "Memes"
+      "memes": "Memes",
+      "intensity": "Intensität"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "Top nach Waffenklasse",
       "hours": "{{h}} Std",
       "cards": {
-        "kills":     "Meiste Kills",
-        "playtime":  "Meiste Spielzeit",
-        "combat":    "Combat (Effektivität)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 Spiele)",
-        "kpm":       "KPM (≥30 Spiele)",
+        "kills": "Meiste Kills",
+        "playtime": "Meiste Spielzeit",
+        "combat": "Combat (Effektivität)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 Spiele)",
+        "kpm": "KPM (≥30 Spiele)",
         "teamkills": "Team-Kills (Anti-Top)",
-        "matches":   "Meiste Spiele"
+        "matches": "Meiste Spiele"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "Allgemeine Metriken",
       "byWeaponClass": "🔫 Nach Waffenklasse",
       "cards": {
-        "kills":            "Meiste Kills pro Spiel",
-        "kills_streak":     "Längste Kill-Serie",
-        "combat":           "Combat pro Spiel",
-        "support":          "Support pro Spiel",
-        "offense":          "Offense pro Spiel",
-        "defense":          "Defense pro Spiel",
+        "kills": "Meiste Kills pro Spiel",
+        "kills_streak": "Längste Kill-Serie",
+        "combat": "Combat pro Spiel",
+        "support": "Support pro Spiel",
+        "offense": "Offense pro Spiel",
+        "defense": "Defense pro Spiel",
         "kill_death_ratio": "K/D pro Spiel",
         "kills_per_minute": "K/Min pro Spiel",
-        "teamkills":        "Schlimmste TK pro Spiel",
-        "deaths":           "Schlimmstes Spiel (Tode)"
+        "teamkills": "Schlimmste TK pro Spiel",
+        "deaths": "Schlimmstes Spiel (Tode)"
       },
       "classes": {
         "sniperRifle": "Sniper pro Spiel",
-        "machineGun":  "MG pro Spiel",
-        "antiTank":    "AT pro Spiel",
-        "tankGun":     "Panzer pro Spiel",
-        "artillery":   "Artillerie pro Spiel",
-        "mine":        "Minen pro Spiel",
-        "explosive":   "Sprengstoff pro Spiel",
-        "flame":       "Flammenwerfer pro Spiel",
-        "melee":       "Nahkampf pro Spiel"
+        "machineGun": "MG pro Spiel",
+        "antiTank": "AT pro Spiel",
+        "tankGun": "Panzer pro Spiel",
+        "artillery": "Artillerie pro Spiel",
+        "mine": "Minen pro Spiel",
+        "explosive": "Sprengstoff pro Spiel",
+        "flame": "Flammenwerfer pro Spiel",
+        "melee": "Nahkampf pro Spiel"
       }
     }
   }

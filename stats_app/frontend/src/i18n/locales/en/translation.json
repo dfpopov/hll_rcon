@@ -96,12 +96,30 @@
     "subtitle": "Anti-leaderboard. The friendly fire experts, the floor-staring veterans, and the reason you never want them in your squad.",
     "noCandidates": "no candidates",
     "cards": {
-      "tk_total":          { "title": "Most all-time team-kills",        "caption": "Lobby crashers. Killed more friendlies than the enemy did." },
-      "tk_victims":        { "title": "Most deaths from friendly TK",    "caption": "Always standing in the wrong spot. Magnet for allied bullets." },
-      "worst_kd":          { "title": "Worst K/D with 100+ matches",     "caption": "Played a lot. Played consistently. Never learned to shoot." },
-      "most_deaths":       { "title": "Most all-time deaths",            "caption": "Every match — a new page of the obituary." },
-      "worst_game_deaths": { "title": "Worst single-game death count",   "caption": "One match — one disaster. 70+ deaths in a game takes effort." },
-      "worst_game_tk":     { "title": "Most TK in a single match",       "caption": "The squad needed a leader. They got him — with grenades." }
+      "tk_total": {
+        "title": "Most all-time team-kills",
+        "caption": "Lobby crashers. Killed more friendlies than the enemy did."
+      },
+      "tk_victims": {
+        "title": "Most deaths from friendly TK",
+        "caption": "Always standing in the wrong spot. Magnet for allied bullets."
+      },
+      "worst_kd": {
+        "title": "Worst K/D with 100+ matches",
+        "caption": "Played a lot. Played consistently. Never learned to shoot."
+      },
+      "most_deaths": {
+        "title": "Most all-time deaths",
+        "caption": "Every match — a new page of the obituary."
+      },
+      "worst_game_deaths": {
+        "title": "Worst single-game death count",
+        "caption": "One match — one disaster. 70+ deaths in a game takes effort."
+      },
+      "worst_game_tk": {
+        "title": "Most TK in a single match",
+        "caption": "The squad needed a leader. They got him — with grenades."
+      }
     }
   },
   "playerMemes": {
@@ -120,119 +138,446 @@
   },
   "meta": {
     "achievements": {
-      "centurion":      { "title": "Centurion",                  "description": "Play 100+ matches" },
-      "veteran":        { "title": "Veteran",                    "description": "Play 500+ matches" },
-      "lifetime":       { "title": "Lifetime player",            "description": "Play 1000+ matches" },
-      "sharpshooter":   { "title": "Sharpshooter",               "description": "K/D 2.0+ over 30+ matches" },
-      "elite_sniper":   { "title": "Elite sniper",               "description": "K/D 3.0+ over 30+ matches" },
-      "centurion_k":    { "title": "100 kills",                  "description": "100+ all-time kills" },
-      "killer_1k":      { "title": "1000 kills",                 "description": "1000+ all-time kills" },
-      "killing_mach":   { "title": "Machine of Kill",            "description": "5000+ all-time kills" },
-      "reaper":         { "title": "Reaper",                     "description": "10000+ all-time kills" },
-      "unstoppable":    { "title": "Unstoppable",                "description": "30+ kill streak in a single match" },
-      "legendary_st":   { "title": "Legendary streak",           "description": "60+ kill streak in a single match" },
-      "god_mode":       { "title": "God mode",                   "description": "88+ kill streak in a single match" },
-      "marathon":       { "title": "Marathoner",                 "description": "100+ hours on the server" },
-      "time_lord":      { "title": "Time lord",                  "description": "500+ hours on the server" },
-      "combat_master":  { "title": "Combat master",              "description": "Accumulate 100K+ combat score" },
-      "support_hero":   { "title": "Support hero",               "description": "Accumulate 300K+ support score" },
-      "defender":       { "title": "Defender",                   "description": "Accumulate 200K+ defense score" },
-      "attacker":       { "title": "Attacker",                   "description": "Accumulate 100K+ offense score" },
-      "elite":          { "title": "Elite (lvl 200+)",           "description": "Reach level 200" },
-      "legendary_lvl":  { "title": "Legend (lvl 250+)",          "description": "Reach level 250" },
-      "mythic_lvl":     { "title": "Mythic (lvl 300+)",          "description": "Reach level 300" },
-      "survivor":       { "title": "Survivor",                   "description": "Survive 10+ minutes without dying" },
-      "tk_offender":    { "title": "TK offender",                "description": "100+ team kills" },
-      "clumsy":         { "title": "Clumsy",                     "description": "Died 100+ times from friendly TK" },
-      "disciplined":    { "title": "Disciplined",                "description": "100+ matches with TK rate < 10%" },
-      "spotless":       { "title": "Spotless conscience",        "description": "100+ matches and never died from friendly TK" },
-      "fortress":       { "title": "Fortress",                   "description": "Accumulate 500K+ defense score" },
-      "tireless":       { "title": "Tireless",                   "description": "1000+ hours on the server" },
-      "lone_survivor":  { "title": "Lone survivor",              "description": "Survive 30+ minutes without dying" },
-      "old_guard":      { "title": "Old guard",                  "description": "Play 2000+ matches" },
-      "samurai":        { "title": "Samurai",                    "description": "50+ melee kills" },
-      "tank_god":       { "title": "Tank god",                   "description": "200+ kills via Tank Gun / Anti-Tank" },
-      "all_rounder":    { "title": "Universal soldier",          "description": "Kills with 8+ different weapon classes" },
-      "sniper_ghost":   { "title": "Sniper ghost",               "description": "500+ kills with Sniper Rifle" },
-      "mg_master":      { "title": "MG master",                  "description": "500+ kills with Machine Gun" },
-      "artillerist":    { "title": "Artillerist",                "description": "300+ kills with artillery" },
-      "grenadier":      { "title": "Grenadier",                  "description": "300+ kills with explosives (grenade/satchel/rocket)" },
-      "miner":          { "title": "Sapper",                     "description": "100+ kills with mines" },
-      "fire_fist":      { "title": "Fire fist",                  "description": "100+ kills with flamethrower" },
-      "anti_tank_ace":  { "title": "Anti-tank ace",              "description": "200+ kills with Anti-Tank weapons" },
-      "fast_killer":    { "title": "Fast killer",                "description": "KPM 1.5+ over 30+ matches" },
-      "loyal_soldier":  { "title": "Loyal soldier",              "description": "500+ matches with zero own TKs" },
-      "weapon_master":  { "title": "Arsenal master",             "description": "Use 50+ different weapons" },
-      "night_owl":      { "title": "Night owl",                  "description": "60%+ of all matches played at the same hour of day" },
-      "storm":          { "title": "Storm",                      "description": "Combined score (combat+offense+defense+support) 1M+" },
-      "balanced":       { "title": "Zen balancer",               "description": "Combat / offense / defense / support — all within 15% of each other" },
-      "exact_one":      { "title": "Equilibrium",                "description": "K/D exactly 1.00 (knife-edge balance of kills and deaths)" },
-      "iron_apron":     { "title": "Iron apron",                 "description": "Defense makes up 50%+ of all score categories" },
-      "supply_main":    { "title": "Supply maniac",              "description": "Support makes up 60%+ of all score categories" }
+      "centurion": {
+        "title": "Centurion",
+        "description": "Play 100+ matches"
+      },
+      "veteran": {
+        "title": "Veteran",
+        "description": "Play 500+ matches"
+      },
+      "lifetime": {
+        "title": "Lifetime player",
+        "description": "Play 1000+ matches"
+      },
+      "sharpshooter": {
+        "title": "Sharpshooter",
+        "description": "K/D 2.0+ over 30+ matches"
+      },
+      "elite_sniper": {
+        "title": "Elite sniper",
+        "description": "K/D 3.0+ over 30+ matches"
+      },
+      "centurion_k": {
+        "title": "100 kills",
+        "description": "100+ all-time kills"
+      },
+      "killer_1k": {
+        "title": "1000 kills",
+        "description": "1000+ all-time kills"
+      },
+      "killing_mach": {
+        "title": "Machine of Kill",
+        "description": "5000+ all-time kills"
+      },
+      "reaper": {
+        "title": "Reaper",
+        "description": "10000+ all-time kills"
+      },
+      "unstoppable": {
+        "title": "Unstoppable",
+        "description": "30+ kill streak in a single match"
+      },
+      "legendary_st": {
+        "title": "Legendary streak",
+        "description": "60+ kill streak in a single match"
+      },
+      "god_mode": {
+        "title": "God mode",
+        "description": "88+ kill streak in a single match"
+      },
+      "marathon": {
+        "title": "Marathoner",
+        "description": "100+ hours on the server"
+      },
+      "time_lord": {
+        "title": "Time lord",
+        "description": "500+ hours on the server"
+      },
+      "combat_master": {
+        "title": "Combat master",
+        "description": "Accumulate 100K+ combat score"
+      },
+      "support_hero": {
+        "title": "Support hero",
+        "description": "Accumulate 300K+ support score"
+      },
+      "defender": {
+        "title": "Defender",
+        "description": "Accumulate 200K+ defense score"
+      },
+      "attacker": {
+        "title": "Attacker",
+        "description": "Accumulate 100K+ offense score"
+      },
+      "elite": {
+        "title": "Elite (lvl 200+)",
+        "description": "Reach level 200"
+      },
+      "legendary_lvl": {
+        "title": "Legend (lvl 250+)",
+        "description": "Reach level 250"
+      },
+      "mythic_lvl": {
+        "title": "Mythic (lvl 300+)",
+        "description": "Reach level 300"
+      },
+      "survivor": {
+        "title": "Survivor",
+        "description": "Survive 10+ minutes without dying"
+      },
+      "tk_offender": {
+        "title": "TK offender",
+        "description": "100+ team kills"
+      },
+      "clumsy": {
+        "title": "Clumsy",
+        "description": "Died 100+ times from friendly TK"
+      },
+      "disciplined": {
+        "title": "Disciplined",
+        "description": "100+ matches with TK rate < 10%"
+      },
+      "spotless": {
+        "title": "Spotless conscience",
+        "description": "100+ matches and never died from friendly TK"
+      },
+      "fortress": {
+        "title": "Fortress",
+        "description": "Accumulate 500K+ defense score"
+      },
+      "tireless": {
+        "title": "Tireless",
+        "description": "1000+ hours on the server"
+      },
+      "lone_survivor": {
+        "title": "Lone survivor",
+        "description": "Survive 30+ minutes without dying"
+      },
+      "old_guard": {
+        "title": "Old guard",
+        "description": "Play 2000+ matches"
+      },
+      "samurai": {
+        "title": "Samurai",
+        "description": "50+ melee kills"
+      },
+      "tank_god": {
+        "title": "Tank god",
+        "description": "200+ kills via Tank Gun / Anti-Tank"
+      },
+      "all_rounder": {
+        "title": "Universal soldier",
+        "description": "Kills with 8+ different weapon classes"
+      },
+      "sniper_ghost": {
+        "title": "Sniper ghost",
+        "description": "500+ kills with Sniper Rifle"
+      },
+      "mg_master": {
+        "title": "MG master",
+        "description": "500+ kills with Machine Gun"
+      },
+      "artillerist": {
+        "title": "Artillerist",
+        "description": "300+ kills with artillery"
+      },
+      "grenadier": {
+        "title": "Grenadier",
+        "description": "300+ kills with explosives (grenade/satchel/rocket)"
+      },
+      "miner": {
+        "title": "Sapper",
+        "description": "100+ kills with mines"
+      },
+      "fire_fist": {
+        "title": "Fire fist",
+        "description": "100+ kills with flamethrower"
+      },
+      "anti_tank_ace": {
+        "title": "Anti-tank ace",
+        "description": "200+ kills with Anti-Tank weapons"
+      },
+      "fast_killer": {
+        "title": "Fast killer",
+        "description": "KPM 1.5+ over 30+ matches"
+      },
+      "loyal_soldier": {
+        "title": "Loyal soldier",
+        "description": "500+ matches with zero own TKs"
+      },
+      "weapon_master": {
+        "title": "Arsenal master",
+        "description": "Use 50+ different weapons"
+      },
+      "night_owl": {
+        "title": "Night owl",
+        "description": "60%+ of all matches played at the same hour of day"
+      },
+      "storm": {
+        "title": "Storm",
+        "description": "Combined score (combat+offense+defense+support) 1M+"
+      },
+      "balanced": {
+        "title": "Zen balancer",
+        "description": "Combat / offense / defense / support — all within 15% of each other"
+      },
+      "exact_one": {
+        "title": "Equilibrium",
+        "description": "K/D exactly 1.00 (knife-edge balance of kills and deaths)"
+      },
+      "iron_apron": {
+        "title": "Iron apron",
+        "description": "Defense makes up 50%+ of all score categories"
+      },
+      "supply_main": {
+        "title": "Supply maniac",
+        "description": "Support makes up 60%+ of all score categories"
+      }
     },
     "playstyles": {
-      "logistician":      { "title": "Logistician",              "description": "Support 50%+ score — builder, medic, supplier, or a combination" },
-      "kamikadze":        { "title": "Kamikaze",                 "description": "TK rate 10%+ over 100+ matches — dangerous to allies" },
-      "sharpshooter":     { "title": "Sharpshooter killer",      "description": "K/D 2.5+ and 30+ streak in a single match" },
-      "veteran_marksman": { "title": "Veteran marksman",         "description": "Level 200+, K/D 1.5+, 500+ matches" },
-      "commander":        { "title": "Commander",                "description": "Balanced: all 4 score categories 20%+ over 200+ matches" },
-      "kpm_killer":       { "title": "Hammerer",                 "description": "KPM 1.5+ with combat 40%+ — non-stop kills" },
-      "zerg":             { "title": "Zerg",                     "description": "3000+ kills with K/D < 1.0 — quantity over quality" },
-      "lone_wolf":        { "title": "Lone wolf",                "description": "Support under 10% with 200+ matches — does everything alone" },
-      "knife_master":     { "title": "Knife master",             "description": "Top weapon — melee, 10+ melee kills" },
-      "artilleryman":     { "title": "Artilleryman",             "description": "Top weapon — artillery, 20%+ of all kills" },
-      "pure_sniper":      { "title": "Pure sniper",              "description": "Top weapon — sniper rifle, 25%+ of all kills" },
-      "tanker":           { "title": "Tanker",                   "description": "Top weapon — tank gun or AT, 20%+ of all kills" },
-      "night_owl":        { "title": "Night owl",                "description": "Peak activity 0:00–5:59 — night players" },
-      "ritual":           { "title": "Ritual",                   "description": "30%+ matches in the same hour — human schedule" },
-      "kpm_wizard":       { "title": "KPM wizard",               "description": "KPM 1.0+ with combat <30% — kills via non-combat weapons (tanks, artillery, grenades)" },
-      "bone":             { "title": "Bone",                     "description": "High level (150+), low K/D (<1.0) — grinded level, not aim" },
-      "diamond_in_rough": { "title": "Diamond in the rough",     "description": "K/D 2.0+ with level <50 — talent without time" },
-      "lottery":          { "title": "Lottery",                  "description": "40+ streak in one match but K/D <1.5 — one big day" },
-      "master":           { "title": "Master",                   "description": "Level 200+, K/D 1.8+, 300+ matches — true guru" },
-      "speedster":        { "title": "Speedster",                "description": "KPM 1.0+ with <50 hours on the server — effective from second one" },
-      "slowmo":           { "title": "Slowmo",                   "description": "KPM <0.3 with 100+ matches — never rushes" },
-      "tk_martyr":        { "title": "TK martyr",                "description": "50+ deaths from friendly TK — magnet for allied bullets" },
-      "runner":           { "title": "Runner",                   "description": "Deaths twice the kills — regular respawn customer" },
-      "sacrificial":      { "title": "Sacrificial",              "description": "K/D under 0.8 — throws themselves into hell" },
-      "trench_defender":  { "title": "Trench defender",          "description": "Combat 50%+ with defensive lean (5+ matches)" },
-      "combat_reaper":    { "title": "Combat reaper",            "description": "Combat 50%+ with offensive lean (5+ matches)" },
-      "wall":             { "title": "Wall",                     "description": "Defense significantly higher than offense — holds the point (5+ matches)" },
-      "assault":          { "title": "Assault",                  "description": "Offense significantly higher than defense — first on the point (5+ matches)" },
-      "sharp_versatile":  { "title": "Sharp generalist",         "description": "K/D 2.0+ over 30+ matches" },
-      "active_player":    { "title": "Active player",            "description": "50+ matches, K/D between 1.0 and 2.0 — steady mid-tier" },
-      "combat_fly":       { "title": "Combat fly",               "description": "Fewer than 50 matches, K/D 1.0+ — fast learner" },
-      "explorer":         { "title": "Explorer",                 "description": "10–49 matches — trying out the game" },
-      "rookie":           { "title": "Rookie",                   "description": "Fewer than 10 matches — still figuring out where to shoot" },
-      "glider":           { "title": "Glider",                   "description": "15+ min life without activity, K/D <1.0" },
-      "survivor_master":  { "title": "Master of survival",       "description": "Longest life — 30+ minutes without dying, 100+ matches" },
-      "versatile":        { "title": "Generalist",               "description": "Balanced style or not enough data" }
+      "logistician": {
+        "title": "Logistician",
+        "description": "Support 50%+ score — builder, medic, supplier, or a combination"
+      },
+      "kamikadze": {
+        "title": "Kamikaze",
+        "description": "TK rate 10%+ over 100+ matches — dangerous to allies"
+      },
+      "sharpshooter": {
+        "title": "Sharpshooter killer",
+        "description": "K/D 2.5+ and 30+ streak in a single match"
+      },
+      "veteran_marksman": {
+        "title": "Veteran marksman",
+        "description": "Level 200+, K/D 1.5+, 500+ matches"
+      },
+      "commander": {
+        "title": "Commander",
+        "description": "Balanced: all 4 score categories 20%+ over 200+ matches"
+      },
+      "kpm_killer": {
+        "title": "Hammerer",
+        "description": "KPM 1.5+ with combat 40%+ — non-stop kills"
+      },
+      "zerg": {
+        "title": "Zerg",
+        "description": "3000+ kills with K/D < 1.0 — quantity over quality"
+      },
+      "lone_wolf": {
+        "title": "Lone wolf",
+        "description": "Support under 10% with 200+ matches — does everything alone"
+      },
+      "knife_master": {
+        "title": "Knife master",
+        "description": "Top weapon — melee, 10+ melee kills"
+      },
+      "artilleryman": {
+        "title": "Artilleryman",
+        "description": "Top weapon — artillery, 20%+ of all kills"
+      },
+      "pure_sniper": {
+        "title": "Pure sniper",
+        "description": "Top weapon — sniper rifle, 25%+ of all kills"
+      },
+      "tanker": {
+        "title": "Tanker",
+        "description": "Top weapon — tank gun or AT, 20%+ of all kills"
+      },
+      "night_owl": {
+        "title": "Night owl",
+        "description": "Peak activity 0:00–5:59 — night players"
+      },
+      "ritual": {
+        "title": "Ritual",
+        "description": "30%+ matches in the same hour — human schedule"
+      },
+      "kpm_wizard": {
+        "title": "KPM wizard",
+        "description": "KPM 1.0+ with combat <30% — kills via non-combat weapons (tanks, artillery, grenades)"
+      },
+      "bone": {
+        "title": "Bone",
+        "description": "High level (150+), low K/D (<1.0) — grinded level, not aim"
+      },
+      "diamond_in_rough": {
+        "title": "Diamond in the rough",
+        "description": "K/D 2.0+ with level <50 — talent without time"
+      },
+      "lottery": {
+        "title": "Lottery",
+        "description": "40+ streak in one match but K/D <1.5 — one big day"
+      },
+      "master": {
+        "title": "Master",
+        "description": "Level 200+, K/D 1.8+, 300+ matches — true guru"
+      },
+      "speedster": {
+        "title": "Speedster",
+        "description": "KPM 1.0+ with <50 hours on the server — effective from second one"
+      },
+      "slowmo": {
+        "title": "Slowmo",
+        "description": "KPM <0.3 with 100+ matches — never rushes"
+      },
+      "tk_martyr": {
+        "title": "TK martyr",
+        "description": "50+ deaths from friendly TK — magnet for allied bullets"
+      },
+      "runner": {
+        "title": "Runner",
+        "description": "Deaths twice the kills — regular respawn customer"
+      },
+      "sacrificial": {
+        "title": "Sacrificial",
+        "description": "K/D under 0.8 — throws themselves into hell"
+      },
+      "trench_defender": {
+        "title": "Trench defender",
+        "description": "Combat 50%+ with defensive lean (5+ matches)"
+      },
+      "combat_reaper": {
+        "title": "Combat reaper",
+        "description": "Combat 50%+ with offensive lean (5+ matches)"
+      },
+      "wall": {
+        "title": "Wall",
+        "description": "Defense significantly higher than offense — holds the point (5+ matches)"
+      },
+      "assault": {
+        "title": "Assault",
+        "description": "Offense significantly higher than defense — first on the point (5+ matches)"
+      },
+      "sharp_versatile": {
+        "title": "Sharp generalist",
+        "description": "K/D 2.0+ over 30+ matches"
+      },
+      "active_player": {
+        "title": "Active player",
+        "description": "50+ matches, K/D between 1.0 and 2.0 — steady mid-tier"
+      },
+      "combat_fly": {
+        "title": "Combat fly",
+        "description": "Fewer than 50 matches, K/D 1.0+ — fast learner"
+      },
+      "explorer": {
+        "title": "Explorer",
+        "description": "10–49 matches — trying out the game"
+      },
+      "rookie": {
+        "title": "Rookie",
+        "description": "Fewer than 10 matches — still figuring out where to shoot"
+      },
+      "glider": {
+        "title": "Glider",
+        "description": "15+ min life without activity, K/D <1.0"
+      },
+      "survivor_master": {
+        "title": "Master of survival",
+        "description": "Longest life — 30+ minutes without dying, 100+ matches"
+      },
+      "versatile": {
+        "title": "Generalist",
+        "description": "Balanced style or not enough data"
+      }
     },
     "matchTitles": {
-      "spectator":        { "title": "Spectator",                "description": "0 kills 0 deaths while present in match for 5+ minutes" },
-      "safari":           { "title": "Enemy's safari",           "description": "50+ deaths with fewer than 10 kills" },
-      "sacrificial_m":    { "title": "Sacrificial",              "description": "20+ deaths with zero kills" },
-      "dark_hour":        { "title": "Dark hour",                "description": "5 or fewer kills with 30+ deaths" },
-      "bloodbath":        { "title": "Bloodbath (for you)",      "description": "40+ deaths in the match" },
-      "sniper_ghost":     { "title": "Spirit sniper",            "description": "K/D 10+ with 10+ kills — unrealistically accurate" },
-      "perfect":          { "title": "Perfect",                  "description": "20+ kills and zero deaths — complete domination" },
-      "eagle_eye":        { "title": "Eagle eye",                "description": "K/D 7+ with 15+ kills" },
-      "training":         { "title": "Training",                 "description": "50+ kills AND 50+ deaths — intense draw" },
-      "frenzy":           { "title": "Frenzy",                   "description": "50+ kills and 30+ deaths — volume in both directions" },
-      "terror":           { "title": "Terror",                   "description": "100+ kills in a single match" },
-      "massacre":         { "title": "Massacre",                 "description": "80+ kills in a single match" },
-      "merciless":        { "title": "Merciless",                "description": "40+ kills at K/D 3+" },
-      "speedrun":         { "title": "Speedrun",                 "description": "30+ kills in a match under 30 minutes" },
-      "machine_gunner":   { "title": "Machine gunner",           "description": "Combat 1500+ with 30+ kills and no more than 10 deaths" },
-      "god_of_war":       { "title": "God of war",               "description": "50+ kills at K/D 3+" },
-      "untouchable":      { "title": "Untouchable",              "description": "30+ kills at K/D 5+" },
-      "cold_blooded":     { "title": "Cold-blooded",             "description": "K/D 5+ with 20+ kills" },
-      "duelist":          { "title": "Duelist",                  "description": "Close game — 15+ kills, 15+ deaths, diff ≤ 2" },
-      "invisible_helper": { "title": "Invisible helper",         "description": "Support 8000+ with fewer than 5 kills — passive hero" },
-      "quiet_victory":    { "title": "Quiet victory",            "description": "Support 5000+ with fewer than 10 kills" },
-      "wall_m":           { "title": "Wall",                     "description": "Combat 3000+ with no more than 3 deaths — point holds" },
-      "mirror":           { "title": "Mirror",                   "description": "K exactly equals D with 30+ kills" },
-      "zen":              { "title": "Zen",                      "description": "K exactly equals D with 10–29 kills" }
+      "spectator": {
+        "title": "Spectator",
+        "description": "0 kills 0 deaths while present in match for 5+ minutes"
+      },
+      "safari": {
+        "title": "Enemy's safari",
+        "description": "50+ deaths with fewer than 10 kills"
+      },
+      "sacrificial_m": {
+        "title": "Sacrificial",
+        "description": "20+ deaths with zero kills"
+      },
+      "dark_hour": {
+        "title": "Dark hour",
+        "description": "5 or fewer kills with 30+ deaths"
+      },
+      "bloodbath": {
+        "title": "Bloodbath (for you)",
+        "description": "40+ deaths in the match"
+      },
+      "sniper_ghost": {
+        "title": "Spirit sniper",
+        "description": "K/D 10+ with 10+ kills — unrealistically accurate"
+      },
+      "perfect": {
+        "title": "Perfect",
+        "description": "20+ kills and zero deaths — complete domination"
+      },
+      "eagle_eye": {
+        "title": "Eagle eye",
+        "description": "K/D 7+ with 15+ kills"
+      },
+      "training": {
+        "title": "Training",
+        "description": "50+ kills AND 50+ deaths — intense draw"
+      },
+      "frenzy": {
+        "title": "Frenzy",
+        "description": "50+ kills and 30+ deaths — volume in both directions"
+      },
+      "terror": {
+        "title": "Terror",
+        "description": "100+ kills in a single match"
+      },
+      "massacre": {
+        "title": "Massacre",
+        "description": "80+ kills in a single match"
+      },
+      "merciless": {
+        "title": "Merciless",
+        "description": "40+ kills at K/D 3+"
+      },
+      "speedrun": {
+        "title": "Speedrun",
+        "description": "30+ kills in a match under 30 minutes"
+      },
+      "machine_gunner": {
+        "title": "Machine gunner",
+        "description": "Combat 1500+ with 30+ kills and no more than 10 deaths"
+      },
+      "god_of_war": {
+        "title": "God of war",
+        "description": "50+ kills at K/D 3+"
+      },
+      "untouchable": {
+        "title": "Untouchable",
+        "description": "30+ kills at K/D 5+"
+      },
+      "cold_blooded": {
+        "title": "Cold-blooded",
+        "description": "K/D 5+ with 20+ kills"
+      },
+      "duelist": {
+        "title": "Duelist",
+        "description": "Close game — 15+ kills, 15+ deaths, diff ≤ 2"
+      },
+      "invisible_helper": {
+        "title": "Invisible helper",
+        "description": "Support 8000+ with fewer than 5 kills — passive hero"
+      },
+      "quiet_victory": {
+        "title": "Quiet victory",
+        "description": "Support 5000+ with fewer than 10 kills"
+      },
+      "wall_m": {
+        "title": "Wall",
+        "description": "Combat 3000+ with no more than 3 deaths — point holds"
+      },
+      "mirror": {
+        "title": "Mirror",
+        "description": "K exactly equals D with 30+ kills"
+      },
+      "zen": {
+        "title": "Zen",
+        "description": "K exactly equals D with 10–29 kills"
+      }
     }
   },
   "achievementDetail": {
@@ -276,7 +621,8 @@
       "godRatios": "God-tier ratios",
       "volume": "Volume",
       "support": "Support / Defense",
-      "memes": "Memes"
+      "memes": "Memes",
+      "intensity": "Intensity"
     }
   },
   "compareBar": {
@@ -421,16 +767,16 @@
       "byWeaponClass": "Top by weapon class",
       "hours": "{{h}} h",
       "cards": {
-        "kills":     "Most kills",
-        "playtime":  "Most playtime",
-        "combat":    "Combat (effectiveness)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 matches)",
-        "kpm":       "KPM (≥30 matches)",
+        "kills": "Most kills",
+        "playtime": "Most playtime",
+        "combat": "Combat (effectiveness)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 matches)",
+        "kpm": "KPM (≥30 matches)",
         "teamkills": "Team kills (anti-top)",
-        "matches":   "Most matches"
+        "matches": "Most matches"
       }
     },
     "singleGame": {
@@ -439,27 +785,27 @@
       "generalMetrics": "General metrics",
       "byWeaponClass": "🔫 By weapon class",
       "cards": {
-        "kills":            "Most kills per game",
-        "kills_streak":     "Longest kill streak",
-        "combat":           "Combat per game",
-        "support":          "Support per game",
-        "offense":          "Offense per game",
-        "defense":          "Defense per game",
+        "kills": "Most kills per game",
+        "kills_streak": "Longest kill streak",
+        "combat": "Combat per game",
+        "support": "Support per game",
+        "offense": "Offense per game",
+        "defense": "Defense per game",
         "kill_death_ratio": "K/D per game",
         "kills_per_minute": "K/min per game",
-        "teamkills":        "Worst TK per game",
-        "deaths":           "Worst game (deaths)"
+        "teamkills": "Worst TK per game",
+        "deaths": "Worst game (deaths)"
       },
       "classes": {
         "sniperRifle": "Sniper per game",
-        "machineGun":  "MG per game",
-        "antiTank":    "AT per game",
-        "tankGun":     "Tank combat per game",
-        "artillery":   "Artillery per game",
-        "mine":        "Mines per game",
-        "explosive":   "Explosives per game",
-        "flame":       "Flamer per game",
-        "melee":       "Melee per game"
+        "machineGun": "MG per game",
+        "antiTank": "AT per game",
+        "tankGun": "Tank combat per game",
+        "artillery": "Artillery per game",
+        "mine": "Mines per game",
+        "explosive": "Explosives per game",
+        "flame": "Flamer per game",
+        "melee": "Melee per game"
       }
     }
   }

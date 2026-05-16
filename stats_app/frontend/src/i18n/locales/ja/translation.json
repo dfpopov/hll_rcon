@@ -96,12 +96,30 @@
     "subtitle": "反ランキング。フレンドリーファイアの達人、地面を見つめる古参、そしてあなたが絶対に分隊に入れたくない理由。",
     "noCandidates": "候補なし",
     "cards": {
-      "tk_total":          { "title": "全期間最多 TK",        "caption": "ロビー射撃手。敵より多くの味方を殺した。" },
-      "tk_victims":        { "title": "味方TKによる最多死",    "caption": "いつも悪い場所に立っている。味方の弾の磁石。" },
-      "worst_kd":          { "title": "100試合以上で最悪 K/D", "caption": "たくさんプレイ。常にプレイ。射撃を学ばない。" },
-      "most_deaths":       { "title": "全期間最多デス",         "caption": "毎試合 — 訃報の新しい1ページ。" },
-      "worst_game_deaths": { "title": "1試合の最悪デス数",      "caption": "1試合 — 1つの惨事。70+ デスは努力が必要。" },
-      "worst_game_tk":     { "title": "1試合最多 TK",           "caption": "分隊はリーダーを欲しがった。来たのは彼 — グレネード付き。" }
+      "tk_total": {
+        "title": "全期間最多 TK",
+        "caption": "ロビー射撃手。敵より多くの味方を殺した。"
+      },
+      "tk_victims": {
+        "title": "味方TKによる最多死",
+        "caption": "いつも悪い場所に立っている。味方の弾の磁石。"
+      },
+      "worst_kd": {
+        "title": "100試合以上で最悪 K/D",
+        "caption": "たくさんプレイ。常にプレイ。射撃を学ばない。"
+      },
+      "most_deaths": {
+        "title": "全期間最多デス",
+        "caption": "毎試合 — 訃報の新しい1ページ。"
+      },
+      "worst_game_deaths": {
+        "title": "1試合の最悪デス数",
+        "caption": "1試合 — 1つの惨事。70+ デスは努力が必要。"
+      },
+      "worst_game_tk": {
+        "title": "1試合最多 TK",
+        "caption": "分隊はリーダーを欲しがった。来たのは彼 — グレネード付き。"
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "神級レート",
       "volume": "量",
       "support": "Support / Defense",
-      "memes": "ミーム"
+      "memes": "ミーム",
+      "intensity": "強度"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "武器クラス別トップ",
       "hours": "{{h}} 時間",
       "cards": {
-        "kills":     "最多キル",
-        "playtime":  "最長プレイ時間",
-        "combat":    "Combat (効率)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 試合)",
-        "kpm":       "KPM (≥30 試合)",
+        "kills": "最多キル",
+        "playtime": "最長プレイ時間",
+        "combat": "Combat (効率)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 試合)",
+        "kpm": "KPM (≥30 試合)",
         "teamkills": "Team kills (反ランキング)",
-        "matches":   "最多試合数"
+        "matches": "最多試合数"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "一般指標",
       "byWeaponClass": "🔫 武器クラス別",
       "cards": {
-        "kills":            "1試合最多キル",
-        "kills_streak":     "最長キル連続",
-        "combat":           "1試合 Combat",
-        "support":          "1試合 Support",
-        "offense":          "1試合 Offense",
-        "defense":          "1試合 Defense",
+        "kills": "1試合最多キル",
+        "kills_streak": "最長キル連続",
+        "combat": "1試合 Combat",
+        "support": "1試合 Support",
+        "offense": "1試合 Offense",
+        "defense": "1試合 Defense",
         "kill_death_ratio": "1試合 K/D",
         "kills_per_minute": "1試合 K/分",
-        "teamkills":        "1試合最悪 TK",
-        "deaths":           "最悪試合 (デス)"
+        "teamkills": "1試合最悪 TK",
+        "deaths": "最悪試合 (デス)"
       },
       "classes": {
         "sniperRifle": "1試合 Sniper",
-        "machineGun":  "1試合 MG",
-        "antiTank":    "1試合 AT",
-        "tankGun":     "1試合 戦車戦",
-        "artillery":   "1試合 砲兵",
-        "mine":        "1試合 地雷",
-        "explosive":   "1試合 爆発物",
-        "flame":       "1試合 火炎放射器",
-        "melee":       "1試合 近接"
+        "machineGun": "1試合 MG",
+        "antiTank": "1試合 AT",
+        "tankGun": "1試合 戦車戦",
+        "artillery": "1試合 砲兵",
+        "mine": "1試合 地雷",
+        "explosive": "1試合 爆発物",
+        "flame": "1試合 火炎放射器",
+        "melee": "1試合 近接"
       }
     }
   }

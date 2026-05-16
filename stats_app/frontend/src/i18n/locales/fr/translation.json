@@ -96,12 +96,30 @@
     "subtitle": "Anti-classement. Les spécialistes du tir ami, les vétérans qui fixent le sol, et la raison pour laquelle on ne les veut jamais dans son escouade.",
     "noCandidates": "aucun candidat",
     "cards": {
-      "tk_total":          { "title": "Plus de TK de tous les temps",   "caption": "Tireurs en lobby. Ont tué plus d'alliés que l'ennemi." },
-      "tk_victims":        { "title": "Plus de morts par TK ami",        "caption": "Toujours au mauvais endroit. Aimant à balles alliées." },
-      "worst_kd":          { "title": "Pire K/D avec 100+ matchs",       "caption": "Beaucoup joué. Régulièrement. Jamais appris à tirer." },
-      "most_deaths":       { "title": "Plus de morts de tous les temps", "caption": "Chaque match — une nouvelle page de la nécrologie." },
-      "worst_game_deaths": { "title": "Pire match en termes de morts",   "caption": "Un match — une catastrophe. 70+ morts demande de l'effort." },
-      "worst_game_tk":     { "title": "Plus de TK en un match",          "caption": "L'escouade voulait un chef. Il est venu — avec des grenades." }
+      "tk_total": {
+        "title": "Plus de TK de tous les temps",
+        "caption": "Tireurs en lobby. Ont tué plus d'alliés que l'ennemi."
+      },
+      "tk_victims": {
+        "title": "Plus de morts par TK ami",
+        "caption": "Toujours au mauvais endroit. Aimant à balles alliées."
+      },
+      "worst_kd": {
+        "title": "Pire K/D avec 100+ matchs",
+        "caption": "Beaucoup joué. Régulièrement. Jamais appris à tirer."
+      },
+      "most_deaths": {
+        "title": "Plus de morts de tous les temps",
+        "caption": "Chaque match — une nouvelle page de la nécrologie."
+      },
+      "worst_game_deaths": {
+        "title": "Pire match en termes de morts",
+        "caption": "Un match — une catastrophe. 70+ morts demande de l'effort."
+      },
+      "worst_game_tk": {
+        "title": "Plus de TK en un match",
+        "caption": "L'escouade voulait un chef. Il est venu — avec des grenades."
+      }
     }
   },
   "achievementDetail": {
@@ -145,7 +163,8 @@
       "godRatios": "Ratios divins",
       "volume": "Volume",
       "support": "Support / Defense",
-      "memes": "Mèmes"
+      "memes": "Mèmes",
+      "intensity": "Intensité"
     }
   },
   "compareBar": {
@@ -290,16 +309,16 @@
       "byWeaponClass": "Top par classe d'arme",
       "hours": "{{h}} h",
       "cards": {
-        "kills":     "Plus de kills",
-        "playtime":  "Plus de temps de jeu",
-        "combat":    "Combat (efficacité)",
-        "support":   "Support",
-        "offense":   "Offense",
-        "defense":   "Defense",
-        "kd":        "K/D ratio (≥30 matchs)",
-        "kpm":       "KPM (≥30 matchs)",
+        "kills": "Plus de kills",
+        "playtime": "Plus de temps de jeu",
+        "combat": "Combat (efficacité)",
+        "support": "Support",
+        "offense": "Offense",
+        "defense": "Defense",
+        "kd": "K/D ratio (≥30 matchs)",
+        "kpm": "KPM (≥30 matchs)",
         "teamkills": "Team kills (anti-top)",
-        "matches":   "Plus de matchs"
+        "matches": "Plus de matchs"
       }
     },
     "singleGame": {
@@ -308,27 +327,27 @@
       "generalMetrics": "Métriques générales",
       "byWeaponClass": "🔫 Par classe d'arme",
       "cards": {
-        "kills":            "Plus de kills par match",
-        "kills_streak":     "Plus longue série de kills",
-        "combat":           "Combat par match",
-        "support":           "Support par match",
-        "offense":          "Offense par match",
-        "defense":          "Defense par match",
+        "kills": "Plus de kills par match",
+        "kills_streak": "Plus longue série de kills",
+        "combat": "Combat par match",
+        "support": "Support par match",
+        "offense": "Offense par match",
+        "defense": "Defense par match",
         "kill_death_ratio": "K/D par match",
         "kills_per_minute": "K/min par match",
-        "teamkills":        "Pires TK par match",
-        "deaths":           "Pire match (morts)"
+        "teamkills": "Pires TK par match",
+        "deaths": "Pire match (morts)"
       },
       "classes": {
         "sniperRifle": "Sniper par match",
-        "machineGun":  "MG par match",
-        "antiTank":    "AT par match",
-        "tankGun":     "Combat de tank par match",
-        "artillery":   "Artillerie par match",
-        "mine":        "Mines par match",
-        "explosive":   "Explosifs par match",
-        "flame":       "Lance-flammes par match",
-        "melee":       "Mêlée par match"
+        "machineGun": "MG par match",
+        "antiTank": "AT par match",
+        "tankGun": "Combat de tank par match",
+        "artillery": "Artillerie par match",
+        "mine": "Mines par match",
+        "explosive": "Explosifs par match",
+        "flame": "Lance-flammes par match",
+        "melee": "Mêlée par match"
       }
     }
   }
