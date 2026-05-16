@@ -1,3 +1,4 @@
+import { statsAppBaseUrl } from '@/lib/siteConfig'
 import { Player, PlayerWithStatus } from '@/types/player'
 import {
   Drawer,
@@ -69,7 +70,7 @@ export function MobilePlayerGameDetail({
               <Button size={'icon'} variant={'outline'} asChild
                 title="HLL Stats — all-time profile of this player"
                 className="bg-amber-500 hover:bg-amber-400 border-amber-400 text-zinc-950 shadow-md shadow-amber-500/40 hover:shadow-amber-400/60">
-                <a href={`/player/${player.player_id}`}>
+                <a href={`${statsAppBaseUrl()}player/${player.player_id}`}>
                   <BarChart3 size={18} strokeWidth={2.5} />
                 </a>
               </Button>
