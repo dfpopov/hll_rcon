@@ -53,7 +53,14 @@ def _refresh_player_match_side_loop():
                     pass
 
 # Rate limiter — in-memory, single-container scope.
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+# Limits are per-IP. NAT / VPN / corporate proxy users share one egress
+# IP, so the SPA's burst of ~20 parallel API calls on first load (top
+# players, countries, leaderboards…) used to hit the old 60/min cap and
+# break the page for everyone behind the same gateway. Default raised
+# to 600/min (≈10/sec) which still throttles abuse but leaves room
+# for shared-IP scenarios. Per-endpoint limits below follow the same
+# 10× scaling (30→300 heavy, 60→600 standard, 120→1200 keystroke).
+limiter = Limiter(key_func=get_remote_address, default_limits=["600/minute"])
 
 app = FastAPI(
     title="HLL Stats — All-time",
@@ -92,7 +99,7 @@ def health(request: Request):
 
 
 @app.get("/api/top-players")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_top_players(
     request: Request,
     sort: str = Query(default="kills"),
@@ -167,14 +174,14 @@ def get_top_players(
 
 
 @app.get("/api/weapon-classes")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_weapon_classes(request: Request, db: Session = Depends(get_db)):
     """List of weapon classes with their example weapons and counts."""
     return {"classes": queries.get_weapon_classes_with_examples(db)}
 
 
 @app.get("/api/best-single-game")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_best_single_game(
     request: Request,
     metric: str = Query(default="kills"),
@@ -198,7 +205,7 @@ def get_best_single_game(
 
 
 @app.get("/api/players/autocomplete")
-@limiter.limit("120/minute")  # higher cap since this fires on every keystroke
+@limiter.limit("1200/minute")  # higher cap since this fires on every keystroke
 def get_autocomplete(
     request: Request,
     q: str = Query(min_length=2, max_length=64),
@@ -212,14 +219,14 @@ def get_autocomplete(
 
 
 @app.get("/api/playstyles")
-@limiter.limit("30/minute")
+@limiter.limit("300/minute")
 def get_playstyles(request: Request, db: Session = Depends(get_db)):
     """All playstyle archetypes with player_count + 5 sample top players."""
     return {"playstyles": queries.playstyle_stats(db)}
 
 
 @app.get("/api/playstyles/{playstyle_id}/players")
-@limiter.limit("30/minute")
+@limiter.limit("300/minute")
 def get_playstyle_players(
     request: Request,
     playstyle_id: str,
@@ -232,7 +239,7 @@ def get_playstyle_players(
 
 
 @app.get("/api/countries")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_countries(request: Request, db: Session = Depends(get_db)):
     """Player count per ISO 3166-1 alpha-2 country, sorted by count desc.
     Powers the /server/countries world map page."""
@@ -240,7 +247,7 @@ def get_countries(request: Request, db: Session = Depends(get_db)):
 
 
 @app.get("/api/best-single-game-by-class")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_best_single_game_by_class(
     request: Request,
     weapon_class: str = Query(min_length=1),
@@ -259,7 +266,7 @@ def get_best_single_game_by_class(
 
 
 @app.get("/api/player/{steam_id}")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_player_detail(
     request: Request,
     steam_id: str,
@@ -273,7 +280,7 @@ def get_player_detail(
 
 
 @app.get("/api/head-to-head")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_head_to_head(
     request: Request,
     p1: str = Query(min_length=1),
@@ -288,7 +295,7 @@ def get_head_to_head(
 
 
 @app.get("/api/player-by-name")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_player_by_name(
     request: Request,
     name: str = Query(min_length=1, max_length=100),
@@ -302,14 +309,14 @@ def get_player_by_name(
 
 
 @app.get("/api/achievements")
-@limiter.limit("30/minute")  # heavier query — lower limit
+@limiter.limit("300/minute")  # heavier query — lower limit
 def get_achievements_stats(request: Request, db: Session = Depends(get_db)):
     """List all achievements with stats: earned_count + percentage of players."""
     return {"achievements": queries.compute_achievement_stats(db)}
 
 
 @app.get("/api/achievements/{achievement_id}/players")
-@limiter.limit("30/minute")
+@limiter.limit("300/minute")
 def get_players_with_achievement(
     request: Request,
     achievement_id: str,
@@ -322,14 +329,14 @@ def get_players_with_achievement(
 
 
 @app.get("/api/maps")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_maps(request: Request, db: Session = Depends(get_db)):
     """List of distinct map_name values for dropdown."""
     return {"maps": queries.get_unique_maps(db)}
 
 
 @app.get("/api/weapons")
-@limiter.limit("60/minute")
+@limiter.limit("600/minute")
 def get_weapons(request: Request, db: Session = Depends(get_db)):
     """List of all weapon names used at least once."""
     return {"weapons": queries.get_unique_weapons(db)}
