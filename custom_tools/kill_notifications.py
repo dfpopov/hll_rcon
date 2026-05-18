@@ -40,10 +40,68 @@ import redis
 
 from rcon.cache_utils import get_redis_pool
 from rcon.logs.loop import on_chat, on_kill
+from rcon.models import SteamInfo, enter_session
 from rcon.rcon import Rcon
 from rcon.types import StructuredLogLineWithMetaData
 
 logger = logging.getLogger(__name__)
+
+# Per-player language buckets. CRCON's Steam country code resolution is
+# the same source live_topstats uses (see get_player_language there).
+# We only need a binary UA/EN split for kill notifications.
+_UA_COUNTRIES = frozenset({
+    "UA", "RU", "BY", "MD", "KZ", "KG", "TJ", "TM", "UZ", "AZ", "AM", "GE",
+})
+
+
+def _player_lang(player_id: str) -> str:
+    """Return 'ua' for ex-USSR Steam countries, 'en' otherwise (default).
+    Defensive: any DB hiccup → 'en' (broader audience, safer fallback)."""
+    try:
+        with enter_session() as sess:
+            si = (
+                sess.query(SteamInfo)
+                .join(SteamInfo.player)
+                .filter(SteamInfo.player.has(player_id=player_id))
+                .first()
+            )
+            if si and si.country and si.country.upper() in _UA_COUNTRIES:
+                return "ua"
+    except Exception as e:
+        logger.debug("kill_notifications: lang lookup failed for %s: %s", player_id, e)
+    return "en"
+
+
+# Per-language message strings. Keep all under ~40 chars per line so the
+# in-game popup stays in one screen-line on HLL's narrow admin overlay.
+_MESSAGES = {
+    "en": {
+        "footer":          "\n!kn off",
+        "burst_suffix":    " (+{n} more)",
+        "off_reply":       "Popups OFF.\n!kn on / !lk",
+        "on_reply":        "Popups ON.\n!kn off",
+        "status_on":       "Popups: ON.\n!kn off",
+        "status_off":      "Popups: OFF.\n!kn on / !lk",
+        "lk_hint":         "Auto popups: !kn on",
+    },
+    "ua": {
+        "footer":          "\n!kn off",
+        "burst_suffix":    " (+{n} ще)",
+        "off_reply":       "Попапи ВИМК.\n!kn on / !lk",
+        "on_reply":        "Попапи УВІМК.\n!kn off",
+        "status_on":       "Попапи: УВІМК.\n!kn off",
+        "status_off":      "Попапи: ВИМК.\n!kn on / !lk",
+        "lk_hint":         "Авто-попапи: !kn on",
+    },
+}
+
+
+def _msg(player_id: str, key: str, **fmt) -> str:
+    """Pick the message string for the player's language and substitute
+    {n}/etc. tokens. Falls back to English if key missing in 'ua' bucket."""
+    lang = _player_lang(player_id)
+    s = _MESSAGES.get(lang, _MESSAGES["en"]).get(key) or _MESSAGES["en"][key]
+    return s.format(**fmt) if fmt else s
 
 _REDIS_KEY_PREFIX = "kill_notif:disabled:"
 
@@ -62,12 +120,8 @@ _CMD_OFF = "!kn off"
 _CMD_ON = "!kn on"
 _CMD_STATUS = "!kn"
 
-# Auto-popup footer: player is by definition opted-IN here, so the only
-# relevant suggestion is how to turn it off. Keeps the popup minimal.
-# English wording chosen so non-Ukrainian players (majority of the HLL
-# audience) understand the toggle. Ukrainian-only players still get a
-# universal command — !kn off works regardless of language.
-_MESSAGE_FOOTER = "\n!kn off — turn off these popups"
+# (Per-language footer lives in _MESSAGES above; _msg(player_id, "footer")
+# returns the right one. Kept tight — just the command, no extra prose.)
 
 
 def _redis() -> redis.StrictRedis:
@@ -113,13 +167,12 @@ def _flush_burst(rcon: Rcon, killer_id: str) -> None:
     n: int = data["count"]
     first: str = (data["first_victim"] or "?")[:24]
 
+    footer = _msg(killer_id, "footer")
     if n == 1:
-        message = f"+1: {first}{_MESSAGE_FOOTER}"
+        message = f"+1: {first}{footer}"
     else:
-        # Burst aggregated into one popup. Keep neutral & short:
-        # "+N: <first_victim> (+N-1 more)" on one line, footer below.
-        extra = n - 1
-        message = f"+{n}: {first} (+{extra} more){_MESSAGE_FOOTER}"
+        suffix = _msg(killer_id, "burst_suffix", n=n - 1)
+        message = f"+{n}: {first}{suffix}{footer}"
 
     try:
         rcon.message_player(
@@ -186,23 +239,13 @@ def _toggle_via_chat(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
 
     if text == _CMD_OFF:
         _set_disabled(player_id, True)
-        reply = (
-            "Kill popups OFF.\n"
-            "!kn on — see them automatically\n"
-            "!lk — check your last kill manually"
-        )
+        reply = _msg(player_id, "off_reply")
     elif text == _CMD_ON:
         _set_disabled(player_id, False)
-        reply = (
-            "Kill popups ON.\n"
-            "!kn off — turn off"
-        )
+        reply = _msg(player_id, "on_reply")
     elif text == _CMD_STATUS:
-        state = "OFF" if _is_disabled(player_id) else "ON"
-        reply = (
-            f"Kill popups: {state}.\n"
-            "!kn on — turn on / !kn off — turn off"
-        )
+        key = "status_off" if _is_disabled(player_id) else "status_on"
+        reply = _msg(player_id, key)
     else:
         # `!kn something_else` — ignore silently so users typing unrelated
         # !kn-prefixed words (rare but possible) don't get spammed.
@@ -241,10 +284,7 @@ def _augment_lk_with_hint(rcon: Rcon, log: StructuredLogLineWithMetaData) -> Non
     if not _is_disabled(player_id):
         return  # already opted-in, no need to advertise
 
-    hint = (
-        "Want to see this automatically after every kill?\n"
-        "Type: !kn on"
-    )
+    hint = _msg(player_id, "lk_hint")
     try:
         rcon.message_player(
             player_id=player_id,
