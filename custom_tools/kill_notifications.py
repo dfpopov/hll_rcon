@@ -64,7 +64,10 @@ _CMD_STATUS = "!kn"
 
 # Auto-popup footer: player is by definition opted-IN here, so the only
 # relevant suggestion is how to turn it off. Keeps the popup minimal.
-_MESSAGE_FOOTER = "\n!kn off — вимкнути сповіщення"
+# English wording chosen so non-Ukrainian players (majority of the HLL
+# audience) understand the toggle. Ukrainian-only players still get a
+# universal command — !kn off works regardless of language.
+_MESSAGE_FOOTER = "\n!kn off — turn off these popups"
 
 
 def _redis() -> redis.StrictRedis:
@@ -114,9 +117,9 @@ def _flush_burst(rcon: Rcon, killer_id: str) -> None:
         message = f"+1: {first}{_MESSAGE_FOOTER}"
     else:
         # Burst aggregated into one popup. Keep neutral & short:
-        # "+N: <first_victim> (ще +N-1)" on one line, footer below.
+        # "+N: <first_victim> (+N-1 more)" on one line, footer below.
         extra = n - 1
-        message = f"+{n}: {first} (ще +{extra}){_MESSAGE_FOOTER}"
+        message = f"+{n}: {first} (+{extra} more){_MESSAGE_FOOTER}"
 
     try:
         rcon.message_player(
@@ -184,21 +187,21 @@ def _toggle_via_chat(rcon: Rcon, log: StructuredLogLineWithMetaData) -> None:
     if text == _CMD_OFF:
         _set_disabled(player_id, True)
         reply = (
-            "Сповіщення про вбивства ВИМКНУТО.\n"
-            "!kn on — бачити автоматично\n"
-            "!lk — подивитися останнє вбивство вручну"
+            "Kill popups OFF.\n"
+            "!kn on — see them automatically\n"
+            "!lk — check your last kill manually"
         )
     elif text == _CMD_ON:
         _set_disabled(player_id, False)
         reply = (
-            "Сповіщення про вбивства УВІМКНЕНО.\n"
-            "!kn off — вимкнути"
+            "Kill popups ON.\n"
+            "!kn off — turn off"
         )
     elif text == _CMD_STATUS:
-        state = "вимкнено" if _is_disabled(player_id) else "увімкнено"
+        state = "OFF" if _is_disabled(player_id) else "ON"
         reply = (
-            f"Сповіщення про вбивства: {state}.\n"
-            "!kn on — увімкнути / !kn off — вимкнути"
+            f"Kill popups: {state}.\n"
+            "!kn on — turn on / !kn off — turn off"
         )
     else:
         # `!kn something_else` — ignore silently so users typing unrelated
@@ -239,8 +242,8 @@ def _augment_lk_with_hint(rcon: Rcon, log: StructuredLogLineWithMetaData) -> Non
         return  # already opted-in, no need to advertise
 
     hint = (
-        "Хочеш бачити це автоматично після кожного вбивства?\n"
-        "Команда: !kn on"
+        "Want to see this automatically after every kill?\n"
+        "Type: !kn on"
     )
     try:
         rcon.message_player(
