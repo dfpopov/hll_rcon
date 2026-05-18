@@ -87,11 +87,11 @@ _MESSAGES = {
     "ua": {
         "footer":          "\n!kn off",
         "burst_suffix":    " (+{n} ще)",
-        "off_reply":       "Попапи ВИМК.\n!kn on / !lk",
-        "on_reply":        "Попапи УВІМК.\n!kn off",
-        "status_on":       "Попапи: УВІМК.\n!kn off",
-        "status_off":      "Попапи: ВИМК.\n!kn on / !lk",
-        "lk_hint":         "Авто-попапи: !kn on",
+        "off_reply":       "Сповіщення ВИМК.\n!kn on / !lk",
+        "on_reply":        "Сповіщення УВІМК.\n!kn off",
+        "status_on":       "Сповіщення: УВІМК.\n!kn off",
+        "status_off":      "Сповіщення: ВИМК.\n!kn on / !lk",
+        "lk_hint":         "Авто-сповіщення: !kn on",
     },
 }
 
