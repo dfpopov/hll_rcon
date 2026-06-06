@@ -718,28 +718,41 @@ class VoteMap:
         self.red.delete("MAP_SELECTION")
         self.red.lpush("MAP_SELECTION", *[str(map_) for map_ in selection])
 
-    def pick_least_played_map(self, maps):
+    def pick_least_played_map(self, candidate_maps):
+        # NOTE: param renamed from `maps` → `candidate_maps`. The old name
+        # shadowed the module-level `from rcon import maps`, so the
+        # `maps.parse_layer(...)` call below resolved to the parameter (a
+        # list) instead of the module → `'list' object has no attribute
+        # 'parse_layer'`. The bug stayed latent while default_method was
+        # `least_played_all_maps` (the 80+ map candidate set always had a
+        # never-played map, so we returned early before the parse_layer
+        # line). Switching to `least_played_suggestions` (5 candidates,
+        # usually all in recent history) made it fire every match-end.
         maps_history = MapsHistory()
 
-        if not maps:
+        if not candidate_maps:
             raise ValueError("Can't pick a default. No maps to pick from")
 
+        # history entries are raw id strings; candidate_maps are Layer
+        # objects (from get_selection()/get_maps()). Compare by id string.
         history = [obj["name"] for obj in maps_history]
         index = 0
-        for name in maps:
+        for layer in candidate_maps:
+            layer_id = layer.id if hasattr(layer, "id") else str(layer)
             try:
-                idx = history.index(name)
+                idx = history.index(layer_id)
             except ValueError:
-                return name
+                # Never played → it's the least-played, pick it. Already a
+                # Layer (or coerce a bare string just in case).
+                return layer if hasattr(layer, "id") else maps.parse_layer(layer)
             index = max(idx, index)
 
-        # When every candidate map was found in history, return the most
-        # recently-played one. history[index] is a raw string from
-        # MapsHistory — parse it back to a Layer so callers (apply_results
-        # → set_map_rotation) get a consistent type. Returning a bare
-        # string here was an upstream bug that crashed apply_results with
-        # `AttributeError: 'str' object has no attribute 'id'` whenever
-        # zero votes were cast and least_played_* fell into this branch.
+        # Every candidate was found in history → return the most
+        # recently-played one (highest history index among candidates).
+        # history[index] is a raw string from MapsHistory — parse it back
+        # to a Layer so callers (apply_results → set_map_rotation) get a
+        # consistent Layer type. `maps` here is the MODULE (no longer
+        # shadowed by the parameter), so parse_layer resolves correctly.
         return maps.parse_layer(history[index])
 
     def pick_default_next_map(self):
