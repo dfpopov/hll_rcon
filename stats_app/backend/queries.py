@@ -176,7 +176,14 @@ def top_players(
     sql = text(f"""
         SELECT
             s.steam_id_64 AS steam_id,
-            MAX(ps.name) AS name,
+            -- Most-recent name, not MAX(name). MAX() on text returns the
+            -- lexicographically-largest historical nick (so a player who
+            -- renamed would show whichever old name sorts last) — that was
+            -- the "shows my previous nickname" bug. array_agg ordered by
+            -- map_id DESC (map_id is a serial PK → higher = later match)
+            -- picks the name from the player's latest match instead.
+            (array_agg(ps.name ORDER BY ps.map_id DESC)
+                FILTER (WHERE ps.name IS NOT NULL AND ps.name <> ''))[1] AS name,
             MAX(ps.level) AS level,
             SUM(ps.kills) AS kills,
             SUM(ps.deaths) AS deaths,
@@ -374,7 +381,9 @@ def _all_player_profiles(db: Session) -> List[dict]:
     sql = text("""
         SELECT
             s.steam_id_64 AS steam_id,
-            MAX(ps.name) AS name,
+            -- Most-recent name (see top_players comment); not MAX(name).
+            (array_agg(ps.name ORDER BY ps.map_id DESC)
+                FILTER (WHERE ps.name IS NOT NULL AND ps.name <> ''))[1] AS name,
             MAX(ps.level) AS level,
             SUM(ps.kills) AS kills,
             SUM(ps.deaths) AS deaths,
@@ -708,7 +717,10 @@ def played_with_against(db: Session, steam_id: str, limit: int = 10) -> dict:
           WHERE s.steam_id_64 = :sid
         ),
         teammates AS (
-          SELECT s2.steam_id_64 AS steam_id, MAX(ps2.name) AS name, COUNT(*) AS matches
+          SELECT s2.steam_id_64 AS steam_id,
+                 (array_agg(ps2.name ORDER BY ps2.map_id DESC)
+                    FILTER (WHERE ps2.name IS NOT NULL AND ps2.name <> ''))[1] AS name,
+                 COUNT(*) AS matches
           FROM my_sides ms
           JOIN player_match_side pms2
             ON pms2.match_id = ms.match_id AND pms2.side = ms.my_side
@@ -720,7 +732,10 @@ def played_with_against(db: Session, steam_id: str, limit: int = 10) -> dict:
           LIMIT :limit
         ),
         opponents AS (
-          SELECT s2.steam_id_64 AS steam_id, MAX(ps2.name) AS name, COUNT(*) AS matches
+          SELECT s2.steam_id_64 AS steam_id,
+                 (array_agg(ps2.name ORDER BY ps2.map_id DESC)
+                    FILTER (WHERE ps2.name IS NOT NULL AND ps2.name <> ''))[1] AS name,
+                 COUNT(*) AS matches
           FROM my_sides ms
           JOIN player_match_side pms2
             ON pms2.match_id = ms.match_id AND pms2.side <> ms.my_side
@@ -823,13 +838,15 @@ def playstyle_players(db: Session, playstyle_id: str, limit: int = 50, offset: i
 def autocomplete_players(db: Session, q: str, limit: int = 10) -> list[dict]:
     """Player autocomplete: returns top matches by ILIKE substring against
     ANY historical name (player_stats.name). One row per steam_id with the
-    canonical (most-recent / MAX) display name and avatar.
+    most-recent display name and avatar (searching an OLD nick still finds
+    the player, but we show their CURRENT name).
     Ordered by matches_played desc — typed prefix hits the active veterans
     first."""
     sql = text("""
         SELECT
           s.steam_id_64 AS steam_id,
-          MAX(ps.name) AS name,
+          (array_agg(ps.name ORDER BY ps.map_id DESC)
+             FILTER (WHERE ps.name IS NOT NULL AND ps.name <> ''))[1] AS name,
           MAX(si.profile->>'avatarmedium') AS avatar_url,
           COUNT(DISTINCT ps.map_id) AS matches
         FROM player_stats ps
@@ -917,7 +934,10 @@ def hardcounters(db: Session, steam_id: str, min_deaths: int = 5, limit: int = 5
         )
         SELECT
           s.steam_id_64 AS steam_id,
-          (SELECT MAX(ps.name) FROM player_stats ps WHERE ps.playersteamid_id = s.id) AS name,
+          (SELECT ps.name FROM player_stats ps
+             WHERE ps.playersteamid_id = s.id
+               AND ps.name IS NOT NULL AND ps.name <> ''
+             ORDER BY ps.map_id DESC LIMIT 1) AS name,
           t.times AS killed_me,
           COALESCE(i.times, 0) AS i_killed_them,
           t.times - COALESCE(i.times, 0) AS advantage
@@ -1096,7 +1116,9 @@ def player_detail(db: Session, steam_id: str):
     sql_profile = text("""
         SELECT
             s.steam_id_64 AS steam_id,
-            MAX(ps.name) AS name,
+            -- Most-recent name (see top_players comment); not MAX(name).
+            (array_agg(ps.name ORDER BY ps.map_id DESC)
+                FILTER (WHERE ps.name IS NOT NULL AND ps.name <> ''))[1] AS name,
             MAX(ps.level) AS level,
             SUM(ps.kills) AS kills,
             SUM(ps.deaths) AS deaths,
