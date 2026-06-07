@@ -57,8 +57,8 @@ ACHIEVEMENTS = [
     # Long-tenure / dedication (D-batch additions)
     ("disciplined",  "Дисциплінований",    "🎖", "uncommon",  "Зіграти 100+ матчів з TK rate < 10%",
         lambda p: (p.get("matches_played") or 0) >= 100 and (p.get("teamkills") or 0) * 10 < (p.get("kills") or 0)),
-    ("spotless",     "Чисте сумління",     "🕊", "rare",       "Зіграти 50+ матчів і не більше 1 смерті від ТК своїх",
-        lambda p: (p.get("matches_played") or 0) >= 50 and (p.get("deaths_by_tk") or 0) <= 1),
+    ("spotless",     "Чисте сумління",     "🕊", "rare",       "Зіграти 30+ матчів і не більше 2 смертей від ТК своїх",
+        lambda p: (p.get("matches_played") or 0) >= 30 and (p.get("deaths_by_tk") or 0) <= 2),
     ("fortress",     "Фортеця",            "🏯", "epic",       "Накопичити 250K+ defense score",
         lambda p: (p.get("defense") or 0) >= 250000),
     ("tireless",     "Невтомний",          "⏰", "legendary",  "Провести 450+ годин на сервері",
@@ -117,8 +117,8 @@ ACHIEVEMENTS = [
     # Hidden achievements / easter eggs. Pure aggregate from profile — no
     # per-match data needed. These reward unusual statistical signatures
     # rather than raw volume.
-    ("balanced",     "Дзен-балансист",     "☯",   "rare",      "Combat / offense / defense / support — усі в межах 15% одне від одного",
-        lambda p: _scores_balanced(p, tol=15.0) and (p.get("matches_played") or 0) >= 50),
+    ("balanced",     "Дзен-балансист",     "☯",   "rare",      "Combat / offense / defense / support — усі в межах 25% одне від одного",
+        lambda p: _scores_balanced(p, tol=25.0) and (p.get("matches_played") or 0) >= 30),
     ("exact_one",    "Рівновага",          "⚖",   "rare",      "K/D рівно 1.00 (тонкий баланс перемог і смертей)",
         lambda p: (p.get("kd_ratio") or 0) > 0 and round(p.get("kd_ratio") or 0, 2) == 1.00 and (p.get("matches_played") or 0) >= 50),
     ("iron_apron",   "Залізний фартух",    "🛡",  "epic",      "Defense складає 50%+ від суми всіх score-категорій",
