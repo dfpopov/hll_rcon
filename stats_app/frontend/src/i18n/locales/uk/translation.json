@@ -333,6 +333,14 @@
       "supply_main": {
         "title": "Логіст-маньяк",
         "description": "Support складає 60%+ від суми всіх score-категорій"
+      },
+      "kd_capable": {
+        "title": "Боєздатний",
+        "description": "Мати K/D 1.3+ з 30+ матчів"
+      },
+      "kd_adept": {
+        "title": "Вправний",
+        "description": "Мати K/D 1.7+ з 30+ матчів"
       }
     },
     "playstyles": {
