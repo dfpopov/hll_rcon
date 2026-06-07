@@ -341,6 +341,14 @@
       "kd_adept": {
         "title": "Вправний",
         "description": "Мати K/D 1.7+ з 30+ матчів"
+      },
+      "kd_rookie": {
+        "title": "Стрілець",
+        "description": "Мати K/D 0.8+ з 30+ матчів"
+      },
+      "kd_even": {
+        "title": "Боєць",
+        "description": "Мати K/D 1.0+ з 30+ матчів"
       }
     },
     "playstyles": {
@@ -585,6 +593,38 @@
       "zen": {
         "title": "Дзен",
         "description": "K точно дорівнює D при 10-29 вбивствах"
+      },
+      "relentless": {
+        "title": "Невпинний",
+        "description": "60+ вбивств за один матч"
+      },
+      "glass_cannon": {
+        "title": "Скляна гармата",
+        "description": "35+ вбивств і 30+ смертей — багато вбивав, багато гинув"
+      },
+      "workhorse": {
+        "title": "Робоча конячка",
+        "description": "40+ вбивств при K/D 1.5+"
+      },
+      "solid_game": {
+        "title": "Міцний матч",
+        "description": "25+ вбивств при K/D 1.5+"
+      },
+      "positive": {
+        "title": "У плюсі",
+        "description": "15+ вбивств при K/D 1.2+"
+      },
+      "last_stand": {
+        "title": "Остання позиція",
+        "description": "Combat 2000+ при не більш ніж 5 смертях"
+      },
+      "pacifist": {
+        "title": "Пацифіст",
+        "description": "Support 2000+ без жодного вбивства"
+      },
+      "marathon_match": {
+        "title": "Марафон",
+        "description": "60+ хвилин в одному матчі"
       }
     }
   },
@@ -630,7 +670,8 @@
       "volume": "Об'єм",
       "support": "Support / Defense",
       "memes": "Меми",
-      "intensity": "Інтенсивність"
+      "intensity": "Інтенсивність",
+      "solid": "Міцні матчі"
     }
   },
   "compareBar": {

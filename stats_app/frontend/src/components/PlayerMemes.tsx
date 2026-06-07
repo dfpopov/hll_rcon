@@ -127,6 +127,9 @@ export const MATCH_TITLES: (MatchTitle & {
   { id: 'frenzy', emoji: '💢', title: 'Скажений',
     description: '50+ вбивств і 30+ смертей — об\'єм в обидві сторони',
     predicate: (m) => m.kills >= 50 && m.deaths >= 30 },
+  { id: 'glass_cannon', emoji: '💥', title: 'Скляна гармата',
+    description: '35+ вбивств і 30+ смертей — багато вбивав, багато гинув',
+    predicate: (m) => m.kills >= 35 && m.deaths >= 30 && (m.kd ?? 0) > 1 },
 
   // ── High volume ────────────────────────────────────────────────────
   { id: 'terror', emoji: '👹', title: 'Терор',
@@ -135,6 +138,9 @@ export const MATCH_TITLES: (MatchTitle & {
   { id: 'massacre', emoji: '🔥', title: 'Різанина',
     description: '80+ вбивств за один матч',
     predicate: (m) => m.kills >= 80 },
+  { id: 'relentless', emoji: '🌊', title: 'Невпинний',
+    description: '60+ вбивств за один матч',
+    predicate: (m) => m.kills >= 60 },
   { id: 'merciless', emoji: '🦅', title: 'Безжальний',
     description: '40+ вбивств при K/D 3+',
     predicate: (m) => m.kills >= 40 && (m.kd ?? 0) >= 3 },
@@ -157,6 +163,18 @@ export const MATCH_TITLES: (MatchTitle & {
     description: 'Близька гра — 15+ вбивств, 15+ смертей, різниця ≤ 2',
     predicate: (m) => m.kills >= 15 && m.deaths >= 15 && Math.abs(m.kills - m.deaths) <= 2 },
 
+  // ── Solid ordinary games (most-specific first so a 40-kill game gets
+  //    workhorse, not the broader "positive") ──────────────────────────
+  { id: 'workhorse', emoji: '🐴', title: 'Робоча конячка',
+    description: '40+ вбивств при K/D 1.5+',
+    predicate: (m) => m.kills >= 40 && (m.kd ?? 0) >= 1.5 },
+  { id: 'solid_game', emoji: '✊', title: 'Міцний матч',
+    description: '25+ вбивств при K/D 1.5+',
+    predicate: (m) => m.kills >= 25 && (m.kd ?? 0) >= 1.5 },
+  { id: 'positive', emoji: '➕', title: 'У плюсі',
+    description: '15+ вбивств при K/D 1.2+',
+    predicate: (m) => m.kills >= 15 && (m.kd ?? 0) >= 1.2 },
+
   // ── Support / defense heroes ───────────────────────────────────────
   { id: 'invisible_helper', emoji: '📦', title: 'Невидимий помічник',
     description: 'Support 8000+ при менш ніж 5 вбивствах — пасивний герой',
@@ -167,8 +185,17 @@ export const MATCH_TITLES: (MatchTitle & {
   { id: 'wall_m', emoji: '🏯', title: 'Стіна',
     description: 'Combat 3000+ при не більш ніж 3 смертях — точка тримається',
     predicate: (m) => m.combat > 3000 && m.deaths <= 3 },
+  { id: 'last_stand', emoji: '🛡', title: 'Остання позиція',
+    description: 'Combat 2000+ при не більш ніж 5 смертях',
+    predicate: (m) => m.combat > 2000 && m.deaths <= 5 },
+  { id: 'pacifist', emoji: '🕊', title: 'Пацифіст',
+    description: 'Support 2000+ без жодного вбивства',
+    predicate: (m) => m.support >= 2000 && m.kills === 0 },
 
   // ── Edge case memes ────────────────────────────────────────────────
+  { id: 'marathon_match', emoji: '⏱', title: 'Марафон',
+    description: '60+ хвилин в одному матчі',
+    predicate: (m) => (m.time_seconds ?? 0) >= 3600 },
   { id: 'mirror', emoji: '⚖', title: 'Дзеркало',
     description: 'K точно дорівнює D при 30+ вбивствах',
     predicate: (m) => m.kills === m.deaths && m.kills >= 30 },

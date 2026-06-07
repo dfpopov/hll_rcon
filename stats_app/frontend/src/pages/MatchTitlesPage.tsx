@@ -15,13 +15,15 @@ import { useMetaLabel } from '../i18n/metaLabel'
 const CATEGORIES: { id: string; ids: string[]; emoji: string }[] = [
   { id: 'disasters',   emoji: '💀', ids: ['spectator', 'safari', 'sacrificial_m', 'dark_hour', 'bloodbath'] },
   { id: 'godRatios',   emoji: '👑', ids: ['sniper_ghost', 'perfect', 'eagle_eye'] },
-  { id: 'volume',      emoji: '🔥', ids: ['terror', 'massacre', 'god_of_war', 'untouchable', 'cold_blooded', 'duelist'] },
+  { id: 'volume',      emoji: '🔥', ids: ['terror', 'massacre', 'relentless', 'god_of_war', 'untouchable', 'cold_blooded', 'duelist'] },
   // High-engagement / paced play — distinct vibe from raw kill volume:
   // "intensity" maps high-effort styles (long brawls, fast killings,
   // sustained MG, perfect ratio at scale).
-  { id: 'intensity',   emoji: '⚡', ids: ['training', 'frenzy', 'merciless', 'speedrun', 'machine_gunner'] },
-  { id: 'support',     emoji: '🛡', ids: ['invisible_helper', 'quiet_victory', 'wall_m'] },
-  { id: 'memes',       emoji: '🎲', ids: ['mirror', 'zen'] },
+  { id: 'intensity',   emoji: '⚡', ids: ['training', 'frenzy', 'glass_cannon', 'merciless', 'speedrun', 'machine_gunner'] },
+  // Solid ordinary games — the bread-and-butter "good match" tier.
+  { id: 'solid',       emoji: '✊', ids: ['workhorse', 'solid_game', 'positive'] },
+  { id: 'support',     emoji: '🛡', ids: ['invisible_helper', 'quiet_victory', 'wall_m', 'last_stand', 'pacifist'] },
+  { id: 'memes',       emoji: '🎲', ids: ['mirror', 'zen', 'marathon_match'] },
 ]
 
 export default function MatchTitlesPage() {

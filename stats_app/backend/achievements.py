@@ -17,10 +17,12 @@ ACHIEVEMENTS = [
     ("veteran",      "Ветеран",            "🎖", "uncommon",  "Зіграти 500+ матчів",                 lambda p: p.get("matches_played", 0) >= 500),
     ("lifetime",     "Lifetime гравець",   "👑", "legendary", "Зіграти 600+ матчів",                 lambda p: p.get("matches_played", 0) >= 600),
 
-    # Skill (K/D) — tiered ladder. Up to 1.3 is the "average" band (no
-    # badge). Each step above rewards a higher consistency bracket; tiers
-    # are cumulative (K/D 1.8 earns 1.3 and 1.7 but not 2.0). Thresholds
-    # calibrated on 30+-match players: 1.3→73, 1.7→41, 2.0→20, 3.0→4.
+    # Skill (K/D) — tiered ladder, all require 30+ matches so a 2-game
+    # fluke doesn't count. Tiers are cumulative (K/D 1.8 earns rookie,
+    # even, capable, adept — but not sharpshooter). Thresholds calibrated
+    # on 30+-match players: 0.8→129, 1.0→103, 1.3→73, 1.7→41, 2.0→20, 3.0→4.
+    ("kd_rookie",    "Стрілець",           "🔰", "common",    "Мати K/D 0.8+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 0.8 and (p.get("matches_played") or 0) >= 30),
+    ("kd_even",      "Боєць",              "🥊", "common",    "Мати K/D 1.0+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 1.0 and (p.get("matches_played") or 0) >= 30),
     ("kd_capable",   "Боєздатний",         "💪", "common",    "Мати K/D 1.3+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 1.3 and (p.get("matches_played") or 0) >= 30),
     ("kd_adept",     "Вправний",           "🏹", "uncommon",  "Мати K/D 1.7+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 1.7 and (p.get("matches_played") or 0) >= 30),
     ("sharpshooter", "Влучний",            "🎯", "rare",      "Мати K/D 2.0+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 2.0 and (p.get("matches_played") or 0) >= 30),

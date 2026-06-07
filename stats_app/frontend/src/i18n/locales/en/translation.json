@@ -341,6 +341,14 @@
       "kd_adept": {
         "title": "Adept",
         "description": "K/D 1.7+ over 30+ matches"
+      },
+      "kd_rookie": {
+        "title": "Rifleman",
+        "description": "K/D 0.8+ over 30+ matches"
+      },
+      "kd_even": {
+        "title": "Fighter",
+        "description": "K/D 1.0+ over 30+ matches"
       }
     },
     "playstyles": {
@@ -585,6 +593,38 @@
       "zen": {
         "title": "Zen",
         "description": "K exactly equals D with 10–29 kills"
+      },
+      "relentless": {
+        "title": "Relentless",
+        "description": "60+ kills in a single match"
+      },
+      "glass_cannon": {
+        "title": "Glass Cannon",
+        "description": "35+ kills and 30+ deaths — high kills, high losses"
+      },
+      "workhorse": {
+        "title": "Workhorse",
+        "description": "40+ kills at K/D 1.5+"
+      },
+      "solid_game": {
+        "title": "Solid Match",
+        "description": "25+ kills at K/D 1.5+"
+      },
+      "positive": {
+        "title": "In the Green",
+        "description": "15+ kills at K/D 1.2+"
+      },
+      "last_stand": {
+        "title": "Last Stand",
+        "description": "Combat 2000+ with 5 or fewer deaths"
+      },
+      "pacifist": {
+        "title": "Pacifist",
+        "description": "Support 2000+ with zero kills"
+      },
+      "marathon_match": {
+        "title": "Marathon",
+        "description": "60+ minutes in a single match"
       }
     }
   },
@@ -630,7 +670,8 @@
       "volume": "Volume",
       "support": "Support / Defense",
       "memes": "Memes",
-      "intensity": "Intensity"
+      "intensity": "Intensity",
+      "solid": "Solid games"
     }
   },
   "compareBar": {
