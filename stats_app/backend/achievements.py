@@ -15,7 +15,7 @@ ACHIEVEMENTS = [
     # Matches played
     ("centurion",    "Сотник",            "🏆", "common",    "Зіграти 100+ матчів",                 lambda p: p.get("matches_played", 0) >= 100),
     ("veteran",      "Ветеран",            "🎖", "uncommon",  "Зіграти 500+ матчів",                 lambda p: p.get("matches_played", 0) >= 500),
-    ("lifetime",     "Lifetime гравець",   "👑", "legendary", "Зіграти 1000+ матчів",                lambda p: p.get("matches_played", 0) >= 1000),
+    ("lifetime",     "Lifetime гравець",   "👑", "legendary", "Зіграти 600+ матчів",                 lambda p: p.get("matches_played", 0) >= 600),
 
     # Skill (K/D)
     ("sharpshooter", "Влучний",            "🎯", "uncommon",  "Мати K/D 2.0+ з 30+ матчів",          lambda p: (p.get("kd_ratio") or 0) >= 2.0 and (p.get("matches_played") or 0) >= 30),
@@ -25,7 +25,7 @@ ACHIEVEMENTS = [
     ("centurion_k",  "100 вбивств",        "💀", "common",    "Зробити 100+ вбивств за весь час",    lambda p: p.get("kills", 0) >= 100),
     ("killer_1k",    "1000 вбивств",       "💀", "uncommon",  "Зробити 1000+ вбивств за весь час",   lambda p: p.get("kills", 0) >= 1000),
     ("killing_mach", "Machine of Kill",    "🔥", "rare",      "Зробити 5000+ вбивств за весь час",   lambda p: p.get("kills", 0) >= 5000),
-    ("reaper",       "Жнець",              "☠️",  "epic",      "Зробити 10000+ вбивств за весь час",  lambda p: p.get("kills", 0) >= 10000),
+    ("reaper",       "Жнець",              "☠️",  "epic",      "Зробити 6000+ вбивств за весь час",   lambda p: p.get("kills", 0) >= 6000),
 
     # Streaks
     ("unstoppable",  "Нестримний",         "⚡", "rare",      "Серія 30+ вбивств в одному матчі",    lambda p: (p.get("best_kills_streak") or 0) >= 30),
@@ -34,7 +34,7 @@ ACHIEVEMENTS = [
 
     # Playtime
     ("marathon",     "Марафонець",         "⏱",  "uncommon",  "Провести 100+ годин на сервері",      lambda p: p.get("total_seconds", 0) >= 100 * 3600),
-    ("time_lord",    "Володар часу",       "⏳", "epic",      "Провести 500+ годин на сервері",      lambda p: p.get("total_seconds", 0) >= 500 * 3600),
+    ("time_lord",    "Володар часу",       "⏳", "epic",      "Провести 400+ годин на сервері",      lambda p: p.get("total_seconds", 0) >= 400 * 3600),
 
     # Score components
     ("combat_master","Майстер бою",        "⚔️",  "rare",      "Накопичити 100K+ combat score",       lambda p: (p.get("combat") or 0) >= 100000),
@@ -57,16 +57,16 @@ ACHIEVEMENTS = [
     # Long-tenure / dedication (D-batch additions)
     ("disciplined",  "Дисциплінований",    "🎖", "uncommon",  "Зіграти 100+ матчів з TK rate < 10%",
         lambda p: (p.get("matches_played") or 0) >= 100 and (p.get("teamkills") or 0) * 10 < (p.get("kills") or 0)),
-    ("spotless",     "Чисте сумління",     "🕊", "rare",       "Зіграти 100+ матчів і жодного разу не вмерти від ТК своїх",
-        lambda p: (p.get("matches_played") or 0) >= 100 and (p.get("deaths_by_tk") or 0) == 0),
-    ("fortress",     "Фортеця",            "🏯", "epic",       "Накопичити 500K+ defense score",
-        lambda p: (p.get("defense") or 0) >= 500000),
-    ("tireless",     "Невтомний",          "⏰", "legendary",  "Провести 1000+ годин на сервері",
-        lambda p: (p.get("total_seconds") or 0) >= 1000 * 3600),
+    ("spotless",     "Чисте сумління",     "🕊", "rare",       "Зіграти 50+ матчів і не більше 1 смерті від ТК своїх",
+        lambda p: (p.get("matches_played") or 0) >= 50 and (p.get("deaths_by_tk") or 0) <= 1),
+    ("fortress",     "Фортеця",            "🏯", "epic",       "Накопичити 250K+ defense score",
+        lambda p: (p.get("defense") or 0) >= 250000),
+    ("tireless",     "Невтомний",          "⏰", "legendary",  "Провести 450+ годин на сервері",
+        lambda p: (p.get("total_seconds") or 0) >= 450 * 3600),
     ("lone_survivor","Самотній виживальник","🌵", "epic",       "Прожити 30+ хвилин без смерті",
         lambda p: (p.get("longest_life_secs") or 0) >= 1800),
-    ("old_guard",    "Стара гвардія",      "🪖", "legendary",  "Зіграти 2000+ матчів",
-        lambda p: (p.get("matches_played") or 0) >= 2000),
+    ("old_guard",    "Стара гвардія",      "🪖", "legendary",  "Зіграти 650+ матчів",
+        lambda p: (p.get("matches_played") or 0) >= 650),
 
     # Weapon-class achievements — require kills_by_class in profile (which
     # _all_player_profiles_enriched provides). player_detail injects
@@ -84,27 +84,28 @@ ACHIEVEMENTS = [
     # tuned so a focused specialist earns them while a generalist with the
     # same total kill count doesn't — see also `tank_god` / `samurai` which
     # already cover Tank/AT and Melee buckets.
-    ("sniper_ghost",   "Снайпер-привид",       "👻", "epic",      "Зробити 500+ вбивств зі Sniper Rifle",
-        lambda p: (p.get("kills_by_class") or {}).get("Sniper Rifle", 0) >= 500),
+    ("sniper_ghost",   "Снайпер-привид",       "👻", "epic",      "Зробити 250+ вбивств зі Sniper Rifle",
+        lambda p: (p.get("kills_by_class") or {}).get("Sniper Rifle", 0) >= 250),
     ("mg_master",      "Майстер MG",           "🔫", "rare",      "Зробити 500+ вбивств з Machine Gun",
         lambda p: (p.get("kills_by_class") or {}).get("Machine Gun", 0) >= 500),
     ("artillerist",    "Артилерист",           "💥", "epic",      "Зробити 300+ вбивств з артилерії",
         lambda p: (p.get("kills_by_class") or {}).get("Artillery", 0) >= 300),
-    ("grenadier",      "Гранатомет",           "💣", "rare",      "Зробити 300+ вбивств вибухівкою (granade/satchel/rocket)",
-        lambda p: (p.get("kills_by_class") or {}).get("Explosive", 0) >= 300),
-    ("miner",          "Сапер",                "⚙️", "rare",       "Зробити 100+ вбивств мінами",
-        lambda p: (p.get("kills_by_class") or {}).get("Mine", 0) >= 100),
-    ("fire_fist",      "Вогняний кулак",       "🔥", "legendary", "Зробити 100+ вбивств вогнеметом",
-        lambda p: (p.get("kills_by_class") or {}).get("Flame", 0) >= 100),
-    ("anti_tank_ace",  "Бронебійник",          "🚀", "rare",      "Зробити 200+ вбивств з Anti-Tank зброї",
-        lambda p: (p.get("kills_by_class") or {}).get("Anti-Tank", 0) >= 200),
+    ("grenadier",      "Гранатомет",           "💣", "rare",      "Зробити 100+ вбивств вибухівкою (granade/satchel/rocket)",
+        lambda p: (p.get("kills_by_class") or {}).get("Explosive", 0) >= 100),
+    ("miner",          "Сапер",                "⚙️", "rare",       "Зробити 50+ вбивств мінами",
+        lambda p: (p.get("kills_by_class") or {}).get("Mine", 0) >= 50),
+    ("fire_fist",      "Вогняний кулак",       "🔥", "legendary", "Зробити 50+ вбивств вогнеметом",
+        lambda p: (p.get("kills_by_class") or {}).get("Flame", 0) >= 50),
+    ("anti_tank_ace",  "Бронебійник",          "🚀", "rare",      "Зробити 75+ вбивств з Anti-Tank зброї",
+        lambda p: (p.get("kills_by_class") or {}).get("Anti-Tank", 0) >= 75),
 
     # Behavioural / pace (F-batch). Profile-only signals — no per-match data
     # needed thanks to the enriched fields kpm, unique_weapons_count, peak_hour_pct.
-    ("fast_killer",    "Швидкий стрілець",     "⚡", "rare",      "KPM 1.5+ з 30+ матчів",
-        lambda p: (p.get("kpm") or 0) >= 1.5 and (p.get("matches_played") or 0) >= 30),
-    ("loyal_soldier",  "Вірний солдат",        "🕊", "legendary", "500+ матчів і жодного власного TK",
-        lambda p: (p.get("matches_played") or 0) >= 500 and (p.get("teamkills") or 0) == 0),
+    ("fast_killer",    "Швидкий стрілець",     "⚡", "rare",      "KPM 0.6+ з 30+ матчів",
+        lambda p: (p.get("kpm") or 0) >= 0.6 and (p.get("matches_played") or 0) >= 30),
+    ("loyal_soldier",  "Вірний солдат",        "🕊", "legendary", "100+ матчів з дуже низьким TK (≤0.1 за матч)",
+        lambda p: (p.get("matches_played") or 0) >= 100
+                  and (p.get("teamkills") or 0) <= (p.get("matches_played") or 0) * 0.1),
     ("weapon_master",  "Майстер арсеналу",     "🎻", "uncommon",  "Використати 50+ різних видів зброї",
         lambda p: (p.get("unique_weapons_count") or 0) >= 50),
     ("night_owl",      "Сова",                 "🦉", "rare",      "60%+ усіх матчів грав у одну й ту саму годину доби",

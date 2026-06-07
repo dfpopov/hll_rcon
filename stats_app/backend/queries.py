@@ -3,6 +3,7 @@
 Hand-written SQL (raw text()) for clarity and ability to use JSONB
 operators that SQLAlchemy ORM doesn't express cleanly. Read-only.
 """
+import os
 from typing import Optional, List
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -54,6 +55,35 @@ SIDES = {"Allies", "Axis"}
 SIDES_OR_FACTIONS = SIDES | FACTIONS
 
 
+# ── Excluded players ───────────────────────────────────────────────────
+# Steam IDs (or non-Steam GUIDs) filtered out of all public stats:
+# leaderboard, achievements counts, search, playstyles, profiles. Their
+# raw rows stay in the DB (nothing deleted) — they're just hidden, so the
+# exclusion is fully reversible by editing the env var + restarting.
+#
+# IMPORTANT: excluding a player does NOT change anyone else's numbers.
+# A player's kills are the sum of their OWN per-match rows (counting all
+# victims), so hiding an idler/bot doesn't subtract the kills others got
+# ON that player. Only the excluded player disappears from the lists.
+#
+# Configure via STATS_EXCLUDED_STEAM_IDS env var (comma-separated).
+EXCLUDED_STEAM_IDS = frozenset(
+    sid.strip()
+    for sid in os.getenv("STATS_EXCLUDED_STEAM_IDS", "").split(",")
+    if sid.strip()
+)
+
+
+def _exclusion_clause(params: dict, alias: str = "s") -> str:
+    """Return a SQL fragment ' AND <alias>.steam_id_64 <> ALL(:excluded_ids)'
+    (or '' when nothing is excluded) and register the bind param. `alias`
+    is the steam_id_64 table alias in the target query."""
+    if not EXCLUDED_STEAM_IDS:
+        return ""
+    params["excluded_ids"] = list(EXCLUDED_STEAM_IDS)
+    return f" AND {alias}.steam_id_64 <> ALL(:excluded_ids)"
+
+
 def _build_filters(
     period: Optional[str],
     weapon: Optional[str],
@@ -77,6 +107,11 @@ def _build_filters(
     parts: list[str] = []
     joins: list[str] = []
     params: dict = {}
+
+    # Global player exclusion (idlers/bots/test accounts). Empty by default.
+    if EXCLUDED_STEAM_IDS:
+        parts.append("s.steam_id_64 <> ALL(:excluded_ids)")
+        params["excluded_ids"] = list(EXCLUDED_STEAM_IDS)
 
     if period and period in PERIOD_INTERVALS:
         parts.append(f"m.start >= NOW() - INTERVAL '{PERIOD_INTERVALS[period]}'")
@@ -378,7 +413,12 @@ def _all_player_profiles(db: Session) -> List[dict]:
     Result is cached at the function level via lru_cache wrapper above the
     SQLAlchemy session boundary in caller — for simplicity here we just run it.
     """
-    sql = text("""
+    params: dict = {}
+    where_excl = ""
+    if EXCLUDED_STEAM_IDS:
+        where_excl = "WHERE s.steam_id_64 <> ALL(:excluded_ids)"
+        params["excluded_ids"] = list(EXCLUDED_STEAM_IDS)
+    sql = text(f"""
         SELECT
             s.steam_id_64 AS steam_id,
             -- Most-recent name (see top_players comment); not MAX(name).
@@ -390,6 +430,9 @@ def _all_player_profiles(db: Session) -> List[dict]:
             SUM(ps.teamkills) AS teamkills,
             SUM(ps.deaths_by_tk) AS deaths_by_tk,
             ROUND(CAST(SUM(ps.kills) AS NUMERIC) / NULLIF(SUM(ps.deaths), 0), 2) AS kd_ratio,
+            -- kpm needed by the fast_killer achievement; was missing here so
+            -- p.get("kpm") was always None → fast_killer unearnable.
+            ROUND(CAST(AVG(ps.kills_per_minute) AS NUMERIC), 2) AS kpm,
             COUNT(DISTINCT ps.map_id) AS matches_played,
             SUM(ps.time_seconds) AS total_seconds,
             SUM(ps.combat) AS combat,
@@ -403,9 +446,10 @@ def _all_player_profiles(db: Session) -> List[dict]:
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         LEFT JOIN steam_info si ON si.playersteamid_id = s.id
+        {where_excl}
         GROUP BY s.steam_id_64
     """)
-    return [dict(row._mapping) for row in db.execute(sql)]
+    return [dict(row._mapping) for row in db.execute(sql, params)]
 
 
 def compute_achievement_stats(db: Session) -> List[dict]:
@@ -842,7 +886,7 @@ def autocomplete_players(db: Session, q: str, limit: int = 10) -> list[dict]:
     the player, but we show their CURRENT name).
     Ordered by matches_played desc — typed prefix hits the active veterans
     first."""
-    sql = text("""
+    sql = """
         SELECT
           s.steam_id_64 AS steam_id,
           (array_agg(ps.name ORDER BY ps.map_id DESC)
@@ -852,11 +896,13 @@ def autocomplete_players(db: Session, q: str, limit: int = 10) -> list[dict]:
         FROM player_stats ps
         JOIN steam_id_64 s ON s.id = ps.playersteamid_id
         LEFT JOIN steam_info si ON si.playersteamid_id = s.id
-        WHERE ps.name ILIKE :pattern
+        WHERE ps.name ILIKE :pattern{excl}
         GROUP BY s.steam_id_64
         ORDER BY matches DESC
         LIMIT :limit
-    """)
+    """
+    params = {"pattern": f"%{q}%", "limit": limit}
+    sql = text(sql.format(excl=_exclusion_clause(params)))
     return [
         {
             "steam_id": r.steam_id,
@@ -864,7 +910,7 @@ def autocomplete_players(db: Session, q: str, limit: int = 10) -> list[dict]:
             "avatar_url": r.avatar_url,
             "matches": int(r.matches or 0),
         }
-        for r in db.execute(sql, {"pattern": f"%{q}%", "limit": limit})
+        for r in db.execute(sql, params)
     ]
 
 
@@ -1112,6 +1158,9 @@ def player_detail(db: Session, steam_id: str):
 
     Returns: {profile, top_weapons, most_killed, killed_by, recent_matches} or None.
     """
+    # Excluded players (idlers/bots/test accounts) get no profile page.
+    if steam_id in EXCLUDED_STEAM_IDS:
+        return None
     # 1) Profile aggregation + steam_info join for avatar/country
     sql_profile = text("""
         SELECT

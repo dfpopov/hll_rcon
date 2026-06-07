@@ -150,6 +150,12 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://${HLL_DB_USER}:${HLL_DB_PASSWORD}@${HLL_DB_HOST}:${HLL_DB_HOST_PORT}/${HLL_DB_NAME}
       ALLOWED_ORIGINS: "http://95.111.230.75:7012,http://localhost:7012,http://localhost:5173"
+      # Comma-separated steam ids / GUIDs hidden from ALL public stats
+      # (leaderboard, achievements counts, search, playstyles, profiles).
+      # Nothing is deleted — purely a display filter, reversible by editing
+      # this list. Does NOT change other players' numbers. Currently:
+      #   6dd7a23ce998d5a87c3fef409637e215 = Houston1209 (idler, 131 matches / 0 kills)
+      STATS_EXCLUDED_STEAM_IDS: "6dd7a23ce998d5a87c3fef409637e215"
     networks:
       common:
 
